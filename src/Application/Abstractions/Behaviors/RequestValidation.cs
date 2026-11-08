@@ -1,8 +1,8 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using FluentValidation;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Behaviors;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Behaviors;
 
 /// <summary>Runs all FluentValidation validators of a request and groups messages by field.</summary>
 internal static class RequestValidation

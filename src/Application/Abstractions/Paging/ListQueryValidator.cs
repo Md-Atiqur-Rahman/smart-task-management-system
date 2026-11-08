@@ -2,7 +2,7 @@ using FluentValidation;
 
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 /// <summary>
 /// Shared rules for every list query: page and page-size limits from Options,

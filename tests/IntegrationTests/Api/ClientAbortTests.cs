@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 
-using Contoso.TemplateApp.Api.Errors;
+using Datavanced.SmartTaskManagement.Api.Errors;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 using Serilog.Events;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// A client that disconnects is not a server error: no Error log and no 500 body

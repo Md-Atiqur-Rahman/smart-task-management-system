@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using FluentValidation;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Messaging;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Messaging;
 
 internal sealed record TestCommand(string Name) : ICommand<Guid>;
 

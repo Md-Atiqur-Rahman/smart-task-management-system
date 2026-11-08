@@ -1,10 +1,10 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Abstractions;
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Commands.CreateSample;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CreateSample;
 
 /// <summary>Write path: aggregate factory -> write repository -> UnitOfWork.</summary>
 public sealed class CreateSampleCommandHandler(ISampleRepository repository, IUnitOfWork unitOfWork)

@@ -1,5 +1,5 @@
 // SAMPLE: copy-source, delete or rename
-namespace Contoso.TemplateApp.Api.Controllers.Samples;
+namespace Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 /// <summary>
 /// HTTP body for POST /api/samples. Fields are nullable on purpose: a missing

@@ -1,17 +1,17 @@
-using Contoso.TemplateApp.Application.Features.Samples;
-using Contoso.TemplateApp.Domain.Abstractions;
-using Contoso.TemplateApp.Domain.Samples;
-using Contoso.TemplateApp.Infrastructure.Persistence;
-using Contoso.TemplateApp.Infrastructure.Persistence.Interceptors;
-using Contoso.TemplateApp.Infrastructure.Persistence.ReadRepositories;
-using Contoso.TemplateApp.Infrastructure.Persistence.Repositories;
+using Datavanced.SmartTaskManagement.Application.Features.Samples;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Samples;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Interceptors;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.ReadRepositories;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Infrastructure.Configuration.Database;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 
 public static class HostApplicationBuilderExtensions
 {

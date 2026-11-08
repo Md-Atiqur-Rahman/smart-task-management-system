@@ -1,12 +1,12 @@
 using System.Text.Json.Serialization;
 
-using Contoso.TemplateApp.Api.Errors;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class ControllersExtensions
 {

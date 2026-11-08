@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Security;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
 /// Called exactly once per request, by the security context middleware after JWT

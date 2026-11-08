@@ -3,7 +3,7 @@
 - Framework: xunit.v3 on Microsoft.Testing.Platform (`global.json`
   `"test": {"runner": "Microsoft.Testing.Platform"}`), NSubstitute, Shouldly,
   NetArchTest.Rules, Testcontainers (SQL Server). No FluentAssertions, no Moq.
-- Run: `dotnet test --solution Contoso.TemplateApp.slnx` (or
+- Run: `dotnet test --solution Datavanced.SmartTaskManagement.slnx` (or
   `--project <csproj>`). Test projects are `OutputType=Exe`.
 - Test projects are detected by the explicit `IsTestProject=true` property in each
   test csproj, never by name.

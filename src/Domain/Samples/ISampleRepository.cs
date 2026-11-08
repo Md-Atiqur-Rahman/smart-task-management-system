@@ -1,5 +1,5 @@
 // SAMPLE: copy-source, delete or rename
-namespace Contoso.TemplateApp.Domain.Samples;
+namespace Datavanced.SmartTaskManagement.Domain.Samples;
 
 /// <summary>Write repository of the Sample aggregate. Changes are saved by IUnitOfWork.</summary>
 public interface ISampleRepository

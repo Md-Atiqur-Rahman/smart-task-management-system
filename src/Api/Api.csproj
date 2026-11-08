@@ -16,7 +16,7 @@
     <OpenApiGenerateDocumentsOnBuild Condition="'$(GenerateOpenApiDocument)' != 'true'">false</OpenApiGenerateDocumentsOnBuild>
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../docs</OpenApiDocumentsDirectory>
     <OpenApiGenerateDocumentsOptions>--file-name openapi --document-name v1</OpenApiGenerateDocumentsOptions>
-    <UserSecretsId>f330a9f5-d9ee-475b-a875-ae9e8f9d9e8f</UserSecretsId>
+    <UserSecretsId>1f078b06-ed19-4165-9460-6e21f7989c3e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

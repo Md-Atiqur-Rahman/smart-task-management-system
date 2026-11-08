@@ -1,10 +1,10 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Abstractions;
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Commands.DeleteSample;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.DeleteSample;
 
 /// <summary>Soft delete; the time comes from TimeProvider, never DateTime.UtcNow.</summary>
 public sealed class DeleteSampleCommandHandler(

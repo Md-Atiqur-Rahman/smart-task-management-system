@@ -1,9 +1,9 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
 
 /// <summary>Read path: validated query object -> read repository -> PagedResult of DTOs.</summary>
 public sealed class ListSamplesQueryHandler(ISampleReadRepository readRepository)

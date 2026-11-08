@@ -1,13 +1,13 @@
 using System.Reflection;
 
-using Contoso.TemplateApp.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using NetArchTest.Rules;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>Rule 4: controllers stay thin; no repositories, UnitOfWork or DbContext.</summary>
 public sealed class ControllerDependencyTests

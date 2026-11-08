@@ -2,9 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// OpenAPI document and Swagger UI: served in Development only, with the JWT

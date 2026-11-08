@@ -1,8 +1,8 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
 
-namespace Contoso.TemplateApp.Application.Features.Samples;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples;
 
 /// <summary>
 /// Read side: returns DTOs only (no tracking, no aggregates). Declared here,

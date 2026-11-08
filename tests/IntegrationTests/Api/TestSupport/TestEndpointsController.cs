@@ -1,11 +1,11 @@
-using Contoso.TemplateApp.Api.Errors;
-using Contoso.TemplateApp.Application.Abstractions.Security;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api.TestSupport;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 /// <summary>Test-only endpoints, added to the test host only (ApiFactory).</summary>
 [ApiController]

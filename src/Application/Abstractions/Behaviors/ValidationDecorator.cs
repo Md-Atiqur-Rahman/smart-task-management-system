@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using FluentValidation;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Behaviors;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Behaviors;
 
 /// <summary>
 /// Pipeline step: validates the request and returns a ValidationError

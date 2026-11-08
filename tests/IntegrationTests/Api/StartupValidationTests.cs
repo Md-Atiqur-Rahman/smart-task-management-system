@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>Review Focus 5: missing or invalid secrets fail at startup, not at the first request.</summary>
 public sealed class StartupValidationTests

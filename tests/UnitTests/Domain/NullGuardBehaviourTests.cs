@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.WeavingProbe;
+using Datavanced.SmartTaskManagement.WeavingProbe;
 
-namespace Contoso.TemplateApp.UnitTests.Domain;
+namespace Datavanced.SmartTaskManagement.UnitTests.Domain;
 
 /// <summary>
 /// Real-run evidence of how NullGuard treats async, property and generic

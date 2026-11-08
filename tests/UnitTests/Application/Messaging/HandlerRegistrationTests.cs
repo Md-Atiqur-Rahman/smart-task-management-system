@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Application.Configuration.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Configuration.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using FluentValidation;
 
@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Messaging;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Messaging;
 
 public sealed class HandlerRegistrationTests
 {

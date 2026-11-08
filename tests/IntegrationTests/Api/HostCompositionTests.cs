@@ -1,10 +1,10 @@
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// The real Program composes Application and Infrastructure and starts:

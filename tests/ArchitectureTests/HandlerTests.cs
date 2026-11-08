@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>Rules 6 and 7: handler naming/interfaces; query handlers use read repositories only.</summary>
 public sealed class HandlerTests

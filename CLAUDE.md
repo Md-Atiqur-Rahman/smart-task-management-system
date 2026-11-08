@@ -95,5 +95,5 @@ Agents: `architect` (plans changes), `reviewer` (read-only review).
   placeholder check -> naming and TLS checks -> OpenAPI freshness (generated
   twice, compared) -> `docker build`.
 - Quick loop while coding: `dotnet build -c Release`, `dotnet test --solution
-  Contoso.TemplateApp.slnx`.
+  Datavanced.SmartTaskManagement.slnx`.
 - The edit hook fixes whitespace only; run verify for the full style check.

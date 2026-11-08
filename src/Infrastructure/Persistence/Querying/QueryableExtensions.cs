@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
 
-using Contoso.TemplateApp.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Querying;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Querying;
 
 /// <summary>
 /// Reusable search / sort / paging for every read repository. Sorting accepts

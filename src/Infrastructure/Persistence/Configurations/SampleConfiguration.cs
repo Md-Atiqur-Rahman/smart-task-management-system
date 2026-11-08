@@ -1,10 +1,10 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Configurations;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Configurations;
 
 public sealed class SampleConfiguration : IEntityTypeConfiguration<Sample>
 {

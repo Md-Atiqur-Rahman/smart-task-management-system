@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
-namespace Contoso.TemplateApp.Api.Middleware;
+namespace Datavanced.SmartTaskManagement.Api.Middleware;
 
 /// <summary>
 /// The ONLY caller of ISecurityContextSetter: runs once per request, after JWT

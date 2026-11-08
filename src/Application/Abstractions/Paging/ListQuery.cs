@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Application.Abstractions.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 /// <summary>
 /// Base query object for every list endpoint. SortBy is checked against a

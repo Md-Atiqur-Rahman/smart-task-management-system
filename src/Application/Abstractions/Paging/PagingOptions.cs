@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 /// <summary>Paging limits, bound from the "Paging" configuration section and validated on start.</summary>
 public sealed class PagingOptions

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Contoso.TemplateApp.Api.Options;
+namespace Datavanced.SmartTaskManagement.Api.Options;
 
 /// <summary>Fixed-window limit per client IP, bound from "RateLimiting".</summary>
 internal sealed class RateLimitingOptions

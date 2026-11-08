@@ -1,14 +1,14 @@
 using System.Text;
 
-using Contoso.TemplateApp.Api.Middleware;
-using Contoso.TemplateApp.Api.Options;
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Api.Middleware;
+using Datavanced.SmartTaskManagement.Api.Options;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class AuthenticationExtensions
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Contoso.TemplateApp.Api.Options;
+namespace Datavanced.SmartTaskManagement.Api.Options;
 
 /// <summary>
 /// JWT validation settings, bound from "Jwt". The signing key is a secret: it

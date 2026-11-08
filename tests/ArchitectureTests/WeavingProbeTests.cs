@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>tests/WeavingProbe is test support (ADR 0008): no src project may reference it.</summary>
 public sealed class WeavingProbeTests

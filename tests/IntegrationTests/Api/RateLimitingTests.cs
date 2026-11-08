@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>Built-in rate limiting, limits from Options, rejection as ProblemDetails.</summary>
 public sealed class RateLimitingTests

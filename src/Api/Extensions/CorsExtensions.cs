@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Api.Options;
+using Datavanced.SmartTaskManagement.Api.Options;
 
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class CorsExtensions
 {

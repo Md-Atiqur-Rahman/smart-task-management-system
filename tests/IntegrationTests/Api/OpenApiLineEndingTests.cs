@@ -1,13 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-using Contoso.TemplateApp.Api.OpenApi;
+using Datavanced.SmartTaskManagement.Api.OpenApi;
 
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// The OpenAPI document must be byte-identical on Windows and Linux. XML doc

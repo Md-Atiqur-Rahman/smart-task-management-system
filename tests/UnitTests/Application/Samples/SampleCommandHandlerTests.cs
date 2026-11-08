@@ -1,16 +1,16 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Features.Samples.Commands.CompleteSample;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.CreateSample;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.DeleteSample;
-using Contoso.TemplateApp.Domain.Abstractions;
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CompleteSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CreateSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.DeleteSample;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
 using Microsoft.Extensions.Time.Testing;
 
 using NSubstitute;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Samples;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Samples;
 
 public sealed class SampleCommandHandlerTests
 {

@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Api.OpenApi;
+using Datavanced.SmartTaskManagement.Api.OpenApi;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class OpenApiExtensions
 {

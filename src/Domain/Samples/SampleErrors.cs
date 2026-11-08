@@ -1,7 +1,7 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Domain.Samples;
+namespace Datavanced.SmartTaskManagement.Domain.Samples;
 
 /// <summary>Expected failures of the Sample aggregate. Codes are part of the API contract.</summary>
 public static class SampleErrors

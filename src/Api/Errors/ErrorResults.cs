@@ -1,10 +1,10 @@
 using System.Diagnostics;
 
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace Contoso.TemplateApp.Api.Errors;
+namespace Datavanced.SmartTaskManagement.Api.Errors;
 
 /// <summary>
 /// The ONE place where an expected failure becomes HTTP: ErrorType -> status,

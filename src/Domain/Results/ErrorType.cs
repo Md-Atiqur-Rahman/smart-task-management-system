@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Results;
+namespace Datavanced.SmartTaskManagement.Domain.Results;
 
 /// <summary>
 /// Kind of expected failure. The Api maps it to an HTTP status in one place.

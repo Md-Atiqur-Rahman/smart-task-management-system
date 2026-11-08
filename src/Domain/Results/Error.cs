@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Contoso.TemplateApp.Domain.Results;
+namespace Datavanced.SmartTaskManagement.Domain.Results;
 
 /// <summary>An expected failure: machine-readable code, human description, type.</summary>
 [SuppressMessage(

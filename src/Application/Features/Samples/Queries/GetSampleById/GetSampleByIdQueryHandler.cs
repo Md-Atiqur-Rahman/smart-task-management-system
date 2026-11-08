@@ -1,9 +1,9 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Queries.GetSampleById;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.GetSampleById;
 
 /// <summary>Read path: read repository -> DTO. Never loads the aggregate.</summary>
 public sealed class GetSampleByIdQueryHandler(ISampleReadRepository readRepository)

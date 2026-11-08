@@ -1,11 +1,11 @@
 using System.Reflection;
 
-using Contoso.TemplateApp.Application.Abstractions.Behaviors;
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Behaviors;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Contoso.TemplateApp.Application.Configuration.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Configuration.Messaging;
 
 /// <summary>
 /// Registers every concrete handler in an assembly and wraps it in the pipeline:

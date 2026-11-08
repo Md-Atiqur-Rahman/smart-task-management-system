@@ -1,13 +1,13 @@
-using Contoso.TemplateApp.Infrastructure.Configuration.Database;
-using Contoso.TemplateApp.Infrastructure.Persistence;
-using Contoso.TemplateApp.Infrastructure.Persistence.Interceptors;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 
 using Testcontainers.MsSql;
 
-namespace Contoso.TemplateApp.IntegrationTests.Infrastructure;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// One real SQL Server container per test collection. The image comes from

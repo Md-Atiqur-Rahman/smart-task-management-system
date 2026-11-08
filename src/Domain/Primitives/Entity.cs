@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Primitives;
+namespace Datavanced.SmartTaskManagement.Domain.Primitives;
 
 /// <summary>An object with identity. Two entities are equal when their Ids are equal.</summary>
 public abstract class Entity<TId> : IEquatable<Entity<TId>>

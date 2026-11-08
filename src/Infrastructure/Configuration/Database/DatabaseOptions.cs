@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 using Microsoft.Data.SqlClient;
 
-namespace Contoso.TemplateApp.Infrastructure.Configuration.Database;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 
 /// <summary>
 /// SQL Server connection settings, bound from the "Database" section. No secret

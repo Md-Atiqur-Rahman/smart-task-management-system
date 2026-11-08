@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
 /// <summary>
 /// Handles a query. Injects only read repositories; never a write repository,

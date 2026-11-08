@@ -1,10 +1,10 @@
-using Contoso.TemplateApp.Application.Abstractions.Behaviors;
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Behaviors;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using NSubstitute;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Messaging;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Messaging;
 
 public sealed class ValidationDecoratorTests
 {

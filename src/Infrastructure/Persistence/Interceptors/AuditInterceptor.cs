@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Domain.Primitives;
+using Datavanced.SmartTaskManagement.Domain.Primitives;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Interceptors;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Interceptors;
 
 /// <summary>Sets CreatedAt / UpdatedAt from TimeProvider (never DateTime.UtcNow).</summary>
 public sealed class AuditInterceptor(TimeProvider timeProvider) : SaveChangesInterceptor

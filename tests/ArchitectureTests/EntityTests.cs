@@ -1,8 +1,8 @@
 using System.Reflection;
 
-using Contoso.TemplateApp.Domain.Primitives;
+using Datavanced.SmartTaskManagement.Domain.Primitives;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>Rule 8: entities have no public setters (init included); state changes go through methods.</summary>
 public sealed class EntityTests

@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Domain.Abstractions;
+namespace Datavanced.SmartTaskManagement.Domain.Abstractions;
 
 /// <summary>Commits all changes of one use case atomically.</summary>
 public interface IUnitOfWork

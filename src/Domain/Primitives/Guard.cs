@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Contoso.TemplateApp.Domain.Primitives;
+namespace Datavanced.SmartTaskManagement.Domain.Primitives;
 
 /// <summary>
 /// Guard clauses for programmer errors and invariants. They always throw.

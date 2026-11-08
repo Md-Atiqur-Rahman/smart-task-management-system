@@ -1,8 +1,8 @@
 using System.Security.Claims;
 
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Security;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Security;
 
 public sealed class SecurityContextTests
 {

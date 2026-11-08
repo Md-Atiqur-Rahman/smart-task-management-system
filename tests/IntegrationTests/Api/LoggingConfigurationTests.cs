@@ -1,10 +1,10 @@
 using System.Net.Http.Json;
 
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 using Serilog.Events;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// The Serilog minimum levels in appsettings.json take effect: noisy framework

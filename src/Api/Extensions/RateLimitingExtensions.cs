@@ -1,13 +1,13 @@
 using System.Threading.RateLimiting;
 
-using Contoso.TemplateApp.Api.Errors;
-using Contoso.TemplateApp.Api.Options;
+using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Api.Options;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class RateLimitingExtensions
 {

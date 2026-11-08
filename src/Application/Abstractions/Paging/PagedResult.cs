@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Application.Abstractions.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 /// <summary>One page of a list. Returned directly in the response body (no wrapper).</summary>
 public sealed record PagedResult<T>(

@@ -2,7 +2,7 @@ using System.Globalization;
 
 using Serilog;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class LoggingExtensions
 {

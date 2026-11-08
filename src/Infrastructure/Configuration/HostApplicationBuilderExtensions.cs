@@ -1,10 +1,10 @@
-using Contoso.TemplateApp.Infrastructure.Configuration.Database;
-using Contoso.TemplateApp.Infrastructure.Configuration.Security;
-using Contoso.TemplateApp.Infrastructure.Configuration.Time;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Time;
 
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Infrastructure.Configuration;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration;
 
 public static class HostApplicationBuilderExtensions
 {

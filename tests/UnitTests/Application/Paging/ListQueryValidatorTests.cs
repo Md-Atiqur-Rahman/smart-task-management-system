@@ -1,10 +1,10 @@
-using Contoso.TemplateApp.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 using Microsoft.Extensions.Options;
 
-using SortDirection = Contoso.TemplateApp.Application.Abstractions.Paging.SortDirection;
+using SortDirection = Datavanced.SmartTaskManagement.Application.Abstractions.Paging.SortDirection;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Paging;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Paging;
 
 public sealed class ListQueryValidatorTests
 {

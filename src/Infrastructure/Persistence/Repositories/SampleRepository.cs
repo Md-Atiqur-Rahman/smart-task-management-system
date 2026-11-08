@@ -1,9 +1,9 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Repositories;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Repositories;
 
 public sealed class SampleRepository(AppDbContext context) : ISampleRepository
 {

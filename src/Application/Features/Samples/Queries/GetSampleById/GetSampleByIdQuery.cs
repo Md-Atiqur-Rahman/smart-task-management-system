@@ -1,6 +1,6 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Queries.GetSampleById;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.GetSampleById;
 
 public sealed record GetSampleByIdQuery(Guid Id) : IQuery<SampleDto>;

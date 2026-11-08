@@ -5,8 +5,8 @@
     Everything else (assembly names, namespaces) derives from them.
   -->
   <PropertyGroup>
-    <COMPANY_NAME>Contoso</COMPANY_NAME>
-    <PROJECT_NAME>TemplateApp</PROJECT_NAME>
+    <COMPANY_NAME>Datavanced</COMPANY_NAME>
+    <PROJECT_NAME>SmartTaskManagement</PROJECT_NAME>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.Extensions.Logging;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Behaviors;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Behaviors;
 
 /// <summary>
 /// Pipeline step (outermost): logs the request name and the outcome.

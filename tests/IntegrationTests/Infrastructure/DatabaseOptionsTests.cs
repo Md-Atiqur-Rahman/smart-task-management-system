@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 
-namespace Contoso.TemplateApp.IntegrationTests.Infrastructure;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 /// <summary>Encrypt=false is allowed only in Development and Testing.</summary>
 public sealed class DatabaseOptionsTests

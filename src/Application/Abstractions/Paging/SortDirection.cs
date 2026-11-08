@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Application.Abstractions.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 public enum SortDirection
 {

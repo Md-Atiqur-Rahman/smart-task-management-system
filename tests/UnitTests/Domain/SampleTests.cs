@@ -1,8 +1,8 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
-namespace Contoso.TemplateApp.UnitTests.Domain;
+namespace Datavanced.SmartTaskManagement.UnitTests.Domain;
 
 public sealed class SampleTests
 {

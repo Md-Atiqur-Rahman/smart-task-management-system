@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Results;
+namespace Datavanced.SmartTaskManagement.Domain.Results;
 
 /// <summary>Validation failure with messages per field.</summary>
 public sealed record ValidationError(IReadOnlyDictionary<string, string[]> Errors)

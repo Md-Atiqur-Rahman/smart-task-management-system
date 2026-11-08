@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Contoso.TemplateApp.Api.Errors;
+namespace Datavanced.SmartTaskManagement.Api.Errors;
 
 /// <summary>
 /// Last line of defence: every unhandled exception becomes a generic 500

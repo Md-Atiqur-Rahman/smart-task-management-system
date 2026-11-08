@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Api.Extensions;
-using Contoso.TemplateApp.Application.Configuration;
-using Contoso.TemplateApp.Infrastructure.Configuration;
+using Datavanced.SmartTaskManagement.Api.Extensions;
+using Datavanced.SmartTaskManagement.Application.Configuration;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration;
 
 // Composition root. Calls entry points only: no inline service registration.
 var builder = WebApplication.CreateBuilder(args);

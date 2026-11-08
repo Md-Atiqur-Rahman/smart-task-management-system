@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Api.Options;
+namespace Datavanced.SmartTaskManagement.Api.Options;
 
 /// <summary>Allowed browser origins, bound from "Cors". Empty means no cross-origin access.</summary>
 internal sealed class CorsPolicyOptions

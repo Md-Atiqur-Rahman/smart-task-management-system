@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Migrations
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

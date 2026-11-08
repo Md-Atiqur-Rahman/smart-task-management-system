@@ -3,9 +3,9 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Contoso.TemplateApp.IntegrationTests.Api.TestSupport;
+using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>Security context set once from a validated token, and the security baseline, through the real middleware pipeline.</summary>
 public sealed class SecurityTests(ApiFactory factory) : IClassFixture<ApiFactory>

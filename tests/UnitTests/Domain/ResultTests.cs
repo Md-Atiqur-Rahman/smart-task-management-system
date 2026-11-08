@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.UnitTests.Domain;
+namespace Datavanced.SmartTaskManagement.UnitTests.Domain;
 
 public sealed class ResultTests
 {

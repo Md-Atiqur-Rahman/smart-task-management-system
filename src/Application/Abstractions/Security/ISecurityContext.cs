@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Application.Abstractions.Security;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
 /// Read-only identity of the current request. Comes only from the validated

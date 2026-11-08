@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>
 /// Closes the known NullGuard gap (ADR 0008): NullGuard does not check the result

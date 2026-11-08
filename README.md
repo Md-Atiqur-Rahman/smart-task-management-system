@@ -1,4 +1,4 @@
-# Contoso.TemplateApp
+# Datavanced.SmartTaskManagement
 
 ASP.NET Core (.NET 10) Clean Architecture boilerplate with one runnable Sample feature.
 Every rule is enforced by code: build settings, architecture tests and one verify
@@ -156,7 +156,7 @@ docker compose down
 
 ## Tests and checks
 
-- `dotnet test --solution Contoso.TemplateApp.slnx`
+- `dotnet test --solution Datavanced.SmartTaskManagement.slnx`
 - Regenerate the OpenAPI document: `bash scripts/generate-openapi.sh`
 - Verify (Git Bash, Linux, CI): `bash scripts/verify.sh`
 - Verify (Windows): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`

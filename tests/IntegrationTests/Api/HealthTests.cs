@@ -1,8 +1,8 @@
 using System.Net;
 
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>The single /health endpoint, with the database check against real SQL Server.</summary>
 [Collection(SqlServerCollectionDefinition.Name)]

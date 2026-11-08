@@ -1,12 +1,12 @@
 using System.Reflection;
 
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using InfrastructureEntryPoint =
-    Contoso.TemplateApp.Infrastructure.Configuration.HostApplicationBuilderExtensions;
+    Datavanced.SmartTaskManagement.Infrastructure.Configuration.HostApplicationBuilderExtensions;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>Assemblies and root namespaces of the four layers, derived from marker types (no literals).</summary>
 internal static class Layers

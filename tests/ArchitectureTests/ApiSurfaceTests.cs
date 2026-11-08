@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>
 /// Compensating control for the scoped CA1515 exception: the analyzer is off only

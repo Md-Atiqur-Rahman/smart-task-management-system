@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api.TestSupport;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 /// <summary>Creates real HMAC-SHA256 signed JWTs for the test host's Jwt settings.</summary>
 public static class TestTokens

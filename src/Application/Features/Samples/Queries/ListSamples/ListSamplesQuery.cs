@@ -1,8 +1,8 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
 
 public sealed record ListSamplesQuery(
     string? Search,

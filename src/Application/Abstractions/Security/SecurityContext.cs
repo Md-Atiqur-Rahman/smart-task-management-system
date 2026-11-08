@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Security;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
 /// Scoped per request. Registered once and exposed as both

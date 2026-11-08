@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Application.Abstractions.Security;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
 /// The ONLY place claim names are written. JWT inbound claim mapping is turned

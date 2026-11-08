@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
 /// <summary>A state-changing request without a return value. Handled by <see cref="ICommandHandler{TCommand}"/>.</summary>
 [SuppressMessage(

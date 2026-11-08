@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Primitives;
+using Datavanced.SmartTaskManagement.Domain.Primitives;
 
-namespace Contoso.TemplateApp.UnitTests.Domain;
+namespace Datavanced.SmartTaskManagement.UnitTests.Domain;
 
 public sealed class GuardTests
 {

@@ -1,8 +1,8 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Primitives;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Primitives;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Domain.Samples;
+namespace Datavanced.SmartTaskManagement.Domain.Samples;
 
 /// <summary>
 /// Reference aggregate: factory with guard clauses, private setters, a state

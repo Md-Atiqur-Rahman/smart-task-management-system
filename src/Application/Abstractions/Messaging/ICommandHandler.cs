@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
 /// <summary>Handles a command without a return value. Writes go through a repository and IUnitOfWork.</summary>
 public interface ICommandHandler<in TCommand>

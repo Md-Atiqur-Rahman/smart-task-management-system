@@ -1,8 +1,8 @@
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 using Microsoft.AspNetCore.Identity;
 
-namespace Contoso.TemplateApp.Infrastructure.Security;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Security;
 
 /// <summary>IPasswordHasher over ASP.NET Core Identity's PasswordHasher (PBKDF2, salted, versioned).</summary>
 public sealed class PasswordHasherAdapter : IPasswordHasher

@@ -3,7 +3,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Application.Configuration.Validation;
+namespace Datavanced.SmartTaskManagement.Application.Configuration.Validation;
 
 public static class HostApplicationBuilderExtensions
 {

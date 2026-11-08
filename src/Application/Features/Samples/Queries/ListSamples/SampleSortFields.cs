@@ -1,5 +1,5 @@
 // SAMPLE: copy-source, delete or rename
-namespace Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
 
 /// <summary>
 /// The sort WHITELIST: the only values SortBy may take. Infrastructure maps each

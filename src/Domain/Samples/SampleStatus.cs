@@ -1,5 +1,5 @@
 // SAMPLE: copy-source, delete or rename
-namespace Contoso.TemplateApp.Domain.Samples;
+namespace Datavanced.SmartTaskManagement.Domain.Samples;
 
 public enum SampleStatus
 {

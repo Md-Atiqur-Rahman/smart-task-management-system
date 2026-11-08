@@ -1,8 +1,8 @@
-using Contoso.TemplateApp.Domain.Primitives;
+using Datavanced.SmartTaskManagement.Domain.Primitives;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.Configurations;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Configurations;
 
 /// <summary>Shared mapping for every auditable aggregate: audit fields, soft delete filter, RowVersion.</summary>
 internal static class AuditableConfiguration

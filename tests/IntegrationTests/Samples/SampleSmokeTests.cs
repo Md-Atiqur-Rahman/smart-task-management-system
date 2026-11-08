@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
-using static Contoso.TemplateApp.IntegrationTests.Samples.SampleApi;
+using static Datavanced.SmartTaskManagement.IntegrationTests.Samples.SampleApi;
 
-namespace Contoso.TemplateApp.IntegrationTests.Samples;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 
 /// <summary>
 /// The documented Sample flow end to end (docs/sample-flow.md): every endpoint and the

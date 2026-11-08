@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 
 /// <summary>Applies pending migrations at startup. Registered in Development ONLY.</summary>
 public sealed class DevelopmentMigrationService(IServiceScopeFactory scopeFactory) : IHostedService

@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Primitives;
+namespace Datavanced.SmartTaskManagement.Domain.Primitives;
 
 /// <summary>
 /// Consistency boundary. Has exactly one write repository. Other aggregates

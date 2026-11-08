@@ -1,12 +1,12 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
-using Contoso.TemplateApp.Infrastructure.Persistence;
-using Contoso.TemplateApp.Infrastructure.Persistence.Repositories;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.IntegrationTests.Infrastructure;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 /// <summary>Persistence base against a real SQL Server: audit fields, soft-delete filter, optimistic concurrency.</summary>
 [Collection(SqlServerCollectionDefinition.Name)]

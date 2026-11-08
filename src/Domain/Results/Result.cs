@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Results;
+namespace Datavanced.SmartTaskManagement.Domain.Results;
 
 /// <summary>Outcome of an operation that can fail in an expected way.</summary>
 public class Result

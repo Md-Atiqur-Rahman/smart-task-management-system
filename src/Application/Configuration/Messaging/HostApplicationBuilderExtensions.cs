@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Application.Configuration.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Configuration.Messaging;
 
 public static class HostApplicationBuilderExtensions
 {

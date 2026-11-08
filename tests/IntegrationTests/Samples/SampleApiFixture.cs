@@ -1,10 +1,10 @@
 // SAMPLE: copy-source, delete or rename
 using System.Net.Http.Json;
 
-using Contoso.TemplateApp.IntegrationTests.Api;
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.IntegrationTests.Api;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
-namespace Contoso.TemplateApp.IntegrationTests.Samples;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 
 /// <summary>Real host + real SQL Server for the Sample endpoint tests.</summary>
 public sealed class SampleApi : IDisposable

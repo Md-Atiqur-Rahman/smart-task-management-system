@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Application.Configuration.Paging;
+namespace Datavanced.SmartTaskManagement.Application.Configuration.Paging;
 
 public static class HostApplicationBuilderExtensions
 {

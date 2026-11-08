@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Contoso.TemplateApp.Application.Abstractions.Messaging;
+namespace Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 
 /// <summary>A read-only request returning <typeparamref name="TResponse"/>. Never changes state.</summary>
 [SuppressMessage(

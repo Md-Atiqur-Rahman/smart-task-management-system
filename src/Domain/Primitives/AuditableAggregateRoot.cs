@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Contoso.TemplateApp.Domain.Primitives;
+namespace Datavanced.SmartTaskManagement.Domain.Primitives;
 
 /// <summary>
 /// Aggregate root with audit fields, soft delete and optimistic concurrency.

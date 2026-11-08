@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Infrastructure.Configuration.Database;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 
 /// <summary>Rejects an unencrypted database connection outside Development and Testing.</summary>
 public sealed class DatabaseOptionsValidator(IHostEnvironment environment)

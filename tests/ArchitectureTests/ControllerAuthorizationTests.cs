@@ -1,11 +1,11 @@
 using System.Reflection;
 
-using Contoso.TemplateApp.Api.Controllers.Samples;
+using Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>
 /// Rule 5: every controller action declares [Authorize] or [AllowAnonymous]

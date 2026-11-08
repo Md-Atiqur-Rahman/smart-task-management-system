@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Infrastructure.Configuration.Time;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Time;
 
 public static class HostApplicationBuilderExtensions
 {

@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Application.Configuration.Security;
+namespace Datavanced.SmartTaskManagement.Application.Configuration.Security;
 
 public static class HostApplicationBuilderExtensions
 {

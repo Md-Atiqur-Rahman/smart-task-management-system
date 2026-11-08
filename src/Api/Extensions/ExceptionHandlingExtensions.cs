@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Api.Errors;
+using Datavanced.SmartTaskManagement.Api.Errors;
 
-namespace Contoso.TemplateApp.Api.Extensions;
+namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
 internal static class ExceptionHandlingExtensions
 {

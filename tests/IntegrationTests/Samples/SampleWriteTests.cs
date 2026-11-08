@@ -3,20 +3,20 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.CompleteSample;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.DeleteSample;
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.Domain.Samples;
-using Contoso.TemplateApp.Infrastructure.Persistence;
-using Contoso.TemplateApp.IntegrationTests.Infrastructure;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CompleteSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.DeleteSample;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Samples;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
+using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using static Contoso.TemplateApp.IntegrationTests.Samples.SampleApi;
+using static Datavanced.SmartTaskManagement.IntegrationTests.Samples.SampleApi;
 
-namespace Contoso.TemplateApp.IntegrationTests.Samples;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 
 /// <summary>POST, complete and DELETE through HTTP against real SQL Server.</summary>
 [Collection(SqlServerCollectionDefinition.Name)]

@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 
 using TestResult = NetArchTest.Rules.TestResult;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>Rules 1-3: dependency rule, no persistence inside, UnitTests isolation.</summary>
 public sealed class LayerTests

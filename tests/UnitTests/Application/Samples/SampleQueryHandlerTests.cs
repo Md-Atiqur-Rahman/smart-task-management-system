@@ -1,17 +1,17 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Application.Features.Samples;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.GetSampleById;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Features.Samples;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.GetSampleById;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
 
-using SortDirection = Contoso.TemplateApp.Application.Abstractions.Paging.SortDirection;
+using SortDirection = Datavanced.SmartTaskManagement.Application.Abstractions.Paging.SortDirection;
 
-namespace Contoso.TemplateApp.UnitTests.Application.Samples;
+namespace Datavanced.SmartTaskManagement.UnitTests.Application.Samples;
 
 public sealed class SampleQueryHandlerTests
 {

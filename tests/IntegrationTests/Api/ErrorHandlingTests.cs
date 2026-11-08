@@ -2,12 +2,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Contoso.TemplateApp.Domain.Results;
-using Contoso.TemplateApp.IntegrationTests.Api.TestSupport;
+using Datavanced.SmartTaskManagement.Domain.Results;
+using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 using Serilog.Events;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>One ErrorType -> status mapping, ProblemDetails with errorCode, generic 500 for unhandled exceptions.</summary>
 public sealed class ErrorHandlingTests(ApiFactory factory) : IClassFixture<ApiFactory>

@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.WeavingProbe;
+namespace Datavanced.SmartTaskManagement.WeavingProbe;
 
 /// <summary>
 /// Members woven by NullGuard (Mode=NullableReferenceTypes,

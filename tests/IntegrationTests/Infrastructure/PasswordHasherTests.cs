@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Infrastructure.Security;
+using Datavanced.SmartTaskManagement.Infrastructure.Security;
 
-namespace Contoso.TemplateApp.IntegrationTests.Infrastructure;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 /// <summary>IPasswordHasher adapter over ASP.NET Core Identity's PasswordHasher.</summary>
 public sealed class PasswordHasherTests

@@ -1,15 +1,15 @@
 // SAMPLE: copy-source, delete or rename
 using System.Linq.Expressions;
 
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Application.Features.Samples;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
-using Contoso.TemplateApp.Domain.Samples;
-using Contoso.TemplateApp.Infrastructure.Persistence.Querying;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Features.Samples;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
+using Datavanced.SmartTaskManagement.Domain.Samples;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Querying;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence.ReadRepositories;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.ReadRepositories;
 
 /// <summary>AsNoTracking + hand-written Select projection straight to SampleDto.</summary>
 public sealed class SampleReadRepository(AppDbContext context) : ISampleReadRepository

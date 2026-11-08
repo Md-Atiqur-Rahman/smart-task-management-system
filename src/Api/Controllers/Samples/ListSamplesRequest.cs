@@ -1,9 +1,9 @@
 // SAMPLE: copy-source, delete or rename
 using System.ComponentModel.DataAnnotations;
 
-using Contoso.TemplateApp.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 
-namespace Contoso.TemplateApp.Api.Controllers.Samples;
+namespace Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 /// <summary>
 /// Query string of GET /api/samples. SortBy keeps an empty value ("sortBy=") so

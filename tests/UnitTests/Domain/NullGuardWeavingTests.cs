@@ -1,6 +1,6 @@
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
-namespace Contoso.TemplateApp.UnitTests.Domain;
+namespace Datavanced.SmartTaskManagement.UnitTests.Domain;
 
 /// <summary>
 /// Proves that NullGuard actually wove the Domain assembly: Error has no

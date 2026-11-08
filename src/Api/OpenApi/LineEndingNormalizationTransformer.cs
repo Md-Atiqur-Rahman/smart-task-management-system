@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace Contoso.TemplateApp.Api.OpenApi;
+namespace Datavanced.SmartTaskManagement.Api.OpenApi;
 
 /// <summary>
 /// Makes the OpenAPI document identical on every operating system: every string

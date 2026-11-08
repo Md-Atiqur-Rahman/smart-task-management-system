@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 using NetArchTest.Rules;
 
-namespace Contoso.TemplateApp.ArchitectureTests;
+namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>
 /// Rules 9 and 10: the DI style is decided by the project

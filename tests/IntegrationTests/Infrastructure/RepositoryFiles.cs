@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.IntegrationTests.Infrastructure;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 /// <summary>Reads repository files so tests share one source of truth with Compose.</summary>
 internal static class RepositoryFiles

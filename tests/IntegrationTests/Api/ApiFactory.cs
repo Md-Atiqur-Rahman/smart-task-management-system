@@ -1,5 +1,5 @@
-using Contoso.TemplateApp.Infrastructure.Configuration.Database;
-using Contoso.TemplateApp.IntegrationTests.Api.TestSupport;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Serilog.Core;
 
-namespace Contoso.TemplateApp.IntegrationTests.Api;
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Api;
 
 /// <summary>
 /// The real Program in the "Testing" environment with test-only configuration.

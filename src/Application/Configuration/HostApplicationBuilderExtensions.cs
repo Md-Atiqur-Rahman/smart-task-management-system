@@ -1,11 +1,11 @@
-using Contoso.TemplateApp.Application.Configuration.Messaging;
-using Contoso.TemplateApp.Application.Configuration.Paging;
-using Contoso.TemplateApp.Application.Configuration.Security;
-using Contoso.TemplateApp.Application.Configuration.Validation;
+using Datavanced.SmartTaskManagement.Application.Configuration.Messaging;
+using Datavanced.SmartTaskManagement.Application.Configuration.Paging;
+using Datavanced.SmartTaskManagement.Application.Configuration.Security;
+using Datavanced.SmartTaskManagement.Application.Configuration.Validation;
 
 using Microsoft.Extensions.Hosting;
 
-namespace Contoso.TemplateApp.Application.Configuration;
+namespace Datavanced.SmartTaskManagement.Application.Configuration;
 
 public static class HostApplicationBuilderExtensions
 {

@@ -1,9 +1,9 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Domain.Samples;
+using Datavanced.SmartTaskManagement.Domain.Samples;
 
 using FluentValidation;
 
-namespace Contoso.TemplateApp.Application.Features.Samples.Commands.CreateSample;
+namespace Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CreateSample;
 
 public sealed class CreateSampleCommandValidator : AbstractValidator<CreateSampleCommand>
 {

@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Exceptions;
+namespace Datavanced.SmartTaskManagement.Domain.Exceptions;
 
 /// <summary>
 /// Base for unexpected or invariant failures. Concrete exceptions are sealed.

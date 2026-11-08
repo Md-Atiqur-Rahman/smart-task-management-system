@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace Contoso.TemplateApp.Api.OpenApi;
+namespace Datavanced.SmartTaskManagement.Api.OpenApi;
 
 /// <summary>
 /// Adds the JWT Bearer security scheme to the OpenAPI document, which makes

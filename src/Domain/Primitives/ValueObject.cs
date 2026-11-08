@@ -1,4 +1,4 @@
-namespace Contoso.TemplateApp.Domain.Primitives;
+namespace Datavanced.SmartTaskManagement.Domain.Primitives;
 
 /// <summary>An immutable object without identity, equal when all components are equal.</summary>
 public abstract class ValueObject : IEquatable<ValueObject>

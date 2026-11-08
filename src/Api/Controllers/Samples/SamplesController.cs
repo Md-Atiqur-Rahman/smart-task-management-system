@@ -1,19 +1,19 @@
 // SAMPLE: copy-source, delete or rename
-using Contoso.TemplateApp.Api.Errors;
-using Contoso.TemplateApp.Application.Abstractions.Messaging;
-using Contoso.TemplateApp.Application.Abstractions.Paging;
-using Contoso.TemplateApp.Application.Features.Samples;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.CompleteSample;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.CreateSample;
-using Contoso.TemplateApp.Application.Features.Samples.Commands.DeleteSample;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.GetSampleById;
-using Contoso.TemplateApp.Application.Features.Samples.Queries.ListSamples;
+using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
+using Datavanced.SmartTaskManagement.Application.Features.Samples;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CompleteSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.CreateSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Commands.DeleteSample;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.GetSampleById;
+using Datavanced.SmartTaskManagement.Application.Features.Samples.Queries.ListSamples;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Contoso.TemplateApp.Api.Controllers.Samples;
+namespace Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 /// <summary>
 /// Thin controller: binds the request, calls a handler, maps the Result.

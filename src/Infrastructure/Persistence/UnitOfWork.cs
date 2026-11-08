@@ -1,9 +1,9 @@
-using Contoso.TemplateApp.Domain.Abstractions;
-using Contoso.TemplateApp.Domain.Results;
+using Datavanced.SmartTaskManagement.Domain.Abstractions;
+using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.TemplateApp.Infrastructure.Persistence;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 
 /// <summary>Saves the DbContext; a stale RowVersion becomes an expected Conflict.</summary>
 public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
