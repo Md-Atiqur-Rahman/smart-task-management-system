@@ -1,0 +1,157 @@
+# Sample flow
+
+The `Sample` feature is a working demo and the copy-source for every new feature.
+Every Sample file starts with `// SAMPLE: copy-source, delete or rename`.
+
+## Endpoints
+
+| Endpoint | Shows | Success | Failure |
+| --- | --- | --- | --- |
+| `POST /api/samples` | Command, validator, aggregate `Create`, UnitOfWork | 201 + `Location` + `{ "id" }` | 400 with `errors` |
+| `GET /api/samples` | Query, read repository, search, sort whitelist, paging | 200 `PagedResult<SampleDto>` | 400 for bad sort, page or page size |
+| `GET /api/samples/{id}` | Read repository, DTO projection | 200 `SampleDto` | 404 |
+| `POST /api/samples/{id}/complete` | Domain state change returning `Result` | 204 | 404; 409 if already completed or changed concurrently |
+| `DELETE /api/samples/{id}` | Soft delete | 204 | 404; 409 if changed concurrently |
+
+All endpoints are `[AllowAnonymous]` with `// SAMPLE ONLY: replace with [Authorize] in Phase 2`.
+Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
+400 responses also carry an `errors` map (field -> messages).
+
+## (a) Request path of a command
+
+`POST /api/samples/{id}/complete`:
+
+1. `SamplesController.Complete` (Api) binds the route id and calls the handler.
+2. `CompleteSampleCommand` (Application) is passed to `ICommandHandler<CompleteSampleCommand>`.
+3. Pipeline (Application, registered by `HandlerRegistration`):
+   `LoggingDecorator` -> `ValidationDecorator` (FluentValidation; invalid -> 400, handler not called).
+4. `CompleteSampleCommandHandler` (Application) loads the aggregate through
+   `ISampleRepository` (Domain interface), calls `Sample.Complete()` (returns `Result`),
+   then `IUnitOfWork.SaveChangesAsync`.
+5. `SampleRepository` and `UnitOfWork` (Infrastructure) use `AppDbContext`; the
+   `AuditInterceptor` stamps `UpdatedAt` from `TimeProvider`; a stale `RowVersion`
+   becomes a `Conflict` result.
+6. The controller maps the `Result`: success -> 204, failure -> `ErrorResults.ToProblem` (the one mapping place).
+
+## (b) Request path of a query
+
+`GET /api/samples?search=...&sortBy=name&page=1&pageSize=20`:
+
+1. `SamplesController.List` (Api) binds `ListSamplesRequest` and builds `ListSamplesQuery`
+   (page size defaults to `Paging:DefaultPageSize`).
+2. Pipeline: Logging -> Validation (`ListSamplesQueryValidator`: page >= 1,
+   1 <= pageSize <= `Paging:MaxPageSize`, defined direction, `SortBy` only from
+   `SampleSortFields`).
+3. `ListSamplesQueryHandler` (Application) calls `ISampleReadRepository` (Application interface).
+4. `SampleReadRepository` (Infrastructure): `ApplySearch` (parameterized; `%`, `_`, `[`
+   match literally) -> `ApplySort` (whitelist map, stable tie-breaker) ->
+   `ToPagedResultAsync` (AsNoTracking, hand-written `Select` to `SampleDto`).
+5. The controller returns 200 with the `PagedResult<SampleDto>` (no wrapper).
+
+## (c) Which file lives where
+
+| Step | Layer | File |
+| --- | --- | --- |
+| Aggregate, errors, write repository interface | Domain | `src/Domain/Samples/{Sample,SampleStatus,SampleErrors,ISampleRepository}.cs` |
+| Commands (command, handler, validator) | Application | `src/Application/Features/Samples/Commands/{CreateSample,CompleteSample,DeleteSample}/` |
+| Queries (query, handler, validator, sort whitelist) | Application | `src/Application/Features/Samples/Queries/{GetSampleById,ListSamples}/` |
+| DTO and read repository interface | Application | `src/Application/Features/Samples/{SampleDto,ISampleReadRepository}.cs` |
+| EF mapping | Infrastructure | `src/Infrastructure/Persistence/Configurations/SampleConfiguration.cs` |
+| Write repository | Infrastructure | `src/Infrastructure/Persistence/Repositories/SampleRepository.cs` |
+| Read repository | Infrastructure | `src/Infrastructure/Persistence/ReadRepositories/SampleReadRepository.cs` |
+| DI registration | Infrastructure | `src/Infrastructure/Configuration/Database/HostApplicationBuilderExtensions.cs` |
+| Migration | Infrastructure | `src/Infrastructure/Persistence/Migrations/*_InitialCreate*.cs` |
+| Controller, request/response | Api | `src/Api/Controllers/Samples/` |
+| Unit tests | UnitTests | `tests/UnitTests/Domain/SampleTests.cs`, `tests/UnitTests/Application/Samples/` |
+| Integration and smoke tests | IntegrationTests | `tests/IntegrationTests/Samples/` |
+
+## (d) Add a new feature by copying Sample
+
+1. Domain: copy `src/Domain/Samples/` to `src/Domain/<Module>/`, rename `Sample` to the
+   aggregate; keep `Create(...)`, guard clauses, private setters, `Result`-returning
+   state changes, `<Module>Errors` with stable codes.
+2. Application: copy `Features/Samples/` to `Features/<Module>/`; one folder per use case
+   (command or query, handler, validator together). Define the sort whitelist.
+3. Infrastructure: copy the configuration, write repository and read repository;
+   register both repositories in `ConfigureDatabase`.
+4. Migration: `dotnet tool restore`, then
+   `Database__Name=design-time Database__Password=design-time dotnet ef migrations add <Name> --project src/Infrastructure --startup-project src/Api --output-dir Persistence/Migrations`.
+5. Api: copy `Controllers/Samples/`; every action needs `[Authorize]` (new features are
+   NOT anonymous; `[AllowAnonymous]` outside `Samples` fails an architecture test) and
+   `[ProducesResponseType]` for every status.
+6. Tests: copy the unit, integration and smoke tests and adapt.
+7. Regenerate and commit `docs/openapi.json`: `bash scripts/generate-openapi.sh`.
+8. Run `scripts/verify`.
+
+## (e) Run and test from Swagger
+
+1. `cp .env.example .env` (git-ignored; used by Docker Compose).
+2. `docker compose up -d db` (SQL Server on `127.0.0.1:1433` only).
+3. Copy the secrets into user-secrets once (the API does not read `.env`).
+   Git Bash, from the repo root:
+
+   ```bash
+   set -a; . ./.env; set +a; for kv in "Database:Name=$DB_NAME" "Database:Password=$DB_PASSWORD" "Jwt:SigningKey=$JWT_SIGNING_KEY"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
+   ```
+
+   PowerShell, from the repo root:
+
+   ```powershell
+   $e=@{}; Get-Content .env | ? { $_ -match '^\w+=' } | % { $k,$v = $_ -split '=',2; $e[$k]=$v }; dotnet user-secrets set Database:Name $e.DB_NAME --project src/Api; dotnet user-secrets set Database:Password $e.DB_PASSWORD --project src/Api; dotnet user-secrets set Jwt:SigningKey $e.JWT_SIGNING_KEY --project src/Api
+   ```
+
+   Keys: `Database:Name`, `Database:Password`, `Jwt:SigningKey`. As environment
+   variables they are `Database__Name`, `Database__Password`, `Jwt__SigningKey`.
+   If you change `DB_PORT`, also set `Database:Port`.
+4. `dotnet run --project src/Api --launch-profile http` (Development: the initial
+   migration applies automatically).
+5. Open `http://localhost:5199/swagger` (Development only):
+   1. `POST /api/samples` with `{ "name": "first" }` -> 201, copy the `id`.
+   2. `POST /api/samples` with `{ "name": "" }` -> 400 with `errors.Name`.
+   3. `GET /api/samples?page=1&pageSize=5&sortBy=name` -> 200.
+   4. `GET /api/samples?sortBy=password` -> 400.
+   5. `GET /api/samples/{id}` -> 200; with a random GUID -> 404.
+   6. `POST /api/samples/{id}/complete` -> 204; again -> 409.
+   7. `DELETE /api/samples/{id}` -> 204; again -> 404.
+   The "Authorize" button accepts a JWT (Phase 2 issues tokens).
+
+## Phase 2 checklist (authentication)
+
+Phase 2 of the template adds authentication; it is the only Phase 2 item (see
+the Roadmap in `README.md`). Feature modules are added by copying Sample.
+
+1. Replace every `[AllowAnonymous]` that carries
+   `// SAMPLE ONLY: replace with [Authorize] in Phase 2` with `[Authorize]`
+   (or a named policy). Search for the marker text.
+2. Keep architecture test 5: once no anonymous controller remains, also remove
+   the Sample exemption so `[AllowAnonymous]` is allowed nowhere unless a new,
+   reviewed exception is added.
+3. Add the Bearer security requirement per protected operation: register an
+   operation transformer like `AuthOperationTransformer` from
+   https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/customize-openapi?view=aspnetcore-10.0
+   next to `BearerSecuritySchemeTransformer` (which already declares the scheme).
+   Operations with `[AllowAnonymous]` get no requirement.
+4. Add tests: no token -> 401, valid token -> success, wrong role -> 403
+   (ProblemDetails with `errorCode`).
+5. Regenerate and commit `docs/openapi.json` (`bash scripts/generate-openapi.sh`);
+   `scripts/verify` fails until you do.
+6. Update this document's Swagger steps: use the "Authorize" button with a token
+   from the Phase 2 login endpoint.
+
+## Remove Sample
+
+1. Delete the Sample files (search for `// SAMPLE: copy-source, delete or rename`):
+   `src/Domain/Samples/`, `src/Application/Features/Samples/`,
+   `src/Infrastructure/Persistence/Configurations/SampleConfiguration.cs`,
+   `src/Infrastructure/Persistence/Repositories/SampleRepository.cs`,
+   `src/Infrastructure/Persistence/ReadRepositories/SampleReadRepository.cs`,
+   `src/Api/Controllers/Samples/`, `tests/UnitTests/Domain/SampleTests.cs`,
+   `tests/UnitTests/Application/Samples/`, `tests/IntegrationTests/Samples/`,
+   and the Sample-based tests in `tests/IntegrationTests/Infrastructure/PersistenceTests.cs`.
+2. Remove the two Sample repository registrations in `ConfigureDatabase`.
+3. Delete `src/Infrastructure/Persistence/Migrations/` and recreate the initial
+   migration for the remaining model (command in step 4 above).
+4. Remove the Sample exemption from architecture test 5 only when no anonymous
+   endpoint remains.
+5. Regenerate and commit `docs/openapi.json` (`bash scripts/generate-openapi.sh`).
+6. Run `scripts/verify`.

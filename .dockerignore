@@ -1,0 +1,24 @@
+# Build outputs
+**/bin/
+**/obj/
+**/TestResults/
+
+# Secrets and local settings: never sent to the build context
+.env
+.env.*
+**/secrets.json
+**/*.pfx
+**/*.user
+CLAUDE.local.md
+
+# Not needed to build the Api image
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+.claude/
+docs/
+scripts/
+tests/
+**/*.md

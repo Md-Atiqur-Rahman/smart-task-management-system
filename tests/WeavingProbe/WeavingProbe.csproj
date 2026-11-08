@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NOT a test project: it is woven with the shared FodyWeavers.xml exactly like
+    the src projects. It holds probe members that prove NullGuard behaviour
+    (async, nullable property, generic T?) without adding test-only code to src.
+    Referenced only by UnitTests.
+  -->
+
+</Project>

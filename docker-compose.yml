@@ -1,0 +1,46 @@
+# LOCAL DEVELOPMENT ONLY - not for production.
+# The api container runs with ASPNETCORE_ENVIRONMENT=Development because the
+# local SQL Server has no trusted certificate and Database:Encrypt=false is
+# rejected in every other environment (ADR 0011).
+#
+# All names come from .env (copy .env.example). Required variables fail fast
+# (${VAR:?message}). No literal project or company name. Ports bind to 127.0.0.1.
+name: ${PROJECT_NAME:?PROJECT_NAME is required}
+
+services:
+  db:
+    image: ${SQLSERVER_IMAGE:?SQLSERVER_IMAGE is required}
+    container_name: ${IMAGE_NAME:?IMAGE_NAME is required}-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      # Loopback only: the database is never reachable from other machines.
+      - "127.0.0.1:${DB_PORT:?DB_PORT is required}:1433"
+    volumes:
+      - db-data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      args:
+        APP_ASSEMBLY: ${APP_ASSEMBLY:?APP_ASSEMBLY is required}
+    image: ${IMAGE_NAME:?IMAGE_NAME is required}:local
+    container_name: ${IMAGE_NAME:?IMAGE_NAME is required}-api
+    depends_on:
+      - db
+    # The dev-only migration fails while SQL Server is still starting; retry.
+    restart: on-failure
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__Host: db
+      Database__Port: "1433"
+      Database__Name: ${DB_NAME:?DB_NAME is required}
+      Database__Password: ${DB_PASSWORD:?DB_PASSWORD is required}
+      Database__Encrypt: "false"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
+    ports:
+      - "127.0.0.1:${API_PORT:?API_PORT is required}:8080"
+
+volumes:
+  db-data:

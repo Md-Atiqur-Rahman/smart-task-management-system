@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The ONLY Fody configuration. Shared by all woven (src) projects.
+  Mode=NullableReferenceTypes: `?` annotations decide what may be null.
+  Mode=Implicit was rejected: it ignored `?` (14/17 tests, see ADR 0008).
+-->
+<Weavers>
+  <NullGuard Mode="NullableReferenceTypes" />
+</Weavers>

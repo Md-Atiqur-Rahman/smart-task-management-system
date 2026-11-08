@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!--
+    Build-time OpenAPI document (Microsoft.Extensions.ApiDescription.Server).
+    OFF on normal builds: the generator launches the app's entry point. Only
+    scripts/verify (and the documented regenerate command) turn it on with
+    -p:GenerateOpenApiDocument=true, supplying the .env.example placeholders as
+    environment variables. Output: docs/openapi.json.
+  -->
+  <PropertyGroup>
+    <OpenApiGenerateDocumentsOnBuild Condition="'$(GenerateOpenApiDocument)' != 'true'">false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../docs</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name openapi --document-name v1</OpenApiGenerateDocumentsOptions>
+    <UserSecretsId>f330a9f5-d9ee-475b-a875-ae9e8f9d9e8f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(COMPANY_NAME).$(PROJECT_NAME).IntegrationTests" />
+    <InternalsVisibleTo Include="$(COMPANY_NAME).$(PROJECT_NAME).ArchitectureTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Design-time only: dotnet-ef needs it in the startup project (migrations). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,52 @@
+# CI runs ONE check: scripts/verify.sh. This file holds no check logic of its own,
+# no image or project name, and pushes nothing to any registry.
+# Action versions from the official READMEs (checked 2026-11-08):
+#   https://github.com/actions/checkout         (README usage: actions/checkout@v7)
+#   https://github.com/actions/setup-dotnet     (README usage: actions/setup-dotnet@v6)
+#   https://github.com/actions/upload-artifact  (README usage: actions/upload-artifact@v7)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Makes the runner OS visible in the log, so a change of the
+      # ubuntu-latest image is easy to spot. Diagnostic only, no checks.
+      - name: Runner OS
+        run: cat /etc/os-release
+
+      # SDK version comes from global.json. No NuGet cache: it requires lock files,
+      # which this repository does not use.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Verify
+        run: bash scripts/verify.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/
+          if-no-files-found: warn
+          retention-days: 14

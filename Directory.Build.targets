@@ -1,0 +1,40 @@
+<Project>
+
+  <!--
+    Imported after the project body, so properties set in a csproj are visible here.
+    IsTestProject is set explicitly in each test csproj: it is NOT available during
+    Directory.Build.props evaluation, and xunit.v3 on Microsoft.Testing.Platform does
+    not set it.
+  -->
+
+  <!--
+    CA1707 (identifiers should not contain underscores) is disabled for test
+    projects only: test names follow Method_Condition_ExpectedResult.
+    Production code stays checked.
+    CA1515 (consider making public types internal) is disabled for test projects
+    only: xUnit requires public test classes (xUnit1000) and public collection
+    definitions (xUnit1027), and fixtures injected into a public test constructor
+    must then be public too (C# accessibility). Proven by a real build.
+  -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <NoWarn>$(NoWarn);CA1707;CA1515</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    NullGuard weaving: src projects only. Test projects are not woven.
+    WeaverConfiguration (highest Fody precedence) feeds the single root
+    FodyWeavers.xml to every project. Without it, building one project outside
+    the solution makes Fody fail and create a per-project FodyWeavers.xml.
+  -->
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true'">
+    <WeaverConfiguration>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)FodyWeavers.xml'))</WeaverConfiguration>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+    <PackageReference Include="Fody" PrivateAssets="all" />
+    <PackageReference Include="NullGuard.Fody" PrivateAssets="all" />
+    <Compile Include="$(MSBuildThisFileDirectory)src/SharedAssemblyInfo.cs"
+             Link="Properties/SharedAssemblyInfo.cs" />
+  </ItemGroup>
+
+</Project>
