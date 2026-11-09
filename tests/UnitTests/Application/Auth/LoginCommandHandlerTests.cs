@@ -1,4 +1,5 @@
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Auth;
 using Datavanced.SmartTaskManagement.Application.Features.Auth.Commands.Login;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
@@ -33,6 +34,7 @@ public sealed class LoginCommandHandlerTests
 
         result.Error.ShouldBe(AuthErrors.InvalidCredentials);
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await AssertNothingIssuedAsync();
     }
 
     [Fact]
@@ -41,7 +43,8 @@ public sealed class LoginCommandHandlerTests
         var result = await CreateHandler().Handle(new LoginCommand("nobody@x.com", "whatever"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidCredentials);
-        _hasher.Received(1).Verify(Arg.Any<string>(), "whatever");
+        _hasher.Received(1).Verify("dummy-hash", "whatever");
+        await AssertNothingIssuedAsync();
     }
 
     [Fact]
@@ -74,8 +77,28 @@ public sealed class LoginCommandHandlerTests
         result.IsSuccess.ShouldBeTrue();
     }
 
+    [Fact]
+    public async Task Login_SaveFails_ReturnsErrorAndDoesNotPublish()
+    {
+        ExistingUser();
+        _hasher.Verify("stored-hash", "Passw0rdOk").Returns(true);
+        var failure = Error.Conflict("concurrency.conflict", "stale");
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Result.Failure(failure));
+
+        var result = await CreateHandler().Handle(new LoginCommand("a@x.com", "Passw0rdOk"), CancellationToken.None);
+
+        result.Error.ShouldBe(failure);
+        await _auth.VersionStore.DidNotReceive().SetIfHigherAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    private async Task AssertNothingIssuedAsync()
+    {
+        _auth.RefreshTokens.DidNotReceive().Add(Arg.Any<RefreshToken>());
+        await _auth.VersionStore.DidNotReceive().SetIfHigherAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
     private LoginCommandHandler CreateHandler() =>
-        new(_users, _unitOfWork, _hasher, _auth.Issuer);
+        new(_users, _unitOfWork, _hasher, _auth.Issuer, new DummyPasswordHash(_hasher));
 
     private User ExistingUser(int roleChanges = 0)
     {

@@ -1,4 +1,3 @@
-using Datavanced.SmartTaskManagement.Application.Features.Auth.Commands.RegisterUser;
 using Datavanced.SmartTaskManagement.Domain.Users;
 
 using FluentValidation;
@@ -10,7 +9,7 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
     public LoginCommandValidator()
     {
-        RuleFor(c => c.Email).NotEmpty().MaximumLength(Email.MaxLength).Must(RegisterUserCommandValidator.BeValidEmail)
+        RuleFor(c => c.Email).NotEmpty().MaximumLength(Email.MaxLength).Must(AuthValidationRules.IsValidEmail)
             .WithMessage("'{PropertyName}' must be a valid email address.");
         RuleFor(c => c.Password).NotEmpty().MaximumLength(PasswordRules.MaxLength);
     }

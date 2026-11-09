@@ -11,20 +11,16 @@ internal sealed class LoginCommandHandler(
     IUserRepository users,
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
-    AuthSessionIssuer sessionIssuer)
+    AuthSessionIssuer sessionIssuer,
+    DummyPasswordHash dummyPasswordHash)
     : ICommandHandler<LoginCommand, AuthTokens>
 {
-    // Hash of a random throwaway password, created once per process on first use (by the hasher
-    // of the first request). An unknown email then costs one hash verification, like a wrong
-    // password, so response time does not reveal which emails exist. Benign race: every value is equivalent.
-    private static string? s_dummyHash;
-
     public async Task<Result<AuthTokens>> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
         var user = await users.GetByEmailAsync(Email.Create(command.Email), cancellationToken);
         if (user is null)
         {
-            passwordHasher.Verify(GetDummyHash(), command.Password);
+            passwordHasher.Verify(dummyPasswordHash.Value, command.Password);
             return Result.Failure<AuthTokens>(AuthErrors.InvalidCredentials);
         }
 
@@ -42,17 +38,5 @@ internal sealed class LoginCommandHandler(
 
         await sessionIssuer.PublishTokenVersionAsync(user, cancellationToken);
         return Result.Success(tokens);
-    }
-
-    private string GetDummyHash()
-    {
-        var existing = Volatile.Read(ref s_dummyHash);
-        if (existing is not null)
-        {
-            return existing;
-        }
-
-        var created = passwordHasher.Hash(Guid.NewGuid().ToString("N"));
-        return Interlocked.CompareExchange(ref s_dummyHash, created, null) ?? created;
     }
 }

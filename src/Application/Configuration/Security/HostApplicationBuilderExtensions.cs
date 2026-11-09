@@ -27,6 +27,7 @@ public static class HostApplicationBuilderExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
         builder.Services.AddScoped<AuthSessionIssuer>();
+        builder.Services.AddSingleton<DummyPasswordHash>();
         return builder;
     }
 }
