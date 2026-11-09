@@ -23,9 +23,12 @@ Every other action uses `[Authorize]`.
 ### 2. Version check in a middleware, not in `OnTokenValidated` (amends ADR 0013)
 
 The check runs in `TokenVersionMiddleware`, right after `UseAuthentication` and
-before `SecurityContextMiddleware`. Reason: fail closed must return 503, and an
-exception thrown inside the JWT bearer events becomes an authentication failure
-(401). The middleware skips endpoints with `IAllowAnonymous` metadata and
+before `SecurityContextMiddleware`. Reason: fail closed must return 503. The
+bearer events are part of the authentication handler's challenge flow; producing a
+503 ProblemDetails from them would mean fighting that flow, while a middleware
+after `UseAuthentication` can write any status directly.
+UNVERIFIED: whether an exception thrown in `JwtBearerEvents.OnTokenValidated`
+surfaces as 401 or 500; the decision does not depend on it. The middleware skips endpoints with `IAllowAnonymous` metadata and
 unauthenticated requests. A token without a valid `sub` or integer `tv` claim, or
 with a version behind the current one, gets 401 `auth.token_revoked`; an
 unreachable store gets 503 `auth.unavailable`.
@@ -42,8 +45,8 @@ tokens valid for up to 10 minutes.
 
 ### 4. Fixed key expiry instead of sliding (amends ADR 0013)
 
-A version key expires one hour after the last write or load and a read never
-extends it. A miss reloads from SQL Server. Reason: a sliding expiry needs a write
+A version key expires one hour after it is set; the expiry is set whenever the
+value is written (including the load after a miss) and is never extended by a read. A miss reloads from SQL Server. Reason: a sliding expiry needs a write
 on every read and keeps active users' keys alive indefinitely, so a stale value
 could never age out.
 

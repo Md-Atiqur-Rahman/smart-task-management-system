@@ -38,6 +38,8 @@ public sealed class SecurityContextTests
     [Theory]
     [InlineData("Nobody")]
     [InlineData("7")]
+    [InlineData("1")]
+    [InlineData("Admin,TeamMember")]
     public void UnknownRoleClaim_LeavesRoleNull(string value)
     {
         var context = new SecurityContext();

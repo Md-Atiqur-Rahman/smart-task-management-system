@@ -23,6 +23,17 @@ internal static class ErrorResults
 
     public static ObjectResult ToProblem(this ControllerBase controller, Error error)
     {
+        var problem = ToProblemDetails(controller.HttpContext, error);
+        return new ObjectResult(problem)
+        {
+            StatusCode = problem.Status,
+            ContentTypes = { ProblemJson },
+        };
+    }
+
+    /// <summary>The one ProblemDetails body for an expected failure; also used by middleware.</summary>
+    public static ProblemDetails ToProblemDetails(HttpContext httpContext, Error error)
+    {
         var status = StatusCodeFor(error.Type);
         ProblemDetails problem = error is ValidationError validation
             ? new ValidationProblemDetails(validation.Errors.ToDictionary(e => e.Key, e => e.Value))
@@ -31,15 +42,10 @@ internal static class ErrorResults
         problem.Status = status;
         problem.Title = TitleFor(error.Type);
         problem.Detail = error.Description;
-        problem.Instance = controller.HttpContext.Request.Path;
+        problem.Instance = httpContext.Request.Path;
         problem.Extensions[ErrorCodeKey] = error.Code;
-        problem.Extensions[TraceIdKey] = TraceIdFor(controller.HttpContext);
-
-        return new ObjectResult(problem)
-        {
-            StatusCode = status,
-            ContentTypes = { ProblemJson },
-        };
+        problem.Extensions[TraceIdKey] = TraceIdFor(httpContext);
+        return problem;
     }
 
     public static int StatusCodeFor(ErrorType type) => type switch
@@ -53,7 +59,7 @@ internal static class ErrorResults
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown error type."),
     };
 
-    public static string TitleFor(ErrorType type) => type switch
+    private static string TitleFor(ErrorType type) => type switch
     {
         ErrorType.Validation => "One or more validation errors occurred.",
         ErrorType.NotFound => "The resource was not found.",

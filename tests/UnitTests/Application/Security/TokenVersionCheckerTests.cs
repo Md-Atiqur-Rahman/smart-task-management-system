@@ -49,6 +49,17 @@ public sealed class TokenVersionCheckerTests
     }
 
     [Fact]
+    public async Task Check_StoreMissAndStoreAlreadyHigherAfterLoad_Revoked()
+    {
+        _store.GetAsync(_userId, _ct).Returns((int?)null, 3);
+        _users.GetTokenVersionAsync(_userId, _ct).Returns(2);
+
+        var result = await Checker().CheckAsync(_userId, 2, _ct);
+
+        result.ShouldBe(TokenVersionCheck.Revoked);
+    }
+
+    [Fact]
     public async Task Check_StoreMissAndUnknownUser_Revoked()
     {
         _store.GetAsync(_userId, _ct).Returns((int?)null);

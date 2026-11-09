@@ -22,6 +22,10 @@ internal sealed class TokenVersionChecker(ITokenVersionStore store, IUserReadRep
                 }
 
                 await store.SetIfHigherAsync(userId, current.Value, ct);
+
+                // A role change writes the store before the database, so the store may already
+                // hold a higher version than the database value just read.
+                current = await store.GetAsync(userId, ct) ?? current;
             }
 
             return tokenVersion == current.Value ? TokenVersionCheck.Valid : TokenVersionCheck.Revoked;

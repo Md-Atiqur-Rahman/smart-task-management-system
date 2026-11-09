@@ -6,7 +6,6 @@ using Datavanced.SmartTaskManagement.Domain.Auth;
 using Datavanced.SmartTaskManagement.Domain.Results;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Datavanced.SmartTaskManagement.Api.Middleware;
 
@@ -55,22 +54,9 @@ internal sealed class TokenVersionMiddleware(RequestDelegate next)
 
     private static async Task WriteAsync(HttpContext context, Error error)
     {
-        var status = ErrorResults.StatusCodeFor(error.Type);
-        context.Response.StatusCode = status;
-        await Results.Json(
-            new ProblemDetails
-            {
-                Status = status,
-                Title = ErrorResults.TitleFor(error.Type),
-                Detail = error.Description,
-                Instance = context.Request.Path,
-                Extensions =
-                {
-                    [ErrorResults.ErrorCodeKey] = error.Code,
-                    [ErrorResults.TraceIdKey] = ErrorResults.TraceIdFor(context),
-                },
-            },
-            contentType: ErrorResults.ProblemJson,
-            statusCode: status).ExecuteAsync(context);
+        var problem = ErrorResults.ToProblemDetails(context, error);
+        context.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
+        await Results.Json(problem, contentType: ErrorResults.ProblemJson, statusCode: problem.Status)
+            .ExecuteAsync(context);
     }
 }
