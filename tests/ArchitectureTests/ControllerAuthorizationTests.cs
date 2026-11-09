@@ -1,5 +1,6 @@
 using System.Reflection;
 
+using Datavanced.SmartTaskManagement.Api.Controllers.Auth;
 using Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 using Microsoft.AspNetCore.Authorization;
@@ -9,14 +10,18 @@ namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
 /// <summary>
 /// Rule 5: every controller action declares [Authorize] or [AllowAnonymous]
-/// (on the action or its controller); [AllowAnonymous] is allowed only in the
-/// Sample namespace (until Phase 2 adds authentication). There is no
+/// (on the action or its controller); [AllowAnonymous] is allowed only on the four
+/// AuthController actions (ADR 0014) and, until Task 14, in the Sample namespace. There is no
 /// authorization fallback policy, so this rule is the only guard.
 /// </summary>
 public sealed class ControllerAuthorizationTests
 {
     // Exactly the Sample controller's namespace; a ".Samples" segment elsewhere is not exempt.
     private static readonly string SampleNamespace = typeof(SamplesController).Namespace!;
+
+    // ADR 0014: exactly these four actions of AuthController may be anonymous.
+    private static readonly string[] AllowedAnonymousAuthActions =
+        [nameof(AuthController.Register), nameof(AuthController.Login), nameof(AuthController.Refresh), nameof(AuthController.Logout)];
 
     [Fact]
     public void EveryAction_HasAuthorizeOrAllowAnonymous()
@@ -30,14 +35,26 @@ public sealed class ControllerAuthorizationTests
     }
 
     [Fact]
-    public void AllowAnonymous_OnlyInSampleNamespace()
+    public void AllowAnonymous_OnlyOnAllowListedAuthActionsOrInSampleNamespace()
     {
-        var outsideSample = Actions()
-            .Where(a => Has<AllowAnonymousAttribute>(a) && !IsSample(a.DeclaringType!))
+        var unexpected = Actions()
+            .Where(a => Has<AllowAnonymousAttribute>(a) && !IsSample(a.DeclaringType!) && !IsAllowListed(a))
             .Select(Describe)
             .ToList();
 
-        outsideSample.ShouldBeEmpty("[AllowAnonymous] outside the Sample namespace: " + string.Join(", ", outsideSample));
+        unexpected.ShouldBeEmpty("[AllowAnonymous] outside the allow-list: " + string.Join(", ", unexpected));
+    }
+
+    [Fact]
+    public void AllowListedAuthActions_AreAnonymous()
+    {
+        var anonymous = Actions()
+            .Where(a => a.DeclaringType == typeof(AuthController) && Has<AllowAnonymousAttribute>(a))
+            .Select(a => a.Name)
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        anonymous.ShouldBe(["Login", "Logout", "Refresh", "Register"]);
     }
 
     private static IEnumerable<MethodInfo> Actions() =>
@@ -50,6 +67,9 @@ public sealed class ControllerAuthorizationTests
         where TAttribute : Attribute =>
         action.GetCustomAttribute<TAttribute>() is not null
         || action.DeclaringType!.GetCustomAttribute<TAttribute>() is not null;
+
+    private static bool IsAllowListed(MethodInfo action) =>
+        action.DeclaringType == typeof(AuthController) && AllowedAnonymousAuthActions.Contains(action.Name);
 
     private static bool IsSample(Type controller) =>
         string.Equals(controller.Namespace, SampleNamespace, StringComparison.Ordinal);

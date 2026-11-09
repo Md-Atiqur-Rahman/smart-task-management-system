@@ -21,7 +21,8 @@ internal static class CorsExtensions
                 cors.AddPolicy(CorsPolicyOptions.PolicyName, builder => builder
                     .WithOrigins([.. policy.Value.AllowedOrigins])
                     .AllowAnyHeader()
-                    .AllowAnyMethod()));
+                    .AllowAnyMethod()
+                    .AllowCredentials()));
         return services;
     }
 

@@ -4,9 +4,13 @@
   caller of `ISecurityContextSetter.SetPrincipal` (ADR 0007). Inbound claim
   mapping is off; claim names only from `SecurityClaimTypes`.
 - Every controller action declares `[Authorize]` or `[AllowAnonymous]`; there is
-  no fallback policy. `[AllowAnonymous]` is allowed only in the `Samples`
-  namespace, with the comment `// SAMPLE ONLY: replace with [Authorize] in Phase 2`
-  (architecture test 5).
+  no fallback policy. `[AllowAnonymous]` is allowed only on exactly four
+  actions, `AuthController.Register`, `Login`, `Refresh` and `Logout` (explicit
+  allow-list in architecture test 5, ADR 0014), and, until the Sample slice is
+  removed (Task 14), in the `Samples` namespace with the comment
+  `// SAMPLE ONLY: replace with [Authorize] in Phase 2`.
+- Refresh and logout carry `[RequireAllowedOrigin]` (CSRF check against
+  `Cors:AllowedOrigins`); the refresh token lives only in the HttpOnly cookie.
 - Minimal public attack surface: only controllers and their request/response
   types are public in Api (CA1515 scoped exception + architecture test
   `PublicTypesInApi_OnlyInControllersOrContracts`, see anti-patterns.md).

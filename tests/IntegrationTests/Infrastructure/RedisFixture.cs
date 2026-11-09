@@ -24,6 +24,12 @@ public sealed class RedisFixture : IAsyncLifetime
         await _container.StartAsync();
     }
 
+    /// <summary>Stops the container (outage simulation); only for a fixture the test owns.</summary>
+    public async Task StopAsync()
+    {
+        await _container.StopAsync();
+    }
+
     public async ValueTask DisposeAsync()
     {
         await _container.DisposeAsync();
