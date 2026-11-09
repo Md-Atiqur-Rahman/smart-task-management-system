@@ -20,7 +20,10 @@ internal sealed partial class AuthSessionIssuer(
     IOptions<RefreshTokenOptions> options,
     ILogger<AuthSessionIssuer> logger)
 {
-    public AuthTokens Issue(User user)
+    public AuthTokens Issue(User user) => IssueSession(user).Tokens;
+
+    /// <summary>Like <see cref="Issue"/>, also returns the id of the new refresh token (needed by rotation).</summary>
+    public IssuedSession IssueSession(User user)
     {
         var now = timeProvider.GetUtcNow();
         var generated = generator.Generate();
@@ -33,7 +36,7 @@ internal sealed partial class AuthSessionIssuer(
 
         var accessToken = tokenService.CreateAccessToken(user.Id, user.Role, user.TokenVersion);
         var dto = new CurrentUserDto(user.Id, user.FullName, user.Email.Value, user.Role);
-        return new AuthTokens(accessToken, generated.RawToken, refreshToken.ExpiresAt, dto);
+        return new IssuedSession(new AuthTokens(accessToken, generated.RawToken, refreshToken.ExpiresAt, dto), refreshToken.Id);
     }
 
     /// <summary>Publishes the token version to the shared store; a store outage never fails the request.</summary>
@@ -52,3 +55,6 @@ internal sealed partial class AuthSessionIssuer(
     [LoggerMessage(Level = LogLevel.Warning, Message = "Token version of user {UserId} was not published because the shared state store is unavailable.")]
     private static partial void LogPublishFailed(ILogger logger, Exception exception, Guid userId);
 }
+
+/// <summary>The tokens of a new session and the id of its refresh token.</summary>
+internal sealed record IssuedSession(AuthTokens Tokens, Guid RefreshTokenId);
