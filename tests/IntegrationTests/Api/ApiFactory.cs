@@ -26,6 +26,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         ["Database:User"] = "sa",
         ["Database:Password"] = "not-used-without-database",
         ["Database:Encrypt"] = "false",
+        ["Redis:ConnectionString"] = "localhost:6379,password=not-used-without-redis",
         ["Jwt:Issuer"] = TestTokens.Issuer,
         ["Jwt:Audience"] = TestTokens.Audience,
         ["Jwt:SigningKey"] = TestTokens.SigningKey,
@@ -55,6 +56,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         _settings["Database:User"] = database.User;
         _settings["Database:Password"] = database.Password;
         _settings["Database:Encrypt"] = database.Encrypt ? "true" : "false";
+        return this;
+    }
+
+    public ApiFactory WithRedis(string connectionString)
+    {
+        _settings["Redis:ConnectionString"] = connectionString;
         return this;
     }
 

@@ -67,7 +67,8 @@ public sealed class OpenApiTests(SqlServerFixture database)
         using var factory = new ApiFactory()
             .WithEnvironment("Production")
             .WithDatabase(database.Options)
-            .WithSetting("Database:Encrypt", "true");
+            .WithSetting("Database:Encrypt", "true")
+            .WithRedis("localhost:6379,password=not-used-without-redis,ssl=true");
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(Relative(path), _ct);

@@ -1,4 +1,5 @@
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Redis;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Time;
 
@@ -14,6 +15,7 @@ public static class HostApplicationBuilderExtensions
     {
         builder.ConfigureTime();
         builder.ConfigureDatabase();
+        builder.ConfigureRedis();
         builder.ConfigureSecurity();
         return builder;
     }
