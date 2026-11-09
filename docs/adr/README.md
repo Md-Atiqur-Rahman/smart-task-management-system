@@ -16,3 +16,4 @@ Changing an accepted decision needs a new ADR that supersedes the old one.
 | [0010](0010-two-di-styles.md) | Two DI styles, decided by project | Accepted |
 | [0011](0011-database-tls.md) | Database TLS: Encrypt=false only in Development and Testing | Accepted |
 | [0012](0012-transitive-security-pins.md) | Transitive security pin for System.Security.Cryptography.Pkcs | Accepted |
+| [0013](0013-redis-shared-state.md) | Redis for shared security state across instances | Accepted |
