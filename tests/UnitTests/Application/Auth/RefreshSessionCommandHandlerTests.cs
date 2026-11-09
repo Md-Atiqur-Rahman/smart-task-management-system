@@ -75,8 +75,20 @@ public sealed class RefreshSessionCommandHandlerTests
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.RefreshSuperseded);
-        await _auth.RefreshTokens.DidNotReceive().ListActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+        await _auth.RefreshTokens.DidNotReceive().RevokeAllActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Refresh_RotatedExactlyThirtySecondsAgo_IsReuseNotSuperseded()
+    {
+        var user = ExistingUser();
+        StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(30), replacedById: Guid.NewGuid());
+
+        var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
+
+        result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
+        await AssertFamilyRevokedAsync(user.Id);
     }
 
     [Fact]
@@ -84,13 +96,11 @@ public sealed class RefreshSessionCommandHandlerTests
     {
         var user = ExistingUser();
         StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(31), replacedById: Guid.NewGuid());
-        var active = ActiveTokens(user.Id);
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
-        active.ShouldAllBe(t => t.RevokedAt != null);
-        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await AssertFamilyRevokedAsync(user.Id);
     }
 
     [Fact]
@@ -98,13 +108,11 @@ public sealed class RefreshSessionCommandHandlerTests
     {
         var user = ExistingUser();
         StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(1), replacedById: null);
-        var active = ActiveTokens(user.Id);
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
-        active.ShouldAllBe(t => t.RevokedAt != null);
-        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await AssertFamilyRevokedAsync(user.Id);
     }
 
     [Fact]
@@ -152,16 +160,10 @@ public sealed class RefreshSessionCommandHandlerTests
         return token;
     }
 
-    private List<RefreshToken> ActiveTokens(Guid userId)
+    private async Task AssertFamilyRevokedAsync(Guid userId)
     {
-        var now = _auth.Time.GetUtcNow();
-        List<RefreshToken> tokens =
-        [
-            RefreshToken.Issue(userId, new string('c', RefreshToken.TokenHashLength), now, TimeSpan.FromDays(7)),
-            RefreshToken.Issue(userId, new string('d', RefreshToken.TokenHashLength), now, TimeSpan.FromDays(7)),
-        ];
-        _auth.RefreshTokens.ListActiveForUserAsync(userId, now, Arg.Any<CancellationToken>())
-            .Returns((IReadOnlyList<RefreshToken>)tokens);
-        return tokens;
+        await _auth.RefreshTokens.Received(1).RevokeAllActiveForUserAsync(userId, _auth.Time.GetUtcNow(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        _auth.RefreshTokens.DidNotReceive().Add(Arg.Any<RefreshToken>());
     }
 }

@@ -22,17 +22,15 @@ internal sealed class LogoutCommandHandler(
 
         var now = timeProvider.GetUtcNow();
         var token = await refreshTokens.GetByHashAsync(generator.Hash(command.RefreshToken), cancellationToken);
-        if (token is null || token.RevokedAt is not null)
+        if (token is null || !token.IsActive(now))
         {
             return Result.Success();
         }
 
-        var revoked = token.Revoke(now, replacedById: null);
-        if (revoked.IsFailure)
-        {
-            return Result.Success();
-        }
+        token.Revoke(now, replacedById: null);
+        var saved = await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await unitOfWork.SaveChangesAsync(cancellationToken);
+        // A conflict means a rotation of the same token won; it is revoked either way.
+        return saved.IsFailure && saved.Error.Type != ErrorType.Conflict ? saved : Result.Success();
     }
 }

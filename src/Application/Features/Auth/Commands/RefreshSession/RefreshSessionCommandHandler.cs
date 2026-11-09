@@ -42,11 +42,7 @@ internal sealed partial class RefreshSessionCommandHandler(
         }
 
         var session = sessionIssuer.IssueSession(user);
-        var revoked = token.Revoke(now, session.RefreshTokenId);
-        if (revoked.IsFailure)
-        {
-            return Invalid();
-        }
+        token.Revoke(now, session.RefreshTokenId);
 
         var saved = await unitOfWork.SaveChangesAsync(cancellationToken);
         if (saved.IsFailure)
@@ -70,17 +66,12 @@ internal sealed partial class RefreshSessionCommandHandler(
         }
 
         // Reuse of a revoked token: treat the family as stolen and revoke every active token of the user.
-        var active = await refreshTokens.ListActiveForUserAsync(token.UserId, now, cancellationToken);
-        foreach (var other in active)
-        {
-            other.Revoke(now, replacedById: null);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        LogReuseDetected(logger, token.UserId);
+        // One set-based statement, so a concurrent rotation cannot roll the revocation back.
+        var revokedCount = await refreshTokens.RevokeAllActiveForUserAsync(token.UserId, now, cancellationToken);
+        LogReuseDetected(logger, token.UserId, revokedCount);
         return Invalid();
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Refresh token reuse detected for user {UserId}; all active refresh tokens were revoked.")]
-    private static partial void LogReuseDetected(ILogger logger, Guid userId);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Refresh token reuse detected for user {UserId}; {RevokedCount} active refresh tokens were revoked.")]
+    private static partial void LogReuseDetected(ILogger logger, Guid userId, int revokedCount);
 }

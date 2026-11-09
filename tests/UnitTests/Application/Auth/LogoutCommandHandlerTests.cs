@@ -56,5 +56,18 @@ public sealed class LogoutCommandHandlerTests
         await _auth.RefreshTokens.DidNotReceive().ListActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Logout_ConcurrencyConflictOnSave_StillSucceeds()
+    {
+        var token = RefreshToken.Issue(Guid.NewGuid(), StoredHash, _auth.Time.GetUtcNow(), TimeSpan.FromDays(7));
+        _auth.RefreshTokens.GetByHashAsync(StoredHash, Arg.Any<CancellationToken>()).Returns(token);
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Result.Failure(Error.Conflict("concurrency.conflict", "stale")));
+
+        var result = await CreateHandler().Handle(new LogoutCommand("raw"), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+    }
+
     private LogoutCommandHandler CreateHandler() => new(_auth.RefreshTokens, _auth.Generator, _unitOfWork, _auth.Time);
 }

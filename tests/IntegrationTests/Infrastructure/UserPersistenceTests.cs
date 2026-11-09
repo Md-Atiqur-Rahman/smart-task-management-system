@@ -71,6 +71,44 @@ public sealed class UserPersistenceTests(SqlServerFixture fixture)
     }
 
     [Fact]
+    public async Task RevokeAllActiveForUser_RevokesOnlyActiveTokensOfThatUser()
+    {
+        var now = fixture.Time.GetUtcNow();
+        var userId = Guid.NewGuid();
+        var active1 = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
+        var active2 = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
+        var revoked = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
+        var revokedAt = now.AddMinutes(-5);
+        revoked.Revoke(revokedAt, null).IsSuccess.ShouldBeTrue();
+        var expired = RefreshToken.Issue(userId, UniqueHash(), now.AddDays(-10), TimeSpan.FromDays(7));
+        var other = RefreshToken.Issue(Guid.NewGuid(), UniqueHash(), now, TimeSpan.FromDays(7));
+
+        await using (var context = fixture.CreateDbContext())
+        {
+            var repository = new RefreshTokenRepository(context);
+            foreach (var token in new[] { active1, active2, revoked, expired, other })
+            {
+                repository.Add(token);
+            }
+
+            (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+        }
+
+        await using var actionContext = fixture.CreateDbContext();
+        var count = await new RefreshTokenRepository(actionContext).RevokeAllActiveForUserAsync(userId, now, _ct);
+
+        count.ShouldBe(2);
+        await using var verify = fixture.CreateDbContext();
+        var repo = new RefreshTokenRepository(verify);
+        async Task<RefreshToken> Load(RefreshToken t) => (await repo.GetByHashAsync(t.TokenHash, _ct)).ShouldNotBeNull();
+        (await Load(active1)).RevokedAt.ShouldNotBeNull();
+        (await Load(active2)).RevokedAt.ShouldNotBeNull();
+        (await Load(revoked)).RevokedAt.ShouldBe(revokedAt);
+        (await Load(expired)).RevokedAt.ShouldBeNull();
+        (await Load(other)).RevokedAt.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task ListActiveForUser_IgnoresRevokedExpiredAndOtherUsers()
     {
         var now = fixture.Time.GetUtcNow();
