@@ -53,7 +53,7 @@ internal static class ErrorResults
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown error type."),
     };
 
-    private static string TitleFor(ErrorType type) => type switch
+    public static string TitleFor(ErrorType type) => type switch
     {
         ErrorType.Validation => "One or more validation errors occurred.",
         ErrorType.NotFound => "The resource was not found.",

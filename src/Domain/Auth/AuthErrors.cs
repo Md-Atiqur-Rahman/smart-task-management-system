@@ -14,6 +14,9 @@ public static class AuthErrors
     public static readonly Error RefreshSuperseded =
         Error.Unauthorized("auth.refresh_superseded", "The refresh token was already used. Sign in again.");
 
+    public static readonly Error TokenRevoked =
+        Error.Unauthorized("auth.token_revoked", "The access token is no longer valid. Sign in again.");
+
     public static readonly Error Unavailable =
         Error.Unavailable("auth.unavailable", "Authentication is temporarily unavailable. Try again later.");
 }

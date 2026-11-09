@@ -20,10 +20,12 @@ public sealed class SecurityTests(ApiFactory factory) : IClassFixture<ApiFactory
     public async Task SignedToken_PopulatesSecurityContext_FromSubAndRoleClaims()
     {
         var userId = Guid.NewGuid();
+        await factory.TokenVersions.SetIfHigherAsync(userId, 1, _ct);
         var token = TestTokens.Create(new Dictionary<string, object>
         {
             ["sub"] = userId.ToString(),
             ["role"] = Roles,
+            ["tv"] = 1,
         });
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);

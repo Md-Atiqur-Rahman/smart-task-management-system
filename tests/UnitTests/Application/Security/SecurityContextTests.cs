@@ -24,6 +24,32 @@ public sealed class SecurityContextTests
     }
 
     [Fact]
+    public void SingleKnownRoleClaim_SetsRole()
+    {
+        var context = new SecurityContext();
+
+        context.SetPrincipal(Principal(
+            new Claim(SecurityClaimTypes.UserId, Guid.NewGuid().ToString()),
+            new Claim(SecurityClaimTypes.Role, "ProjectManager")));
+
+        context.Role.ShouldBe(Datavanced.SmartTaskManagement.Domain.Users.Role.ProjectManager);
+    }
+
+    [Theory]
+    [InlineData("Nobody")]
+    [InlineData("7")]
+    public void UnknownRoleClaim_LeavesRoleNull(string value)
+    {
+        var context = new SecurityContext();
+
+        context.SetPrincipal(Principal(
+            new Claim(SecurityClaimTypes.UserId, Guid.NewGuid().ToString()),
+            new Claim(SecurityClaimTypes.Role, value)));
+
+        context.Role.ShouldBeNull();
+    }
+
+    [Fact]
     public void MissingUserIdClaim_IsUnauthenticated()
     {
         var context = new SecurityContext();

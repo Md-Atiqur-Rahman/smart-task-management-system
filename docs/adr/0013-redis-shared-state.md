@@ -44,7 +44,9 @@ exception, and the exception is limited to the uses listed below.
 
 ### Check on every authenticated request
 
-After JWT signature and lifetime validation (`JwtBearerEvents.OnTokenValidated`):
+After JWT signature and lifetime validation (`JwtBearerEvents.OnTokenValidated`).
+*Amended by ADR 0014: the check runs in a middleware right after
+`UseAuthentication`, so that fail closed can return 503.*
 
 1. Read the user's current version from Redis (key `auth:token-version:<userId>`).
 2. If Redis has no entry, load `TokenVersion` from SQL Server once and store it in
@@ -54,7 +56,8 @@ After JWT signature and lifetime validation (`JwtBearerEvents.OnTokenValidated`)
 
 ### Role change (and later: deactivation, password change)
 
-`TokenVersion` increments **only** on these events. In one operation:
+`TokenVersion` increments **only** on these events. *Amended by ADR 0014: the
+Redis write comes before the database commit (Redis first).* In one operation:
 
 1. Increment `TokenVersion` in SQL Server and commit.
 2. Write the new version to Redis.
@@ -84,8 +87,12 @@ After JWT signature and lifetime validation (`JwtBearerEvents.OnTokenValidated`)
   value is missing or lower). This stops a slow load-on-miss that read the old
   version from overwriting a newer one.
 - Redis entries have a TTL (sliding, refreshed on load) so inactive users do not
-  stay in Redis forever; a miss simply reloads from SQL Server.
-- If the Redis write in step 2 fails after the SQL commit, the handler tries to
+  stay in Redis forever; a miss simply reloads from SQL Server. *Amended by ADR
+  0014: the expiry is fixed (one hour after the last write or load), never
+  extended by a read.*
+- *Amended by ADR 0014 (Redis first): the next rule no longer applies; a failed
+  Redis write now saves nothing and returns 503.* If the Redis write in step 2
+  fails after the SQL commit, the handler tries to
   delete the key instead (the next request then reloads the new version from SQL
   Server). If that also fails, Redis is down: the request returns an error, not a
   silent success. Old tokens cannot be used meanwhile, because the version check

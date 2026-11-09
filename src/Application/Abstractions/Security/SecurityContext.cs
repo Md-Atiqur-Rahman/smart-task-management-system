@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Datavanced.SmartTaskManagement.Domain.Users;
+
 namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
@@ -13,6 +15,8 @@ internal sealed class SecurityContext : ISecurityContext, ISecurityContextSetter
     public bool IsAuthenticated => UserId is not null;
 
     public Guid? UserId { get; private set; }
+
+    public Role? Role { get; private set; }
 
     public IReadOnlyCollection<string> Roles { get; private set; } = [];
 
@@ -33,5 +37,9 @@ internal sealed class SecurityContext : ISecurityContext, ISecurityContextSetter
 
         UserId = userId;
         Roles = principal.FindAll(SecurityClaimTypes.Role).Select(c => c.Value).ToArray();
+        Role = Roles.Count == 1 && Enum.TryParse<Role>(Roles.First(), ignoreCase: false, out var role)
+            && Enum.IsDefined(role)
+            ? role
+            : null;
     }
 }

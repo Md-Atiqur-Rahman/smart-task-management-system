@@ -18,6 +18,14 @@ public static class HostApplicationBuilderExtensions
         return builder;
     }
 
+    /// <summary>The version check used by the Api's token version middleware (ADR 0014).</summary>
+    public static TBuilder ConfigureTokenVersionCheck<TBuilder>(this TBuilder builder)
+        where TBuilder : IHostApplicationBuilder
+    {
+        builder.Services.AddScoped<ITokenVersionChecker, TokenVersionChecker>();
+        return builder;
+    }
+
     /// <summary>Binds and validates <see cref="RefreshTokenOptions"/> and registers the session issuer.</summary>
     public static TBuilder ConfigureAuthSessions<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder

@@ -47,10 +47,14 @@ internal static class AuthenticationExtensions
         return services;
     }
 
-    /// <summary>Authentication, then the one security-context middleware, then authorization.</summary>
+    /// <summary>
+    /// Authentication, the token version check (ADR 0014), the one security-context
+    /// middleware, then authorization.
+    /// </summary>
     public static WebApplication UseJwtAuthentication(this WebApplication app)
     {
         app.UseAuthentication();
+        app.UseMiddleware<TokenVersionMiddleware>();
         app.UseMiddleware<SecurityContextMiddleware>();
         app.UseAuthorization();
         return app;
