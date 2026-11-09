@@ -26,7 +26,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         ["Database:User"] = "sa",
         ["Database:Password"] = "not-used-without-database",
         ["Database:Encrypt"] = "false",
-        ["Redis:ConnectionString"] = "localhost:6379,password=not-used-without-redis",
+        ["Redis:ConnectionString"] = "127.0.0.1:1,password=not-used-without-redis",
         ["Jwt:Issuer"] = TestTokens.Issuer,
         ["Jwt:Audience"] = TestTokens.Audience,
         ["Jwt:SigningKey"] = TestTokens.SigningKey,

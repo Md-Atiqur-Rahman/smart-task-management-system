@@ -12,8 +12,9 @@ namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
     "Design",
     "CA1032:Implement standard exception constructors",
     Justification = "Like the Domain exceptions: the standard constructors would create an exception without ErrorCode and Title, which the error model forbids.")]
-public sealed class SharedStateUnavailableException()
+public sealed class SharedStateUnavailableException(Exception? innerException = null)
     : AppException(
         "shared_state.unavailable",
         "Shared state unavailable",
-        "The shared security state store is unreachable or timed out.");
+        "The shared security state store is unreachable or timed out.",
+        innerException);

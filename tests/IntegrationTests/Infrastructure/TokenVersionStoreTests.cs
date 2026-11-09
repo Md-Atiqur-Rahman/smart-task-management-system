@@ -88,6 +88,8 @@ public sealed class TokenVersionStoreTests(RedisFixture redis) : IAsyncLifetime
             () => store.GetAsync(Guid.NewGuid(), _ct));
 
         exception.ErrorCode.ShouldBe("shared_state.unavailable");
+        exception.InnerException.ShouldNotBeNull();
+        (exception.InnerException is RedisConnectionException or RedisTimeoutException).ShouldBeTrue();
     }
 
     [Fact]

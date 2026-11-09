@@ -13,6 +13,13 @@ public abstract class AppException : Exception
         Title = title;
     }
 
+    protected AppException(string errorCode, string title, string message, Exception? innerException)
+        : base(message, innerException)
+    {
+        ErrorCode = errorCode;
+        Title = title;
+    }
+
     public string ErrorCode { get; }
 
     public string Title { get; }

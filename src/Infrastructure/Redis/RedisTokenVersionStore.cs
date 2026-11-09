@@ -57,13 +57,13 @@ public sealed class RedisTokenVersionStore(IConnectionMultiplexer connection, IO
         {
             return await operation(connection.GetDatabase());
         }
-        catch (RedisConnectionException)
+        catch (RedisConnectionException ex)
         {
-            throw new SharedStateUnavailableException();
+            throw new SharedStateUnavailableException(ex);
         }
-        catch (RedisTimeoutException)
+        catch (RedisTimeoutException ex)
         {
-            throw new SharedStateUnavailableException();
+            throw new SharedStateUnavailableException(ex);
         }
     }
 }
