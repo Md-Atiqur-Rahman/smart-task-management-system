@@ -1,8 +1,8 @@
 using System.Text;
 
 using Datavanced.SmartTaskManagement.Api.Middleware;
-using Datavanced.SmartTaskManagement.Api.Options;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -21,11 +21,6 @@ internal static class AuthenticationExtensions
     public static IServiceCollection AddJwtAuthentication(
         this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<JwtOptions>()
-            .Bind(configuration.GetSection(JwtOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearer, jwt) =>

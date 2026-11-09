@@ -9,4 +9,8 @@ public static class SecurityClaimTypes
     public const string UserId = "sub";
 
     public const string Role = "role";
+
+    public const string TokenVersion = "tv";
+
+    public const string TokenId = "jti";
 }
