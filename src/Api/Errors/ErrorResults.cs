@@ -49,6 +49,7 @@ internal static class ErrorResults
         ErrorType.Conflict => StatusCodes.Status409Conflict,
         ErrorType.Forbidden => StatusCodes.Status403Forbidden,
         ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
+        ErrorType.Unavailable => StatusCodes.Status503ServiceUnavailable,
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown error type."),
     };
 
@@ -59,6 +60,7 @@ internal static class ErrorResults
         ErrorType.Conflict => "The request conflicts with the current state of the resource.",
         ErrorType.Forbidden => "Access to the resource is forbidden.",
         ErrorType.Unauthorized => "Authentication is required.",
+        ErrorType.Unavailable => "The service is temporarily unavailable.",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown error type."),
     };
 }

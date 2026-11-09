@@ -11,4 +11,5 @@ public enum ErrorType
     Conflict = 2,
     Forbidden = 3,
     Unauthorized = 4,
+    Unavailable = 5,
 }
