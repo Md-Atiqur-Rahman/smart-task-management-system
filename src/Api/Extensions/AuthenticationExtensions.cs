@@ -19,7 +19,7 @@ internal static class AuthenticationExtensions
     /// an architecture test). No fallback policy: it would turn unknown routes into 401.
     /// </summary>
     public static IServiceCollection AddJwtAuthentication(
-        this IServiceCollection services, IConfiguration configuration)
+        this IServiceCollection services)
     {
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)

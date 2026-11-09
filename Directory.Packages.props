@@ -43,6 +43,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Identity.Core" Version="10.0.14" />
+    <!-- Verified 2026-11-09: 8.19.2 listed on nuget.org (MIT); same version JwtBearer/SqlClient already resolve, no advisory (NuGetAudit clean). -->
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
   </ItemGroup>
 
   <!-- Api. Verified 2026-11-08 (latest stable, no advisories). -->

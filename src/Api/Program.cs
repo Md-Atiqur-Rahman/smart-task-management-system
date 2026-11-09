@@ -10,7 +10,7 @@ builder.ConfigureInfrastructure();
 
 builder.Services.AddSerilogLogging(builder.Configuration);
 builder.Services.AddExceptionHandling();
-builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddJwtAuthentication();
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddApiControllers();
