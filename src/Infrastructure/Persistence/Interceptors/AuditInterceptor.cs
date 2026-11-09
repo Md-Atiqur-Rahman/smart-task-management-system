@@ -40,7 +40,8 @@ public sealed class AuditInterceptor(TimeProvider timeProvider) : SaveChangesInt
         var now = timeProvider.GetUtcNow();
         foreach (var entry in context.ChangeTracker.Entries())
         {
-            if (entry.Metadata.FindProperty(CreatedAt) is null)
+            // Only auditable aggregates have both audit fields; RefreshToken has its own CreatedAt and is skipped.
+            if (entry.Metadata.FindProperty(CreatedAt) is null || entry.Metadata.FindProperty(UpdatedAt) is null)
             {
                 continue;
             }

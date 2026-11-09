@@ -1,0 +1,132 @@
+using Datavanced.SmartTaskManagement.Domain.Auth;
+using Datavanced.SmartTaskManagement.Domain.Users;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
+using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Repositories;
+
+using Microsoft.EntityFrameworkCore;
+
+namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
+
+/// <summary>User and refresh token persistence against a real SQL Server.</summary>
+[Collection(SqlServerCollectionDefinition.Name)]
+public sealed class UserPersistenceTests(SqlServerFixture fixture)
+{
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task AddUser_ThenGetByEmail_ReturnsUserWithNormalizedEmail()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var email = $"mixed.case.{suffix}@example.com";
+        var user = User.Register(Email.Create(email), "Mixed Case", "hash");
+        await SaveUserAsync(user);
+
+        await using var context = fixture.CreateDbContext();
+        var loaded = await new UserRepository(context).GetByEmailAsync(Email.Create($"Mixed.CASE.{suffix}@Example.com"), _ct);
+
+        loaded.ShouldNotBeNull();
+        loaded.Id.ShouldBe(user.Id);
+        loaded.Email.Value.ShouldBe(email);
+        loaded.Role.ShouldBe(Role.TeamMember);
+        loaded.TokenVersion.ShouldBe(1);
+        (await new UserRepository(context).EmailExistsAsync(Email.Create(email), _ct)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AddUser_DuplicateEmail_ThrowsDbUpdateException()
+    {
+        var email = UniqueEmail("dup");
+        await SaveUserAsync(User.Register(Email.Create(email), "First", "hash"));
+
+        await using var context = fixture.CreateDbContext();
+        new UserRepository(context).Add(User.Register(Email.Create(email), "Second", "hash"));
+
+        await Should.ThrowAsync<DbUpdateException>(() => new UnitOfWork(context).SaveChangesAsync(_ct));
+    }
+
+    [Fact]
+    public async Task CountByRole_TwoAdminsOneMember_ReturnsTwo()
+    {
+        await using (var clean = fixture.CreateDbContext())
+        {
+            await clean.Set<User>().IgnoreQueryFilters().ExecuteDeleteAsync(_ct);
+        }
+
+        await SaveUserAsync(User.CreateSeedAdmin(Email.Create(UniqueEmail("a1")), "Admin One", "hash"));
+        await SaveUserAsync(User.CreateSeedAdmin(Email.Create(UniqueEmail("a2")), "Admin Two", "hash"));
+        await SaveUserAsync(User.Register(Email.Create(UniqueEmail("m1")), "Member", "hash"));
+
+        await using var context = fixture.CreateDbContext();
+        var repository = new UserRepository(context);
+
+        (await repository.CountByRoleAsync(Role.Admin, _ct)).ShouldBe(2);
+        (await repository.CountByRoleAsync(Role.TeamMember, _ct)).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ListActiveForUser_IgnoresRevokedExpiredAndOtherUsers()
+    {
+        var now = fixture.Time.GetUtcNow();
+        var userId = Guid.NewGuid();
+        var active = RefreshToken.Issue(userId, Hash('a'), now, TimeSpan.FromDays(7));
+        var revoked = RefreshToken.Issue(userId, Hash('b'), now, TimeSpan.FromDays(7));
+        revoked.Revoke(now, null).IsSuccess.ShouldBeTrue();
+        var expired = RefreshToken.Issue(userId, Hash('c'), now.AddDays(-10), TimeSpan.FromDays(7));
+        var other = RefreshToken.Issue(Guid.NewGuid(), Hash('d'), now, TimeSpan.FromDays(7));
+
+        await using (var context = fixture.CreateDbContext())
+        {
+            var repository = new RefreshTokenRepository(context);
+            repository.Add(active);
+            repository.Add(revoked);
+            repository.Add(expired);
+            repository.Add(other);
+            (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+        }
+
+        await using var verify = fixture.CreateDbContext();
+        var repo = new RefreshTokenRepository(verify);
+        var list = await repo.ListActiveForUserAsync(userId, now, _ct);
+
+        list.Count.ShouldBe(1);
+        list[0].Id.ShouldBe(active.Id);
+        (await repo.GetByHashAsync(Hash('b'), _ct)).ShouldNotBeNull().Id.ShouldBe(revoked.Id);
+    }
+
+    [Fact]
+    public async Task RevokeSameToken_FromTwoContexts_SecondSaveIsConcurrencyConflict()
+    {
+        var now = fixture.Time.GetUtcNow();
+        var token = RefreshToken.Issue(Guid.NewGuid(), Hash('e'), now, TimeSpan.FromDays(7));
+        await using (var context = fixture.CreateDbContext())
+        {
+            new RefreshTokenRepository(context).Add(token);
+            (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+        }
+
+        await using var first = fixture.CreateDbContext();
+        await using var second = fixture.CreateDbContext();
+        var firstCopy = await new RefreshTokenRepository(first).GetByHashAsync(Hash('e'), _ct);
+        var secondCopy = await new RefreshTokenRepository(second).GetByHashAsync(Hash('e'), _ct);
+
+        firstCopy.ShouldNotBeNull().Revoke(now, null).IsSuccess.ShouldBeTrue();
+        secondCopy.ShouldNotBeNull().Revoke(now, null).IsSuccess.ShouldBeTrue();
+
+        (await new UnitOfWork(first).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+        var result = await new UnitOfWork(second).SaveChangesAsync(_ct);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("concurrency.conflict");
+    }
+
+    private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
+
+    private static string Hash(char c) => new(c, RefreshToken.TokenHashLength);
+
+    private async Task SaveUserAsync(User user)
+    {
+        await using var context = fixture.CreateDbContext();
+        new UserRepository(context).Add(user);
+        (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+    }
+}
