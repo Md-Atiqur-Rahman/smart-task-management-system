@@ -17,6 +17,7 @@ public static class HostApplicationBuilderExtensions
         builder.ConfigureValidation();
         builder.ConfigurePaging();
         builder.ConfigureSecurityContext();
+        builder.ConfigureAuthSessions();
         return builder;
     }
 }

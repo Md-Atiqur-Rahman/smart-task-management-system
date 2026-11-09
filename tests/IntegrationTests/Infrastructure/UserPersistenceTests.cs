@@ -33,15 +33,18 @@ public sealed class UserPersistenceTests(SqlServerFixture fixture)
     }
 
     [Fact]
-    public async Task AddUser_DuplicateEmail_ThrowsDbUpdateException()
+    public async Task SaveChanges_DuplicateEmail_ReturnsDuplicateKeyConflict()
     {
-        var email = UniqueEmail("dup");
+        var email = UniqueEmail("dupkey");
         await SaveUserAsync(User.Register(Email.Create(email), "First", "hash"));
 
         await using var context = fixture.CreateDbContext();
         new UserRepository(context).Add(User.Register(Email.Create(email), "Second", "hash"));
 
-        await Should.ThrowAsync<DbUpdateException>(() => new UnitOfWork(context).SaveChangesAsync(_ct));
+        var result = await new UnitOfWork(context).SaveChangesAsync(_ct);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("persistence.duplicate_key");
     }
 
     [Fact]
