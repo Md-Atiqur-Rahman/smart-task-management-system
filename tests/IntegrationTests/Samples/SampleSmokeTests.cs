@@ -15,7 +15,7 @@ namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 /// every failure. Runs as part of dotnet test.
 /// </summary>
 [Collection(SqlServerCollectionDefinition.Name)]
-public sealed class SampleSmokeTests(SqlServerFixture database) : IDisposable
+public sealed class SampleSmokeTests(SqlServerFixture database) : IAsyncLifetime, IDisposable
 {
     private readonly SampleApi _api = new(database);
     private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
@@ -63,6 +63,10 @@ public sealed class SampleSmokeTests(SqlServerFixture database) : IDisposable
         using var deletedAgain = await _api.Client.DeleteAsync(Uri($"{Route}/{id}"), _ct);
         await Problem(deletedAgain, HttpStatusCode.NotFound);
     }
+
+    public ValueTask InitializeAsync() => new(_api.SignInAsync(_ct));
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     public void Dispose() => _api.Dispose();
 

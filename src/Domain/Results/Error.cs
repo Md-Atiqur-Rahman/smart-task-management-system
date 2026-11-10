@@ -23,4 +23,7 @@ public record Error(string Code, string Description, ErrorType Type)
 
     public static Error Unauthorized(string code, string description) =>
         new(code, description, ErrorType.Unauthorized);
+
+    public static Error Unavailable(string code, string description) =>
+        new(code, description, ErrorType.Unavailable);
 }

@@ -1,8 +1,10 @@
 using System.Text;
 
+using Datavanced.SmartTaskManagement.Api.Auth;
 using Datavanced.SmartTaskManagement.Api.Middleware;
-using Datavanced.SmartTaskManagement.Api.Options;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Domain.Users;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -19,13 +21,8 @@ internal static class AuthenticationExtensions
     /// an architecture test). No fallback policy: it would turn unknown routes into 401.
     /// </summary>
     public static IServiceCollection AddJwtAuthentication(
-        this IServiceCollection services, IConfiguration configuration)
+        this IServiceCollection services)
     {
-        services.AddOptions<JwtOptions>()
-            .Bind(configuration.GetSection(JwtOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearer, jwt) =>
@@ -47,15 +44,25 @@ internal static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.AdminOnly, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireRole(nameof(Role.Admin)))
+            .AddPolicy(AuthorizationPolicies.ProjectManagerOrAdmin, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireRole(nameof(Role.Admin), nameof(Role.ProjectManager)));
 
         return services;
     }
 
-    /// <summary>Authentication, then the one security-context middleware, then authorization.</summary>
+    /// <summary>
+    /// Authentication, the token version check (ADR 0014), the one security-context
+    /// middleware, then authorization.
+    /// </summary>
     public static WebApplication UseJwtAuthentication(this WebApplication app)
     {
         app.UseAuthentication();
+        app.UseMiddleware<TokenVersionMiddleware>();
         app.UseMiddleware<SecurityContextMiddleware>();
         app.UseAuthorization();
         return app;

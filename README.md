@@ -14,14 +14,23 @@ script (`scripts/verify.sh`), which is also the only CI step.
   `errorCode` for every error.
 - **Persistence:** EF Core + SQL Server, soft delete, audit fields from
   `TimeProvider`, `RowVersion` concurrency (stale writes return 409).
-- **Security baseline:** JWT bearer skeleton, security context set once by
-  middleware, HTTPS/HSTS, security headers, CORS and rate limiting from validated
-  Options, secrets only in user-secrets or environment variables.
+- **Authentication:** register, login, refresh (rotating refresh token in an
+  HttpOnly cookie, reuse detection), logout, `GET /api/auth/me`, roles Admin /
+  Project Manager / Team Member, Admin-only user management under `/api/users`,
+  first Admin seeded from secret configuration. Design: `docs/auth-design.md`.
+- **Redis (shared security state):** access tokens live 10 minutes and carry a
+  token version; a role change takes effect on every instance at once (Redis, SQL
+  Server is the source of truth). The per-IP rate limit is shared through Redis.
+  Redis down: authenticated requests get 503 (fail closed), rate limiting falls
+  back to per-instance limits (fail open). ADR 0013, 0014, 0015.
+- **Security baseline:** JWT bearer, security context set once by middleware,
+  HTTPS/HSTS, security headers, CORS, rate limiting and trusted forwarded headers
+  from validated Options, secrets only in user-secrets or environment variables.
 - **Quality gates:** warnings as errors with all analyzers, NullGuard runtime null
   checks, `dotnet format`, vulnerable/deprecated package check, committed
   OpenAPI document checked for freshness, Docker image build.
-- **Sample feature:** five endpoints under `/api/samples`, the copy-source for new
-  features ([docs/sample-flow.md](docs/sample-flow.md)).
+- **Sample feature:** five endpoints under `/api/samples` (all `[Authorize]`), the
+  copy-source for new features ([docs/sample-flow.md](docs/sample-flow.md)).
 
 ## Repository layout
 
@@ -39,29 +48,74 @@ script (`scripts/verify.sh`), which is also the only CI step.
 ## Requirements
 
 - .NET SDK 10.0.401 (pinned in `global.json`)
-- Docker (SQL Server for local runs and integration tests)
+- Docker (SQL Server and Redis for local runs; SQL Server and Redis containers for
+  the integration tests)
 
 ## Run locally
 
 1. `cp .env.example .env`
-2. `docker compose up -d db`
-3. Copy the secrets into user-secrets once (Git Bash, repo root):
+2. `docker compose up -d db redis`
+3. Copy the secrets into user-secrets once (Git Bash, repo root; reads `.env`
+   line by line because `ADMIN_SEED_FULL_NAME` contains a space, so the file
+   cannot be `source`d):
 
    ```bash
-   set -a; . ./.env; set +a; for kv in "Database:Name=$DB_NAME" "Database:Password=$DB_PASSWORD" "Jwt:SigningKey=$JWT_SIGNING_KEY"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
+   g() { grep "^$1=" .env | cut -d= -f2- | tr -d '\r'; }; for kv in "Database:Name=$(g DB_NAME)" "Database:Password=$(g DB_PASSWORD)" "Jwt:SigningKey=$(g JWT_SIGNING_KEY)" "Redis:ConnectionString=127.0.0.1:$(g REDIS_PORT),password=$(g REDIS_PASSWORD)" "AdminSeed:Email=$(g ADMIN_SEED_EMAIL)" "AdminSeed:Password=$(g ADMIN_SEED_PASSWORD)" "AdminSeed:FullName=$(g ADMIN_SEED_FULL_NAME)"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
    ```
+
+   If a key is missing from an older `.env`, copy only that key from
+   `.env.example` into `.env`; do not overwrite the whole file (an existing
+   database volume keeps its old `DB_PASSWORD`). An empty value means the key is
+   missing.
 
    PowerShell:
 
    ```powershell
-   $e=@{}; Get-Content .env | ? { $_ -match '^\w+=' } | % { $k,$v = $_ -split '=',2; $e[$k]=$v }; dotnet user-secrets set Database:Name $e.DB_NAME --project src/Api; dotnet user-secrets set Database:Password $e.DB_PASSWORD --project src/Api; dotnet user-secrets set Jwt:SigningKey $e.JWT_SIGNING_KEY --project src/Api
+   $e=@{}; Get-Content .env | ? { $_ -match '^\w+=' } | % { $k,$v = $_ -split '=',2; $e[$k]=$v }; dotnet user-secrets set Database:Name $e.DB_NAME --project src/Api; dotnet user-secrets set Database:Password $e.DB_PASSWORD --project src/Api; dotnet user-secrets set Jwt:SigningKey $e.JWT_SIGNING_KEY --project src/Api; dotnet user-secrets set Redis:ConnectionString "127.0.0.1:$($e.REDIS_PORT),password=$($e.REDIS_PASSWORD)" --project src/Api; dotnet user-secrets set AdminSeed:Email $e.ADMIN_SEED_EMAIL --project src/Api; dotnet user-secrets set AdminSeed:Password $e.ADMIN_SEED_PASSWORD --project src/Api; dotnet user-secrets set AdminSeed:FullName $e.ADMIN_SEED_FULL_NAME --project src/Api
    ```
 
-   Environment-variable equivalents: `Database__Name`, `Database__Password`, `Jwt__SigningKey`.
-4. `dotnet run --project src/Api --launch-profile http`
-5. Swagger UI (Development only): `http://localhost:5199/swagger`
+   Environment-variable equivalents: `Database__Name`, `Database__Password`,
+   `Jwt__SigningKey`, `Redis__ConnectionString`, `AdminSeed__Email`,
+   `AdminSeed__Password`, `AdminSeed__FullName`. If you change `DB_PORT`, also set
+   `Database:Port`.
+4. `dotnet run --project src/Api --launch-profile https` (or `http` if the ASP.NET
+   Core development certificate is not trusted; run `dotnet dev-certs https
+   --trust` once to trust it). In Development the initial migration applies
+   automatically, then the first Admin is seeded.
+5. Swagger UI (Development only): `https://localhost:7254/swagger` (`http`
+   profile: `http://localhost:5199/swagger`). `POST /api/auth/register` (or
+   `login`), copy the `accessToken`, click "Authorize", then call
+   `GET /api/samples` (200; without a token 401). `GET /health` checks the
+   database and Redis.
 
 Full walkthrough and request paths: [docs/sample-flow.md](docs/sample-flow.md).
+
+### Authentication and the first Admin
+
+- Register creates a Team Member. Only an Admin can change a role
+  (`PUT /api/users/{id}/role`); a role change signs the user out everywhere.
+- **First Admin.** `AdminSeed:Email`, `AdminSeed:Password`, `AdminSeed:FullName`:
+  set all three or none (none = no seeding; some = startup fails). At startup,
+  if no Admin exists, one is created. Password: 8 to 128 characters with a letter
+  and a digit.
+- **Seed recovery.** If the seed email already belongs to a non-Admin account,
+  startup fails and the account is never promoted. Set a different
+  `AdminSeed:Email` and restart.
+- **No password change in v1.** The seeded Admin's password can only be changed
+  by a future feature; choose it accordingly outside local development.
+- The refresh token is only in the `__Secure-refresh_token` cookie (HttpOnly,
+  Secure, SameSite=Strict, path `/api/auth`). `refresh` and `logout` check the
+  `Origin` header against `Cors:AllowedOrigins`.
+
+### Database migrations outside Development
+
+Only Development migrates automatically. Elsewhere apply an idempotent SQL
+script before starting the API (the first-Admin seeding needs the schema and the
+startup fails without it):
+
+```bash
+Database__Name=design-time Database__Password=design-time dotnet ef migrations script --idempotent --project src/Infrastructure --startup-project src/Api --output migrate.sql
+```
 
 ## Run the full stack in Docker (local only)
 
@@ -80,10 +134,6 @@ docker compose down
 
 ## Roadmap
 
-- **Phase 2: authentication.** Register, login and refresh endpoints, a `User`
-  aggregate, an admin seed, `[Authorize]` on every endpoint, and the Bearer
-  requirement per protected operation in the OpenAPI document (checklist in
-  `docs/sample-flow.md`).
 - **Phase 1.5: tooling.** A `/scaffold` Claude Code skill that generates a new
   feature slice from Sample, and a matching Angular front-end boilerplate.
 - **Open decisions.**
@@ -92,22 +142,29 @@ docker compose down
   - Whether to enforce the 80-character line guideline with a built-in analyzer
     rule, if one exists (today it is a guideline only; `dotnet format` does not
     wrap lines).
-  - Reverse-proxy support: forwarded headers with explicit trusted proxies (see
-    Known limitations).
 
 ## Known limitations
 
-- **Reverse proxies are not configured.** There is no forwarded-headers handling
-  (`X-Forwarded-For` / `X-Forwarded-Proto`). Behind a reverse proxy or load
-  balancer:
-  - **rate limiting sees the proxy's IP address**, not the client's, so every
-    client shares one limit;
-  - **HTTPS redirection may loop**: a TLS-terminating proxy forwards plain
-    `http`, the app redirects to `https`, and the proxy sends `http` again.
-  **Before production, configure forwarded headers with explicit trusted proxies**
-  (known proxy addresses or networks, from validated Options; never trust all
-  sources). `/health` is already excluded from rate limiting so probes never
-  compete with client traffic.
+- **Forwarded headers are off until proxies are listed.** `X-Forwarded-For` and
+  `X-Forwarded-Proto` are honoured only from the addresses in
+  `ForwardedHeaders:KnownProxies` (list of IP addresses, empty by default). With an
+  empty list the middleware is not added at all, so direct clients cannot spoof
+  their address. **Behind a reverse proxy or load balancer, list its IP address(es)**;
+  otherwise rate limiting sees the proxy's IP (every client shares one limit) and
+  HTTPS redirection may loop. Startup fails if
+  `ASPNETCORE_FORWARDEDHEADERS_ENABLED` or `FORWARDEDHEADERS_ENABLED` is true (it
+  would trust every sender). `/health` is excluded from rate limiting.
+- **The seeded Admin's password cannot be changed in v1** (see "Authentication and
+  the first Admin").
+- **Logout is per device.** The logged-out device's access token stays valid for
+  at most 10 minutes (ADR 0013).
+- **Redis is required.** When it is down, authenticated requests return 503
+  (`auth.unavailable`); register and login still work (a failed token version
+  publish is only logged); `/health` reports Redis unhealthy.
+- **With `AdminSeed` configured, the host cannot start while SQL Server is
+  unreachable**: the seed runs at startup and needs the database. In Docker
+  Compose, `restart: on-failure` retries until SQL Server is up; elsewhere the
+  orchestrator must restart the process.
 
 ## Create a project from this template
 
@@ -145,9 +202,11 @@ docker compose down
    user-secrets or environment variables.
 3. Add features by copying the Sample slice, then remove Sample
    (checklists in `docs/sample-flow.md`).
-4. Add authentication (Phase 2 checklist in `docs/sample-flow.md`).
+4. Authentication is included; set the Redis and first-Admin secrets (see "Run
+   locally" and "Authentication and the first Admin") and run Redis in every
+   environment.
 5. **If the API will run behind a reverse proxy or load balancer, configure
-   forwarded headers with explicit trusted proxies first** (see Known
+   `ForwardedHeaders:KnownProxies` first** (see Known
    limitations): otherwise rate limiting sees only the proxy's IP and HTTPS
    redirection may loop.
 6. Production database: `Database:Encrypt=true` with a certificate the client

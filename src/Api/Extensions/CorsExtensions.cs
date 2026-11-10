@@ -14,6 +14,7 @@ internal static class CorsExtensions
         services.AddOptions<CorsPolicyOptions>()
             .Bind(configuration.GetSection(CorsPolicyOptions.SectionName))
             .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<CorsPolicyOptions>, CorsPolicyOptionsValidator>();
 
         services.AddCors();
         services.AddOptions<CorsOptions>()
@@ -21,7 +22,8 @@ internal static class CorsExtensions
                 cors.AddPolicy(CorsPolicyOptions.PolicyName, builder => builder
                     .WithOrigins([.. policy.Value.AllowedOrigins])
                     .AllowAnyHeader()
-                    .AllowAnyMethod()));
+                    .AllowAnyMethod()
+                    .AllowCredentials()));
         return services;
     }
 

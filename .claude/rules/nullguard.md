@@ -16,7 +16,9 @@ Decision and evidence: `docs/adr/0008-nullguard.md`.
 - Known gap: non-nullable `ValueTask<T>` results are NOT checked. Use `Task<T>`
   for non-nullable async results. Enforced by the architecture test
   `NullGuardGapTests.Src_HasNoNonNullableReferenceValueTask` (reference-type `T`
-  without `?` fails; `ValueTask<T?>` and value-type results are allowed).
+  without `?` fails; `ValueTask<T?>` and value-type results are allowed;
+  overrides of framework members are exempt because the framework fixes their
+  signature, e.g. `PartitionedRateLimiter.AcquireAsyncCore`).
 - Properties and non-public members are not checked (EF Core materializes
   entities through private constructors and setters).
 - Test projects (`IsTestProject=true`) are not woven. `tests/WeavingProbe` is

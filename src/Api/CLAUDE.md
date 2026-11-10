@@ -11,8 +11,8 @@
   handler interface (`[FromServices]`), map the `Result` (`Ok`/`Created`/
   `NoContent` or `this.ToProblem(error)`). No repositories, `IUnitOfWork` or
   `DbContext`.
-- Every action: `[Authorize]` or `[AllowAnonymous]` (anonymous only in the
-  Sample namespace, marked `// SAMPLE ONLY: replace with [Authorize] in Phase 2`)
+- Every action: `[Authorize]` or `[AllowAnonymous]` (anonymous only on the four
+  `AuthController` actions Register, Login, Refresh, Logout; ADR 0014)
   and `[ProducesResponseType]` for every status, with `application/problem+json`
   on errors. No class-level `[Produces]`.
 - Request bodies bind to request records with nullable fields; validation

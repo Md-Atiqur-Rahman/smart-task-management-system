@@ -25,8 +25,7 @@ public sealed class SamplesController : ControllerBase
 {
     public const string Route = "api/samples";
 
-    // SAMPLE ONLY: replace with [Authorize] in Phase 2
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet]
     [ProducesResponseType<PagedResult<SampleDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
@@ -47,8 +46,7 @@ public sealed class SamplesController : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error);
     }
 
-    // SAMPLE ONLY: replace with [Authorize] in Phase 2
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet("{id:guid}")]
     [ProducesResponseType<SampleDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
@@ -61,8 +59,7 @@ public sealed class SamplesController : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error);
     }
 
-    // SAMPLE ONLY: replace with [Authorize] in Phase 2
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost]
     [ProducesResponseType<CreatedResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
@@ -80,8 +77,7 @@ public sealed class SamplesController : ControllerBase
             : this.ToProblem(result.Error);
     }
 
-    // SAMPLE ONLY: replace with [Authorize] in Phase 2
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost("{id:guid}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
@@ -95,8 +91,7 @@ public sealed class SamplesController : ControllerBase
         return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
     }
 
-    // SAMPLE ONLY: replace with [Authorize] in Phase 2
-    [AllowAnonymous]
+    [Authorize]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]

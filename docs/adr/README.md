@@ -16,3 +16,7 @@ Changing an accepted decision needs a new ADR that supersedes the old one.
 | [0010](0010-two-di-styles.md) | Two DI styles, decided by project | Accepted |
 | [0011](0011-database-tls.md) | Database TLS: Encrypt=false only in Development and Testing | Accepted |
 | [0012](0012-transitive-security-pins.md) | Transitive security pin for System.Security.Cryptography.Pkcs | Accepted |
+| [0013](0013-redis-shared-state.md) | Redis for shared security state across instances | Accepted |
+| [0014](0014-auth-endpoints-and-redis-amendments.md) | Auth endpoints and amendments to the Redis design | Accepted |
+| [0015](0015-auth-implementation-amendments.md) | Amendments made while implementing authentication | Accepted |
+| [0016](0016-refresh-token-families.md) | Refresh-token families; reuse detection revokes one family | Accepted |

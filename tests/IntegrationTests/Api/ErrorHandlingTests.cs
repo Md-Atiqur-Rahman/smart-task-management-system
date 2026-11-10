@@ -20,6 +20,7 @@ public sealed class ErrorHandlingTests(ApiFactory factory) : IClassFixture<ApiFa
     [InlineData(ErrorType.Conflict, HttpStatusCode.Conflict)]
     [InlineData(ErrorType.Forbidden, HttpStatusCode.Forbidden)]
     [InlineData(ErrorType.Unauthorized, HttpStatusCode.Unauthorized)]
+    [InlineData(ErrorType.Unavailable, HttpStatusCode.ServiceUnavailable)]
     public async Task ErrorType_MapsToStatus_WithProblemDetailsAndErrorCode(
         ErrorType type, HttpStatusCode expected)
     {

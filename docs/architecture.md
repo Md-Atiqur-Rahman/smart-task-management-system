@@ -40,7 +40,8 @@ flowchart LR
 | --- | --- | --- |
 | Validation | Application pipeline (FluentValidation) | ADR 0001 |
 | Errors | `Result`/`Error`, `AppException`, `ErrorResults`, `GlobalExceptionHandler` | ADR 0004, 0005 |
-| Identity | JWT bearer (claim mapping off) -> `SecurityContextMiddleware` -> `ISecurityContext` | ADR 0007 |
+| Identity | JWT bearer (claim mapping off) -> `TokenVersionMiddleware` -> `SecurityContextMiddleware` -> `ISecurityContext` | ADR 0007, 0014 |
+| Shared security state | Redis: token versions, shared rate limit | ADR 0013, 0014, 0015 |
 | Persistence | `AppDbContext`, soft-delete filter, audit interceptor (`TimeProvider`), `RowVersion` | ADR 0004 (conflicts) |
 | Null safety | NullGuard.Fody, `Mode=NullableReferenceTypes` | ADR 0008 |
 | DI | `Configure*` in Application/Infrastructure, `Add*`/`Use*` in Api | ADR 0010 |
@@ -49,7 +50,33 @@ flowchart LR
 | Database TLS | `Encrypt=false` only in Development/Testing | ADR 0011 |
 | Dependencies | central versions, NuGetAudit, transitive security pins | ADR 0003, 0012 |
 | Logging | Serilog per host (`preserveStaticLogger: true`), `[LoggerMessage]` | coding-standards.md |
-| Security baseline | HTTPS/HSTS, security headers, CORS and rate limiting from Options, `/health` | security rules |
+| Security baseline | HTTPS/HSTS, security headers, CORS, rate limiting and trusted forwarded headers from Options, `/health` | security rules, ADR 0015 |
+
+## Authentication and Redis
+
+Full design: `docs/auth-design.md`; decisions: ADR 0013, 0014, 0015.
+
+- **Sign-in.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`)
+  calls command and query handlers like any feature. The access token is a JWT
+  valid 10 minutes with a `tv` (token version) claim; the refresh token is random,
+  stored only as a hash, rotated on every use (reuse detection revokes the
+  token's family, the chain of one login, ADR 0016) and travels only in an
+  HttpOnly cookie.
+- **Per request.** Pipeline order: `UseAuthentication` -> `TokenVersionMiddleware`
+  -> `SecurityContextMiddleware` -> `UseAuthorization`. The middleware compares
+  the token's version with the current one: Redis key
+  `auth:token-version:<userId>`, loaded from SQL Server on a miss, expiring one
+  hour after it is written. A stale token gets 401 `auth.token_revoked`; Redis
+  unreachable gets 503 `auth.unavailable` (fail closed).
+- **Role change.** `PUT /api/users/{id}/role` (Admin) writes the new version to
+  Redis first, then saves the user and revokes the refresh tokens in one
+  `SaveChangesAsync`.
+- **Rate limiting.** The per-IP limit (and a stricter one for login and register)
+  is a fixed-window counter in Redis shared by all instances; any Redis error
+  fails open to per-instance limits. `/health` checks the database and Redis.
+- **Redis scope.** Only token versions and rate-limit counters; any other use
+  needs a new ADR. Only Infrastructure references StackExchange.Redis;
+  Application sees `ITokenVersionStore`.
 
 ## Projects
 

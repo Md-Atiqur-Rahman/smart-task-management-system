@@ -38,8 +38,8 @@ DDD and CQRS Lite. Every rule is enforced by the build, an architecture test or
 - DI style by project: `Configure*` on `IHostApplicationBuilder` in
   Application/Infrastructure; `Add*` / `Use*` in Api; nothing inline in
   `Program.cs`.
-- Every action has `[Authorize]` or `[AllowAnonymous]` (anonymous only in the
-  Sample namespace) and `[ProducesResponseType]` for every status.
+- Every action has `[Authorize]` or `[AllowAnonymous]` (anonymous only on the four
+  `AuthController` actions Register, Login, Refresh, Logout; ADR 0014) and `[ProducesResponseType]` for every status.
 - Options with `ValidateOnStart()` for all settings; secrets only in
   user-secrets or environment variables; `TimeProvider`, never `DateTime.UtcNow`.
 - Sort only by whitelisted keys; page size capped by Options.

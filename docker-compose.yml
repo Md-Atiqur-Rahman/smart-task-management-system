@@ -20,6 +20,15 @@ services:
     volumes:
       - db-data:/var/opt/mssql
 
+  redis:
+    image: ${REDIS_IMAGE:?REDIS_IMAGE is required}
+    container_name: ${IMAGE_NAME:?IMAGE_NAME is required}-redis
+    # Password required (dev-only value from .env).
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"]
+    ports:
+      # Loopback only: Redis is never reachable from other machines.
+      - "127.0.0.1:${REDIS_PORT:?REDIS_PORT is required}:6379"
+
   api:
     build:
       context: .
@@ -29,6 +38,7 @@ services:
     container_name: ${IMAGE_NAME:?IMAGE_NAME is required}-api
     depends_on:
       - db
+      - redis
     # The dev-only migration fails while SQL Server is still starting; retry.
     restart: on-failure
     environment:
@@ -39,6 +49,10 @@ services:
       Database__Password: ${DB_PASSWORD:?DB_PASSWORD is required}
       Database__Encrypt: "false"
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
+      Redis__ConnectionString: redis:6379,password=${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      AdminSeed__Email: ${ADMIN_SEED_EMAIL:?ADMIN_SEED_EMAIL is required}
+      AdminSeed__Password: ${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}
+      AdminSeed__FullName: ${ADMIN_SEED_FULL_NAME:?ADMIN_SEED_FULL_NAME is required}
     ports:
       - "127.0.0.1:${API_PORT:?API_PORT is required}:8080"
 

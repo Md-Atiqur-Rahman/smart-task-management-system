@@ -1,11 +1,9 @@
-using System.Threading.RateLimiting;
-
 using Datavanced.SmartTaskManagement.Api.Errors;
 using Datavanced.SmartTaskManagement.Api.Options;
+using Datavanced.SmartTaskManagement.Api.RateLimiting;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
 
 namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
@@ -13,7 +11,10 @@ internal static class RateLimitingExtensions
 {
     public const string RateLimitedCode = "rate_limited";
 
-    /// <summary>Built-in fixed-window limiter per client IP; rejections are ProblemDetails (429).</summary>
+    /// <summary>
+    /// Framework rate limiting with the shared fixed-window limiter per client IP as the global
+    /// limiter (in-memory fallback when Redis is down); rejections are ProblemDetails (429).
+    /// </summary>
     public static IServiceCollection AddRateLimiting(
         this IServiceCollection services, IConfiguration configuration)
     {
@@ -22,20 +23,14 @@ internal static class RateLimitingExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        // Singleton owned by the container, so its in-memory fallback limiters are disposed with it.
+        services.AddSingleton<SharedFixedWindowRateLimiter>();
         services.AddRateLimiter(_ => { });
         services.AddOptions<RateLimiterOptions>()
-            .Configure<IOptions<RateLimitingOptions>>((limiter, limits) =>
+            .Configure<SharedFixedWindowRateLimiter>((limiter, shared) =>
             {
                 limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-                limiter.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
-                    context => RateLimitPartition.GetFixedWindowLimiter(
-                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                        _ => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = limits.Value.PermitLimit,
-                            Window = TimeSpan.FromSeconds(limits.Value.WindowSeconds),
-                            QueueLimit = 0,
-                        }));
+                limiter.GlobalLimiter = shared;
                 limiter.OnRejected = WriteRejectionAsync;
             });
         return services;

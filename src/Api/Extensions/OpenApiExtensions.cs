@@ -16,6 +16,7 @@ internal static class OpenApiExtensions
         services.AddOpenApi(DocumentName, options =>
         {
             options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+            options.AddOperationTransformer<AuthOperationTransformer>();
             options.AddDocumentTransformer<LineEndingNormalizationTransformer>();
         });
         return services;

@@ -27,24 +27,37 @@ public sealed class SqlServerFixture : IAsyncLifetime
     public FakeTimeProvider Time { get; } =
         new(new DateTimeOffset(2026, 11, 8, 9, 0, 0, TimeSpan.Zero));
 
-    public DatabaseOptions Options => new()
+    public DatabaseOptions Options => OptionsFor("IntegrationTests");
+
+    /// <summary>A new, migrated, empty database on the shared container (for tests that need a known empty state).</summary>
+    public async Task<DatabaseOptions> CreateIsolatedDatabaseAsync(CancellationToken cancellationToken)
+    {
+        var options = OptionsFor("Isolated_" + Guid.NewGuid().ToString("N"));
+        await using var context = CreateDbContext(options);
+        await context.Database.MigrateAsync(cancellationToken);
+        return options;
+    }
+
+    public AppDbContext CreateDbContext(DatabaseOptions options)
+    {
+        var builder = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(options.BuildConnectionString())
+            .AddInterceptors(new AuditInterceptor(Time))
+            .Options;
+        return new AppDbContext(builder);
+    }
+
+    private DatabaseOptions OptionsFor(string name) => new()
     {
         Host = _container.Hostname,
         Port = _container.GetMappedPublicPort(MsSqlBuilder.MsSqlPort),
-        Name = "IntegrationTests",
+        Name = name,
         User = "sa",
         Password = Password,
         Encrypt = false,
     };
 
-    public AppDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(Options.BuildConnectionString())
-            .AddInterceptors(new AuditInterceptor(Time))
-            .Options;
-        return new AppDbContext(options);
-    }
+    public AppDbContext CreateDbContext() => CreateDbContext(Options);
 
     public async ValueTask InitializeAsync()
     {

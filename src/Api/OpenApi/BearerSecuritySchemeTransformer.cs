@@ -10,8 +10,8 @@ namespace Datavanced.SmartTaskManagement.Api.OpenApi;
 /// Source: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/customize-openapi?view=aspnetcore-10.0
 /// ("Use document transformers", BearerSecuritySchemeTransformer). Only the
 /// document-level scheme is taken; the sample's loop that marks EVERY operation
-/// as requiring Bearer is left out because the Sample endpoints are anonymous.
-/// Phase 2: add the same page's AuthOperationTransformer for [Authorize] endpoints.
+/// as requiring Bearer is left out: <see cref="AuthOperationTransformer"/> adds the
+/// requirement per operation instead, skipping [AllowAnonymous] ones.
 /// </summary>
 internal sealed class BearerSecuritySchemeTransformer(
     IAuthenticationSchemeProvider authenticationSchemeProvider)

@@ -1,5 +1,7 @@
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Redis;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Seeding;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Time;
 
 using Microsoft.Extensions.Hosting;
@@ -14,7 +16,11 @@ public static class HostApplicationBuilderExtensions
     {
         builder.ConfigureTime();
         builder.ConfigureDatabase();
+        builder.ConfigureRedis();
         builder.ConfigureSecurity();
+
+        // After ConfigureDatabase: hosted services start in registration order (development migration first).
+        builder.ConfigureSeeding();
         return builder;
     }
 }

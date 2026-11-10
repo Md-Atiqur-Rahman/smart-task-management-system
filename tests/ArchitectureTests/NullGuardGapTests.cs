@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Threading.RateLimiting;
 
 namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 
@@ -7,7 +8,9 @@ namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 /// of a non-nullable ValueTask&lt;T&gt;. src code must use Task&lt;T&gt; for a
 /// non-nullable reference result, or ValueTask&lt;T?&gt;. Value-type results
 /// (ValueTask&lt;bool&gt;, ValueTask&lt;InterceptionResult&lt;int&gt;&gt;) cannot be null
-/// and are allowed. Uses the compiler's nullability metadata (NullabilityInfoContext).
+/// and are allowed. Overrides of framework members are exempt: the framework fixes their
+/// signature (for example PartitionedRateLimiter.AcquireAsyncCore), so Task&lt;T&gt; is not an
+/// option there. Uses the compiler's nullability metadata (NullabilityInfoContext).
 /// </summary>
 public sealed class NullGuardGapTests
 {
@@ -30,6 +33,13 @@ public sealed class NullGuardGapTests
         Violations(typeof(ControlSamples)).ShouldBe([$"{typeof(ControlSamples).FullName}.{nameof(ControlSamples.NonNullable)}"]);
     }
 
+    // The exemption covers only overrides of members declared outside src.
+    [Fact]
+    public void Control_IgnoresOverridesOfFrameworkMembers()
+    {
+        Violations(typeof(FrameworkOverrideSample)).ShouldBeEmpty();
+    }
+
     private static IEnumerable<string> Violations(Type type)
     {
         var nullability = new NullabilityInfoContext();
@@ -39,8 +49,17 @@ public sealed class NullGuardGapTests
             .Where(m => m.ReturnType.IsGenericType
                 && m.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>)
                 && !m.ReturnType.GenericTypeArguments[0].IsValueType
-                && nullability.Create(m.ReturnParameter).GenericTypeArguments[0].ReadState == NullabilityState.NotNull)
+                && nullability.Create(m.ReturnParameter).GenericTypeArguments[0].ReadState == NullabilityState.NotNull
+                && !OverridesFrameworkMember(m))
             .Select(m => $"{type.FullName}.{m.Name}");
+    }
+
+    private static bool OverridesFrameworkMember(MethodInfo method)
+    {
+        var declaringType = method.GetBaseDefinition().DeclaringType;
+        return declaringType is not null
+            && declaringType != method.DeclaringType
+            && !Layers.Src.Contains(declaringType.Assembly);
     }
 
     private static class ControlSamples
@@ -50,5 +69,13 @@ public sealed class NullGuardGapTests
         public static ValueTask<string?> Nullable() => ValueTask.FromResult<string?>(null);
 
         public static ValueTask<bool> ValueType() => ValueTask.FromResult(true);
+    }
+
+    // Abstract: only the declared override matters, the type is never instantiated.
+    private abstract class FrameworkOverrideSample : PartitionedRateLimiter<object>
+    {
+        protected override ValueTask<RateLimitLease> AcquireAsyncCore(
+            object resource, int permitCount, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }
