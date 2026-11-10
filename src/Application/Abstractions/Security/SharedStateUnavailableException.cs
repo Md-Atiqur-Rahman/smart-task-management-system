@@ -5,8 +5,10 @@ using Datavanced.SmartTaskManagement.Domain.Exceptions;
 namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 
 /// <summary>
-/// The shared security state (Redis) is unreachable or timed out. Security checks that
-/// need it fail closed; the Api maps this to 503 (ADR 0013).
+/// The shared security state (Redis) is unreachable, timed out or returned an error. The global
+/// exception handler does not map it: each caller catches it and decides. The version check and
+/// a role change fail closed (503 auth.unavailable), publishing a version after login only logs,
+/// and the rate limiter fails open (ADR 0013).
 /// </summary>
 [SuppressMessage(
     "Design",
