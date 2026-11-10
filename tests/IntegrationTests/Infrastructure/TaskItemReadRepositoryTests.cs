@@ -387,6 +387,21 @@ public sealed class TaskItemReadRepositoryTests(SqlServerFixture fixture)
         (await IsProjectVisibleAsync(project.Id, assignee.Id, Role.TeamMember)).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task IsProjectVisible_PmAssigneeOfOtherPmsProject_IsTrue_FalseAfterTaskSoftDeleted()
+    {
+        var owner = await SaveUserAsync(Role.ProjectManager);
+        var pmAssignee = await SaveUserAsync(Role.ProjectManager);
+        var project = await SaveProjectAsync(owner.Id);
+        var task = await SaveTaskAsync(project.Id, "delegated", assigneeId: pmAssignee.Id);
+
+        (await IsProjectVisibleAsync(project.Id, pmAssignee.Id, Role.ProjectManager)).ShouldBeTrue();
+
+        await SoftDeleteTaskAsync(task.Id);
+
+        (await IsProjectVisibleAsync(project.Id, pmAssignee.Id, Role.ProjectManager)).ShouldBeFalse();
+    }
+
     private static ListTasksQuery Query(
         string? search = null,
         Guid? assigneeId = null,

@@ -214,6 +214,61 @@ public sealed class TaskAccessTests(SqlServerFixture database, RedisFixture redi
         assignee.GetProperty("completedTaskCount").GetInt32().ShouldBe(0);
     }
 
+    [Fact]
+    public async Task OtherPm_Gets404OnEveryTaskEndpoint_AndTaskIsUnchanged()
+    {
+        var pmA = await _api.CreateUserAsync(Role.ProjectManager, _ct);
+        var pmB = await _api.CreateUserAsync(Role.ProjectManager, _ct);
+        var member = await _api.CreateUserAsync(Role.TeamMember, _ct);
+        var projectId = await CreateProjectAsync(pmA, "Cross PM");
+        var id = await CreateTaskAsync(pmA, projectId, new { title = "Original", priority = "High", assigneeId = member.Id });
+
+        using var get = await SendAsync(HttpMethod.Get, $"{TasksPath}/{id}", pmB);
+        await ShouldBeNotFoundAsync(get);
+        using var edit = await SendAsync(HttpMethod.Put, $"{TasksPath}/{id}", pmB, new { title = "Hijacked", priority = "Low" });
+        await ShouldBeNotFoundAsync(edit);
+        using var status = await SendAsync(HttpMethod.Put, $"{TasksPath}/{id}/status", pmB, new { status = "Completed" });
+        await ShouldBeNotFoundAsync(status);
+        using var assign = await SendAsync(HttpMethod.Put, $"{TasksPath}/{id}/assignee", pmB, new { assigneeId = (Guid?)null });
+        await ShouldBeNotFoundAsync(assign);
+        using var delete = await SendAsync(HttpMethod.Delete, $"{TasksPath}/{id}", pmB);
+        await ShouldBeNotFoundAsync(delete);
+
+        using var details = await SendAsync(HttpMethod.Get, $"{TasksPath}/{id}", pmA);
+        details.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await details.Content.ReadFromJsonAsync<JsonElement>(_ct);
+        body.GetProperty("title").GetString().ShouldBe("Original");
+        body.GetProperty("priority").GetString().ShouldBe("High");
+        body.GetProperty("status").GetString().ShouldBe("ToDo");
+        body.GetProperty("assignee").GetProperty("id").GetGuid().ShouldBe(member.Id);
+    }
+
+    [Fact]
+    public async Task Reassign_PreviousAssigneeLosesTaskAndProject_NewAssigneeSeesTask()
+    {
+        var pm = await _api.CreateUserAsync(Role.ProjectManager, _ct);
+        var memberA = await _api.CreateUserAsync(Role.TeamMember, _ct);
+        var memberB = await _api.CreateUserAsync(Role.TeamMember, _ct);
+        var marker = Guid.NewGuid().ToString("N");
+        var projectId = await CreateProjectAsync(pm, $"Reassign {marker}");
+        var id = await CreateTaskAsync(pm, projectId, new { title = "Moving", assigneeId = memberA.Id });
+        (await ListIdsAsync(memberA, $"{ProjectsPath}?search={marker}")).ShouldContain(projectId);
+
+        using var reassign = await SendAsync(HttpMethod.Put, $"{TasksPath}/{id}/assignee", pm, new { assigneeId = memberB.Id });
+        reassign.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var oldTask = await SendAsync(HttpMethod.Get, $"{TasksPath}/{id}", memberA);
+        await ShouldBeNotFoundAsync(oldTask);
+        using var oldProject = await SendAsync(HttpMethod.Get, $"{ProjectsPath}/{projectId}", memberA);
+        oldProject.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await ListIdsAsync(memberA, $"{ProjectsPath}?search={marker}")).ShouldNotContain(projectId);
+
+        using var newTask = await SendAsync(HttpMethod.Get, $"{TasksPath}/{id}", memberB);
+        newTask.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await newTask.Content.ReadFromJsonAsync<JsonElement>(_ct)).GetProperty("assignee").GetProperty("id").GetGuid()
+            .ShouldBe(memberB.Id);
+    }
+
     public void Dispose() => _api.Dispose();
 
     private async Task ShouldBeNotFoundAsync(HttpResponseMessage response)
