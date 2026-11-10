@@ -3135,7 +3135,11 @@
         "description": "HTTP body for POST /api/auth/register. Nullable so a missing value reaches FluentValidation."
       },
       "Role": {
-        "type": "integer",
+        "enum": [
+          "Admin",
+          "ProjectManager",
+          "TeamMember"
+        ],
         "description": "Authorization role of a user. Values are persisted; do not renumber."
       },
       "SampleDto": {
@@ -3180,10 +3184,16 @@
         "description": "Read model returned by the API. Never the entity itself."
       },
       "SampleStatus": {
-        "type": "integer"
+        "enum": [
+          "Open",
+          "Completed"
+        ]
       },
       "SortDirection": {
-        "type": "integer"
+        "enum": [
+          "Ascending",
+          "Descending"
+        ]
       },
       "TaskAssigneeDto": {
         "required": [
@@ -3275,7 +3285,12 @@
         "description": "A single task with its assignee (null when unassigned) and its project."
       },
       "TaskItemStatus": {
-        "type": "integer",
+        "enum": [
+          "ToDo",
+          "InProgress",
+          "Completed",
+          "Cancelled"
+        ],
         "description": "Workflow status of a task. Any status may change to any other (no transition table)."
       },
       "TaskListItemDto": {
@@ -3349,7 +3364,13 @@
         "description": "A task as shown in the task lists. AssigneeName is null when the task is unassigned."
       },
       "TaskPriority": {
-        "type": "integer"
+        "enum": [
+          "Low",
+          "Medium",
+          "High",
+          "Critical",
+          null
+        ]
       },
       "TaskProjectDto": {
         "required": [
