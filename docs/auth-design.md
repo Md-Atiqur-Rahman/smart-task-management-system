@@ -342,12 +342,14 @@ The middleware:
 
 - `ForwardedHeadersOptions`: `X-Forwarded-For` and `X-Forwarded-Proto`, trusted
   proxies from `ForwardedHeaders:KnownProxies` (list of IP addresses), empty by
-  default. The framework's default trusted entries (loopback) are cleared, so an
-  empty list really means "trust nobody".
-- `UseForwardedHeaders` runs first in the pipeline, before HTTPS redirection,
+  default. The framework's default trusted entries (loopback) are cleared. With
+  both trusted lists empty the framework middleware accepts the headers from ANY
+  sender, so with an empty `KnownProxies` the middleware is **not added at all**
+  (corrected in ADR 0015). Proto is handled the same way as For.
+- `UseForwardedHeaders` (only when `KnownProxies` is not empty) runs first in the pipeline, before HTTPS redirection,
   logging and rate limiting.
-- UNVERIFIED: exact property names in .NET 10 (`KnownProxies`,
-  `KnownNetworks` / `KnownIPNetworks`); check the official docs when building.
+- Property names settled when building: `KnownProxies` and `KnownIPNetworks`
+  (`KnownNetworks` is obsolete in .NET 10, ASPDEPR005); see ADR 0015.
 
 ## 12. Logging
 
@@ -412,6 +414,10 @@ The middleware:
   `docs/CONTEXT.md` (Redis exception, 10-minute token, forwarded headers),
   `.env.example` (`REDIS_IMAGE`, `REDIS_PASSWORD`, seed placeholders),
   `docker-compose.yml` (Redis service), README setup steps.
+
+ADR 0015 records the amendments made during implementation (Redis rate-limit
+key and fail-open, forwarded headers, NullGuard gap exemption, Sample exemption
+removed, duplicate-key error).
 
 ## 17. Left to the builder
 

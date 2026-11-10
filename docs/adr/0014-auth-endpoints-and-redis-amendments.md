@@ -18,7 +18,8 @@ Exactly four actions may be anonymous in the whole Api: `AuthController`
 `Register`, `Login`, `Refresh` and `Logout`. Architecture test 5 checks an
 explicit allow-list of these four (implemented with the Auth controller). The
 exemption for the `Samples` namespace is removed when the Sample slice is removed.
-Every other action uses `[Authorize]`.
+Every other action uses `[Authorize]`. *Amended by ADR 0015: the Sample exemption
+was removed earlier, when the Sample endpoints got `[Authorize]`.*
 
 ### 2. Version check in a middleware, not in `OnTokenValidated` (amends ADR 0013)
 

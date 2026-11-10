@@ -86,26 +86,32 @@ Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
 ## (e) Run and test from Swagger
 
 1. `cp .env.example .env` (git-ignored; used by Docker Compose).
-2. `docker compose up -d db` (SQL Server on `127.0.0.1:1433` only).
+2. `docker compose up -d db redis` (SQL Server and Redis on `127.0.0.1` only).
 3. Copy the secrets into user-secrets once (the API does not read `.env`).
-   Git Bash, from the repo root:
+   Git Bash, from the repo root (`.env` is read line by line, not sourced,
+   because `ADMIN_SEED_FULL_NAME` contains a space):
 
    ```bash
-   set -a; . ./.env; set +a; for kv in "Database:Name=$DB_NAME" "Database:Password=$DB_PASSWORD" "Jwt:SigningKey=$JWT_SIGNING_KEY"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
+   g() { grep "^$1=" .env | cut -d= -f2-; }; for kv in "Database:Name=$(g DB_NAME)" "Database:Password=$(g DB_PASSWORD)" "Jwt:SigningKey=$(g JWT_SIGNING_KEY)" "Redis:ConnectionString=127.0.0.1:$(g REDIS_PORT),password=$(g REDIS_PASSWORD)" "AdminSeed:Email=$(g ADMIN_SEED_EMAIL)" "AdminSeed:Password=$(g ADMIN_SEED_PASSWORD)" "AdminSeed:FullName=$(g ADMIN_SEED_FULL_NAME)"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
    ```
 
    PowerShell, from the repo root:
 
    ```powershell
-   $e=@{}; Get-Content .env | ? { $_ -match '^\w+=' } | % { $k,$v = $_ -split '=',2; $e[$k]=$v }; dotnet user-secrets set Database:Name $e.DB_NAME --project src/Api; dotnet user-secrets set Database:Password $e.DB_PASSWORD --project src/Api; dotnet user-secrets set Jwt:SigningKey $e.JWT_SIGNING_KEY --project src/Api
+   $e=@{}; Get-Content .env | ? { $_ -match '^\w+=' } | % { $k,$v = $_ -split '=',2; $e[$k]=$v }; dotnet user-secrets set Database:Name $e.DB_NAME --project src/Api; dotnet user-secrets set Database:Password $e.DB_PASSWORD --project src/Api; dotnet user-secrets set Jwt:SigningKey $e.JWT_SIGNING_KEY --project src/Api; dotnet user-secrets set Redis:ConnectionString "127.0.0.1:$($e.REDIS_PORT),password=$($e.REDIS_PASSWORD)" --project src/Api; dotnet user-secrets set AdminSeed:Email $e.ADMIN_SEED_EMAIL --project src/Api; dotnet user-secrets set AdminSeed:Password $e.ADMIN_SEED_PASSWORD --project src/Api; dotnet user-secrets set AdminSeed:FullName $e.ADMIN_SEED_FULL_NAME --project src/Api
    ```
 
-   Keys: `Database:Name`, `Database:Password`, `Jwt:SigningKey`. As environment
-   variables they are `Database__Name`, `Database__Password`, `Jwt__SigningKey`.
-   If you change `DB_PORT`, also set `Database:Port`.
-4. `dotnet run --project src/Api --launch-profile http` (Development: the initial
-   migration applies automatically).
-5. Open `http://localhost:5199/swagger` (Development only). Sign in first:
+   Keys: `Database:Name`, `Database:Password`, `Jwt:SigningKey`,
+   `Redis:ConnectionString`, `AdminSeed:Email`, `AdminSeed:Password`,
+   `AdminSeed:FullName`. As environment variables: `Database__Name`,
+   `Database__Password`, `Jwt__SigningKey`, `Redis__ConnectionString`,
+   `AdminSeed__Email`, `AdminSeed__Password`, `AdminSeed__FullName` (set all three
+   `AdminSeed` values or none). If you change `DB_PORT`, also set `Database:Port`.
+4. `dotnet run --project src/Api --launch-profile https` (`http` if the development
+   certificate is not trusted; Development: the initial migration applies
+   automatically, then the first Admin is seeded).
+5. Open `https://localhost:7254/swagger` (`http` profile: `http://localhost:5199/swagger`;
+   Development only). Sign in first:
    `POST /api/auth/register` (or `POST /api/auth/login`), copy the `accessToken` from
    the response, click "Authorize" and paste it. Then:
    1. `POST /api/samples` with `{ "name": "first" }` -> 201, copy the `id`.
@@ -153,7 +159,7 @@ modules are added by copying Sample.
 2. Remove the two Sample repository registrations in `ConfigureDatabase`.
 3. Delete `src/Infrastructure/Persistence/Migrations/` and recreate the initial
    migration for the remaining model (command in step 4 above).
-4. Remove the Sample exemption from architecture test 5 only when no anonymous
-   endpoint remains.
+4. Nothing to change in architecture test 5: the Sample `[AllowAnonymous]`
+   exemption is already gone; only the four `AuthController` actions are anonymous.
 5. Regenerate and commit `docs/openapi.json` (`bash scripts/generate-openapi.sh`).
 6. Run `scripts/verify`.

@@ -118,7 +118,9 @@ Redis write comes before the database commit (Redis first).* In one operation:
   window) is shared by all instances through Redis.
 - Hand-written counter, no extra package: key
   `ratelimit:<ip>:<window-start>`; one atomic Lua script does `INCR` and, when the
-  result is 1, `EXPIRE` for the window length. The request is allowed while the
+  result is 1, `EXPIRE` for the window length. *Amended by ADR 0015: the key is
+  `ratelimit:<policy>:<client-ip>:<window-start-unix-seconds>` and the script uses
+  `PEXPIRE`.* The request is allowed while the
   count is within the limit; otherwise 429 with the existing `rate_limited`
   ProblemDetails.
 - It stays inside the framework's rate limiting middleware (a custom
@@ -126,7 +128,8 @@ Redis write comes before the database commit (Redis first).* In one operation:
   `DisableRateLimiting()` on `/health` keep working.
 - **Redis down: fail open.** If the Redis call fails or times out, the request is
   checked against the current per-instance in-memory fixed-window limiter instead.
-  A warning is logged. Requests are never blocked just because Redis is down.
+  A warning is logged. *Amended by ADR 0015: any Redis error fails open, and after
+  a failure Redis is skipped for the rest of the window.* Requests are never blocked just because Redis is down.
 - Unlike the token version check, failing open is acceptable here: during an
   outage the limit becomes N times the configured limit (N = instances), which is
   degraded but still bounded.

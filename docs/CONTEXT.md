@@ -1,12 +1,12 @@
 # Project context: Smart Task Management System
 
-Updated 2026-11-09. This file describes the current truth, not the history. Anything marked **proposed** has not been confirmed by the developer.
+Updated 2026-11-10. This file describes the current truth, not the history. Anything marked **proposed** has not been confirmed by the developer.
 
 ## At a glance
 
-**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। এখনো কোনো আসল feature (Auth, Project, Task, Dashboard, AI, Angular) লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
+**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) তৈরি হয়েছে; Project, Task, Dashboard, AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. No business feature exists yet. The first task is to write this project's own `docs/PRD.md` by interviewing the developer. Authentication will be implemented in-house.
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`); Project, Task, Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -31,7 +31,7 @@ Evaluation: architecture, code quality, security, backend, frontend, design patt
 
 ## Current state
 
-The foundation is finished and verified; every Smart Task feature is still to be built.
+The foundation and the Auth feature are finished and verified; the other Smart Task features are still to be built.
 
 ### Repositories (all private on GitHub)
 
@@ -46,17 +46,20 @@ A fourth private repository is an archive of the long template build history and
 ### What exists in this repository
 
 - Four source projects (Domain, Application, Infrastructure, Api) and three test projects (UnitTests, IntegrationTests, ArchitectureTests), plus a small `tests/WeavingProbe` library used only to probe NullGuard behaviour.
-- A runnable `Sample` feature (5 endpoints: create, list with search/sort/paging, get by id, complete, soft delete). It is the copy-source for every new feature. See `docs/sample-flow.md`.
-- 172 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
+- A runnable `Sample` feature (5 endpoints: create, list with search/sort/paging, get by id, complete, soft delete), all `[Authorize]`. It is the copy-source for every new feature. See `docs/sample-flow.md`.
+- **Auth: built.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`; the only anonymous actions), `UsersController` (Admin: list users and change a role; Admin or Project Manager: assignable users), `User` and `RefreshToken` aggregates, a first-Admin seed from secret configuration, and `[RequireAllowedOrigin]` (Origin check against `Cors:AllowedOrigins`) on refresh and logout. The refresh token lives only in the `__Secure-refresh_token` HttpOnly cookie. Details: `docs/auth-design.md`, ADR 0013 to 0015.
+- **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
+- **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
+- 322 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
 - `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
-- Docker Compose with SQL Server bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
+- Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
 - Claude Code files: `CLAUDE.md`, `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
 - ADRs in `docs/adr/`, `docs/architecture.md`, `docs/coding-standards.md`.
 - `docs/TEMPLATE-PRD.md`, inherited from the template. The project should write its own `docs/PRD.md`; `TEMPLATE-PRD.md` may then be deleted.
 
 ### Not started
 
-The project PRD, the user and role model and the Auth feature, Project, Task, Dashboard, the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
+Project, Task, Dashboard, the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
 
 ## Locked decisions and why
 
@@ -80,11 +83,12 @@ These are settled. Changing one needs an ADR and the developer's approval.
 | Tests | xunit.v3 on Microsoft.Testing.Platform, NSubstitute, Shouldly, NetArchTest.Rules, Testcontainers (SQL Server) | Free licenses; real database in integration tests |
 | Database TLS | `Encrypt=False` only in Development and Testing; the literal `TrustServerCertificate` is forbidden everywhere | Certificate validation is never disabled |
 | OpenAPI | `docs/openapi.json` is committed and checked for freshness in CI; no Spectral | Doubles as the Swagger export deliverable |
-| Auth | Implemented in-house: JWT access token plus rotating refresh token. Keycloak was considered and not chosen for now | The assignment lists these features as deliverables |
+| Auth | Implemented in-house (built): 10-minute JWT access token with a token version, rotating refresh token in an HttpOnly cookie. Keycloak was considered and not chosen | The assignment lists these features as deliverables |
+| Redis | Allowed only for token versions and the shared rate-limit counter (ADR 0013); any other use needs a new ADR | Revocation and rate limits must agree across instances |
 
 ### Banned
 
-AutoMapper (version 14.0.0 has advisory GHSA-rvv3-g6hj-g44x; fixed versions are commercial), MediatR, FluentAssertions, Moq, CSharpier, the Specification pattern, caching, API versioning, Domain Events, Aspire, StyleCop, Meziantou, AsyncFixer, VS.Threading, commitlint, Renovate, Spectral, SonarQube, NuGet lock files, coverage packages with unclear licenses, any EF Core reference in Domain or Application.
+AutoMapper (version 14.0.0 has advisory GHSA-rvv3-g6hj-g44x; fixed versions are commercial), MediatR, FluentAssertions, Moq, CSharpier, the Specification pattern, caching (the only Redis uses are in ADR 0013), API versioning, Domain Events, Aspire, StyleCop, Meziantou, AsyncFixer, VS.Threading, commitlint, Renovate, Spectral, SonarQube, NuGet lock files, coverage packages with unclear licenses, any EF Core reference in Domain or Application.
 
 A pinned transitive package (`System.Security.Cryptography.Pkcs` 10.0.14) fixes a vulnerable dependency of EF Core; it is explained in an ADR and should be removed when upstream updates.
 
@@ -108,15 +112,15 @@ The developer reads Bangla and prefers explanations in simple Bangla with Englis
 
 ## What to do next
 
-The developer confirmed in-house Auth. Everything below is **proposed** until the developer confirms it in the PRD interview.
+Auth is built. Everything below that is not about Auth is **proposed** until the developer confirms it in the PRD interview.
 
 ### First task: the project PRD
 
-Write `docs/PRD.md` by interviewing the developer, one question at a time, each with a recommended default. Order of topics: roles and permissions, task status rules, project delete behaviour, the AI provider, the frontend location, where the refresh token lives. Mark every requirement CONFIRMED or PROPOSED, and anything about the AI provider that cannot be verified from official documentation as UNVERIFIED. The PRD is final only when the developer approves it and its open-questions list is empty.
+A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Write `docs/PRD.md` by interviewing the developer, one question at a time, each with a recommended default. Order of topics: roles and permissions, task status rules, project delete behaviour, the AI provider, the frontend location, where the refresh token lives. Mark every requirement CONFIRMED or PROPOSED, and anything about the AI provider that cannot be verified from official documentation as UNVERIFIED. The PRD is final only when the developer approves it and its open-questions list is empty.
 
 ### Build order
 
-1. Auth (users, roles, register, login, refresh, logout)
+1. ~~Auth (users, roles, register, login, refresh, logout)~~ built
 2. Project module
 3. Task module
 4. Dashboard
@@ -124,21 +128,9 @@ Write `docs/PRD.md` by interviewing the developer, one question at a time, each 
 6. Angular frontend (after the backend is stable)
 7. README, `PROMPTS.md`, API collection export
 
-### Auth design (proposed)
+### Auth design
 
-| Topic | Design |
-| --- | --- |
-| Tokens | Short-lived JWT access token (for example 15 minutes) and a long-lived random refresh token (for example 7 days); lifetimes in Options |
-| Storage | Refresh tokens are stored only as a hash in a `RefreshToken` table, never in plain text; generated with a cryptographic random generator |
-| Rotation | Every refresh revokes the used token and issues a new pair |
-| Reuse detection | If a revoked refresh token is presented again, revoke all refresh tokens of that user |
-| Logout | Revokes the refresh token; the access token expires on its own |
-| Register | Default role Team Member; only an Admin can grant Admin or Project Manager; the first Admin is seeded from secret configuration, never hardcoded |
-| Login | Same generic error for unknown email and wrong password; rate limited |
-| Claims | `sub` and `role`; role comes only from the validated token, never from the request body |
-| Layers | Domain: `User`, `RefreshToken`, `Role`; Application: commands, validators, `ITokenService`, repositories; Infrastructure: JWT generation, refresh-token hashing, migration; Api: `AuthController` and authorization policies |
-
-The template already provides `ISecurityContext`, the security-context middleware, `IPasswordHasher`, JWT options validation (signing key of at least 32 characters) and rate limiting.
+Built as designed in `docs/auth-design.md`; the implementation amendments are in ADR 0014 and ADR 0015. The template pieces it uses: `ISecurityContext`, the security-context middleware, `IPasswordHasher`, JWT options validation (signing key of at least 32 characters) and rate limiting.
 
 ### Domain rules (proposed)
 
@@ -170,7 +162,7 @@ UNVERIFIED:
 - The GitHub Models API shape, authentication and rate limits for the AI feature.
 - Whether an evaluator accepts in-house Auth as expected; the developer may ask the assignment contact if unsure.
 
-Template follow-ups (not blocking): GitHub Actions are pinned by major version, not by commit SHA; `ubuntu-latest` moves to new Ubuntu releases and may change behaviour; behind a reverse proxy, rate limiting sees the proxy address, so configure forwarded headers with explicit trusted proxies before production.
+Template follow-ups (not blocking): GitHub Actions are pinned by major version, not by commit SHA; `ubuntu-latest` moves to new Ubuntu releases and may change behaviour; behind a reverse proxy, list its address in `ForwardedHeaders:KnownProxies` before production, otherwise rate limiting sees the proxy address.
 
 ## Repo map, commands and verification
 
@@ -194,9 +186,9 @@ Assemblies and namespaces are `Datavanced.SmartTaskManagement.<Layer>`, set once
 | --- | --- |
 | Full verification (Git Bash) | `bash scripts/verify.sh` |
 | Full verification (Windows PowerShell 5.1) | `powershell -File scripts/verify.ps1` |
-| Start the database | `docker compose up -d db` (needs a local `.env` copied from `.env.example`) |
-| Local secrets | Set `Database:Name`, `Database:Password` and `Jwt:SigningKey` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the README |
-| Run the API | `dotnet run --project src/Api --launch-profile http`, then open `/swagger` (Development only; the template used port 5199) |
+| Start the database and Redis | `docker compose up -d db redis` (needs a local `.env` copied from `.env.example`) |
+| Local secrets | Set `Database:Name`, `Database:Password`, `Jwt:SigningKey`, `Redis:ConnectionString` and `AdminSeed:Email|Password|FullName` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the README |
+| Run the API | `dotnet run --project src/Api --launch-profile https`, then open `https://localhost:7254/swagger` (Development only; the `http` profile uses port 5199) |
 | Regenerate the OpenAPI file | `bash scripts/generate-openapi.sh` and commit `docs/openapi.json` |
 | Full stack in Docker | `docker compose up -d` (local only; the compose file runs in Development mode; the API port comes from `API_PORT` in `.env`) |
 
