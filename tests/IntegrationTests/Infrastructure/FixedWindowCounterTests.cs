@@ -53,6 +53,21 @@ public sealed class FixedWindowCounterTests(RedisFixture redis) : IAsyncLifetime
         (exception.InnerException is RedisConnectionException or RedisTimeoutException).ShouldBeTrue();
     }
 
+    // A real server error without stopping Redis: INCR on a non-integer value replies "ERR ...".
+    // Stands in for LOADING / READONLY / MASTERDOWN / OOM, which use the same exception type.
+    [Fact]
+    public async Task Increment_RedisServerError_ThrowsSharedStateUnavailable()
+    {
+        var (counter, connection) = Create(redis.ConnectionString);
+        var key = $"ratelimit:test:{Guid.NewGuid():N}:0";
+        await connection.GetDatabase().StringSetAsync(key, "not-a-number");
+
+        var exception = await Should.ThrowAsync<SharedStateUnavailableException>(
+            () => counter.IncrementAsync(key, TimeSpan.FromSeconds(60), _ct));
+
+        exception.InnerException.ShouldBeOfType<RedisServerException>();
+    }
+
     private (RedisFixedWindowCounter Counter, IConnectionMultiplexer Connection) Create(
         string connectionString, int connectTimeoutMs = 2000, int operationTimeoutMs = 1000)
     {

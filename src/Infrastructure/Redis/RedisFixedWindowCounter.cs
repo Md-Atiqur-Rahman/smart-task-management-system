@@ -6,7 +6,10 @@ using StackExchange.Redis;
 
 namespace Datavanced.SmartTaskManagement.Infrastructure.Redis;
 
-/// <summary>Fixed-window counter in Redis: one atomic script increments and sets the expiry once.</summary>
+/// <summary>
+/// Fixed-window counter in Redis: one atomic script increments and sets the expiry once.
+/// Any Redis error (connection, timeout, server error) becomes <see cref="SharedStateUnavailableException"/>.
+/// </summary>
 public sealed class RedisFixedWindowCounter(IConnectionMultiplexer connection) : IFixedWindowCounter
 {
     // INCR, and PEXPIRE only on the first increment, so the window is never extended.
@@ -33,6 +36,11 @@ public sealed class RedisFixedWindowCounter(IConnectionMultiplexer connection) :
         }
         catch (RedisTimeoutException ex)
         {
+            throw new SharedStateUnavailableException(ex);
+        }
+        catch (RedisServerException ex)
+        {
+            // LOADING, READONLY, MASTERDOWN, OOM, ...: the rate limit fails open on any Redis error (ADR 0013).
             throw new SharedStateUnavailableException(ex);
         }
     }

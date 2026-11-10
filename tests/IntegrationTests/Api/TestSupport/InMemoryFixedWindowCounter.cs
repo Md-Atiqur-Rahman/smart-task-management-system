@@ -10,14 +10,20 @@ public sealed class InMemoryFixedWindowCounter : IFixedWindowCounter
 {
     private readonly ConcurrentDictionary<string, long> _counts = new(StringComparer.Ordinal);
 
+    private int _calls;
+
     /// <summary>When true every call throws <see cref="SharedStateUnavailableException"/>.</summary>
     public bool SimulateOutage { get; set; }
 
     /// <summary>The keys incremented so far.</summary>
     public IReadOnlyCollection<string> Keys => _counts.Keys.ToArray();
 
+    /// <summary>Number of IncrementAsync calls, failed ones included.</summary>
+    public int Calls => Volatile.Read(ref _calls);
+
     public Task<long> IncrementAsync(string key, TimeSpan window, CancellationToken ct)
     {
+        Interlocked.Increment(ref _calls);
         if (SimulateOutage)
         {
             throw new SharedStateUnavailableException();

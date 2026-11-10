@@ -108,6 +108,30 @@ public sealed class SharedRateLimitingTests(RedisFixture redis) : IClassFixture<
         warnings[0].Properties.Keys.ShouldNotContain(k => k.Contains("Ip", StringComparison.OrdinalIgnoreCase));
     }
 
+    // An outage costs one failed Redis call per window, not one (up to the operation timeout) per request.
+    [Fact]
+    public async Task RedisDown_SkipsRedisForTheRestOfTheWindow_RetriesInTheNextWindow()
+    {
+        var clock = new FakeTimeProvider(Now);
+        using var factory = CreateFactory(clock, permitLimit: 100);
+        factory.RateLimitCounter.SimulateOutage = true;
+        using var client = factory.CreateClient();
+
+        for (var i = 0; i < 3; i++)
+        {
+            (await client.GetAsync(AnonymousUri, _ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        factory.RateLimitCounter.Calls.ShouldBe(1);
+
+        clock.Advance(TimeSpan.FromSeconds(WindowSeconds));
+        factory.RateLimitCounter.SimulateOutage = false;
+        (await client.GetAsync(AnonymousUri, _ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        factory.RateLimitCounter.Calls.ShouldBe(2);
+        factory.RateLimitCounter.Keys.ShouldHaveSingleItem();
+    }
+
     [Fact]
     public async Task Health_IsNotRateLimited()
     {

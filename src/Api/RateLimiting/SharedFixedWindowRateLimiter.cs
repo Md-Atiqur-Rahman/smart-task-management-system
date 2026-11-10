@@ -15,7 +15,8 @@ namespace Datavanced.SmartTaskManagement.Api.RateLimiting;
 /// with <see cref="AuthRateLimitAttribute"/> must pass the stricter auth limit as well.
 /// Key: <c>ratelimit:&lt;policy&gt;:&lt;client-ip&gt;:&lt;window-start-unix-seconds&gt;</c>.
 /// When the store is unavailable the request is checked against per-instance in-memory
-/// fixed-window limiters instead (fail open), and a warning is logged at most once per window.
+/// fixed-window limiters instead (fail open) for the rest of the current window; a warning is
+/// logged at most once per window, and the next window tries the shared store again.
 /// </summary>
 internal sealed partial class SharedFixedWindowRateLimiter : PartitionedRateLimiter<HttpContext>
 {
@@ -32,8 +33,9 @@ internal sealed partial class SharedFixedWindowRateLimiter : PartitionedRateLimi
     private readonly PartitionedRateLimiter<HttpContext> _fallbackGlobal;
     private readonly PartitionedRateLimiter<HttpContext> _fallbackAuth;
 
-    // Window start (unix seconds) of the last fallback warning; per instance, not static.
-    private long _lastWarningWindowStart = long.MinValue;
+    // Global window start (unix seconds) in which the shared store last failed; per instance, not
+    // static. While it equals the current window, Redis is skipped and no further warning is logged.
+    private long _failedWindowStart = long.MinValue;
 
     public SharedFixedWindowRateLimiter(
         IFixedWindowCounter counter,
@@ -67,8 +69,18 @@ internal sealed partial class SharedFixedWindowRateLimiter : PartitionedRateLimi
         ArgumentOutOfRangeException.ThrowIfNotEqual(permitCount, 1);
         var client = ClientKey(resource);
         var auth = resource.GetEndpoint()?.Metadata.GetMetadata<AuthRateLimitAttribute>() is not null;
+
+        // After a failure, skip Redis until the next window: an outage then costs one failed call
+        // (up to the operation timeout) per window instead of one per request.
+        if (Volatile.Read(ref _failedWindowStart) == WindowStart(_options.WindowSeconds))
+        {
+            return AcquireFromFallback(resource, auth);
+        }
+
         try
         {
+            // A request rejected by the auth limit has already consumed the global counter
+            // (accepted over-count of a fixed window).
             var allowed = await IsWithinLimitAsync(
                     GlobalPolicy, client, _options.PermitLimit, _options.WindowSeconds, cancellationToken)
                 && (!auth || await IsWithinLimitAsync(
@@ -77,7 +89,7 @@ internal sealed partial class SharedFixedWindowRateLimiter : PartitionedRateLimi
         }
         catch (SharedStateUnavailableException ex)
         {
-            WarnOncePerWindow(ex);
+            MarkWindowFailed(ex);
             return AcquireFromFallback(resource, auth);
         }
     }
@@ -142,10 +154,10 @@ internal sealed partial class SharedFixedWindowRateLimiter : PartitionedRateLimi
         return authLease.IsAcquired ? Lease.Acquired : Lease.Rejected;
     }
 
-    private void WarnOncePerWindow(SharedStateUnavailableException exception)
+    private void MarkWindowFailed(SharedStateUnavailableException exception)
     {
         var windowStart = WindowStart(_options.WindowSeconds);
-        if (Interlocked.Exchange(ref _lastWarningWindowStart, windowStart) != windowStart)
+        if (Interlocked.Exchange(ref _failedWindowStart, windowStart) != windowStart)
         {
             LogFallback(_logger, exception);
         }
