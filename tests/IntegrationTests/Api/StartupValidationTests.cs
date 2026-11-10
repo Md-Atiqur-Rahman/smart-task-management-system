@@ -35,6 +35,21 @@ public sealed class StartupValidationTests
     }
 
     [Fact]
+    public void Startup_AdminSeedPasswordBreaksPolicy_FailsValidation()
+    {
+        using var factory = new ApiFactory()
+            .WithSetting("AdminSeed:Email", "admin@example.com")
+            .WithSetting("AdminSeed:Password", "short1")
+            .WithSetting("AdminSeed:FullName", "Admin");
+
+        var exception = Should.Throw<Exception>(() => factory.CreateClient());
+
+        var validation = FindValidationException(exception);
+        validation.ShouldNotBeNull($"Expected an OptionsValidationException, got: {exception}");
+        validation.Message.ShouldContain("AdminSeed:Password");
+    }
+
+    [Fact]
     public void Startup_NoAdminSeedSettings_Starts()
     {
         using var factory = new ApiFactory();

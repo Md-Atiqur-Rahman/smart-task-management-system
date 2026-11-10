@@ -40,7 +40,7 @@ public sealed partial class AdminSeeder(
 
         var admin = User.CreateSeedAdmin(
             Email.Create(settings.Email!),
-            settings.FullName!,
+            settings.FullName!.Trim(),
             passwordHasher.Hash(settings.Password!));
         users.Add(admin);
 
