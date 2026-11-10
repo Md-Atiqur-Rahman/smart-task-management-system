@@ -6,7 +6,9 @@ namespace Datavanced.SmartTaskManagement.Application.Features.Projects;
 
 /// <summary>
 /// Read side of projects: returns DTOs only, never aggregates. Every method sees only the
-/// projects visible to the caller (Admin: all; Project Manager: own; anyone else: none).
+/// projects visible to the caller (Admin: all; Project Manager: own projects; any caller: projects
+/// with a non-deleted task assigned to them). Task counts include only non-deleted tasks the caller
+/// may see: all of them for an Admin or the owning Project Manager, otherwise own assignments.
 /// </summary>
 public interface IProjectReadRepository
 {

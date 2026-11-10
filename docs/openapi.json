@@ -1904,7 +1904,8 @@
           "description",
           "owner",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "taskCounts"
         ],
         "type": "object",
         "properties": {
@@ -1934,9 +1935,12 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "taskCounts": {
+            "$ref": "#/components/schemas/ProjectTaskCountsDto"
           }
         },
-        "description": "A single project with its owner."
+        "description": "A single project with its owner and the task counts the caller may see."
       },
       "ProjectListItemDto": {
         "required": [
@@ -1945,7 +1949,9 @@
           "ownerId",
           "ownerName",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "taskCount",
+          "completedTaskCount"
         ],
         "type": "object",
         "properties": {
@@ -1973,9 +1979,25 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "taskCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "completedTaskCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         },
-        "description": "A project as shown in the projects list."
+        "description": "A project as shown in the projects list. The counts include only non-deleted tasks the caller\nmay see: every task for an Admin or the owning Project Manager, only the caller's own assigned\ntasks for a caller who sees the project through assignment."
       },
       "ProjectOwnerDto": {
         "required": [
@@ -1997,6 +2019,50 @@
           }
         },
         "description": "The owner of a project as shown in its details. Never carries credentials."
+      },
+      "ProjectTaskCountsDto": {
+        "required": [
+          "toDo",
+          "inProgress",
+          "completed",
+          "cancelled"
+        ],
+        "type": "object",
+        "properties": {
+          "toDo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "inProgress": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "completed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cancelled": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "description": "Non-deleted tasks of a project per status: every task for an Admin or the owning Project\nManager, only the caller's own assigned tasks for a caller who sees the project through assignment."
       },
       "RegisterRequest": {
         "required": [

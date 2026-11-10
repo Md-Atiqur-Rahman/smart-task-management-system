@@ -51,7 +51,7 @@ public sealed class ProjectQueryHandlerTests
         SetCaller(callerId, Role.Admin);
         var dto = new ProjectDetailsDto(
             Guid.NewGuid(), "P", null, new ProjectOwnerDto(Guid.NewGuid(), "Owner", "o@x.com"),
-            DateTimeOffset.UnixEpoch, null);
+            DateTimeOffset.UnixEpoch, null, new ProjectTaskCountsDto(1, 2, 3, 4));
         _readRepository.GetByIdAsync(dto.Id, callerId, Role.Admin, Arg.Any<CancellationToken>()).Returns(dto);
         var handler = new GetProjectByIdQueryHandler(_security, _readRepository);
 
