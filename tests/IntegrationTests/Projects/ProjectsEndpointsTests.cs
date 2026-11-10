@@ -130,7 +130,7 @@ public sealed class ProjectsEndpointsTests(SqlServerFixture database, RedisFixtu
         details.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         update.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         delete.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await ListIdsAsync(other, "?pageSize=100")).ShouldNotContain(id);
+        (await ListIdsAsync(other, $"?ownerId={owner.Id}&pageSize=100")).ShouldNotContain(id);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class ProjectsEndpointsTests(SqlServerFixture database, RedisFixtu
         using var details = await SendAsync(HttpMethod.Get, $"{ProjectsPath}/{id}", admin);
 
         details.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await ListIdsAsync(admin, "?pageSize=100")).ShouldNotContain(id);
+        (await ListIdsAsync(admin, $"?ownerId={pm.Id}&pageSize=100")).ShouldNotContain(id);
     }
 
     [Fact]
