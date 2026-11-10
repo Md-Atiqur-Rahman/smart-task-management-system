@@ -57,6 +57,36 @@ public sealed class StartupValidationTests
         Should.NotThrow(() => factory.CreateClient());
     }
 
+    [Theory]
+    [InlineData("*")]
+    [InlineData("https://app.example.test/")]
+    [InlineData("https://app.example.test/app")]
+    [InlineData("https://app.example.test?x=1")]
+    [InlineData("https://app.example.test#top")]
+    [InlineData("ftp://app.example.test")]
+    [InlineData("app.example.test")]
+    [InlineData("")]
+    public void Startup_InvalidCorsOrigin_FailsValidation(string origin)
+    {
+        using var factory = new ApiFactory().WithSetting("Cors:AllowedOrigins:0", origin);
+
+        var exception = Should.Throw<Exception>(() => factory.CreateClient());
+
+        var validation = FindValidationException(exception);
+        validation.ShouldNotBeNull($"Expected an OptionsValidationException, got: {exception}");
+        validation.Message.ShouldContain("Cors:AllowedOrigins");
+    }
+
+    [Theory]
+    [InlineData("https://app.example.test")]
+    [InlineData("http://localhost:4200")]
+    public void Startup_ValidCorsOrigin_Starts(string origin)
+    {
+        using var factory = new ApiFactory().WithSetting("Cors:AllowedOrigins:0", origin);
+
+        Should.NotThrow(() => factory.CreateClient());
+    }
+
     private static OptionsValidationException? FindValidationException(Exception? exception)
     {
         while (exception is not null)

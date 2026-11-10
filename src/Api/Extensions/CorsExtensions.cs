@@ -14,6 +14,7 @@ internal static class CorsExtensions
         services.AddOptions<CorsPolicyOptions>()
             .Bind(configuration.GetSection(CorsPolicyOptions.SectionName))
             .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<CorsPolicyOptions>, CorsPolicyOptionsValidator>();
 
         services.AddCors();
         services.AddOptions<CorsOptions>()
