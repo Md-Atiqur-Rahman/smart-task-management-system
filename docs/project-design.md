@@ -69,7 +69,7 @@ From PRD 2 and PRD 8; enforced in Application handlers using `ISecurityContext`
 | Operation | Admin | Project Manager | Team Member |
 | --- | --- | --- | --- |
 | Create | `ownerId` required; must be an existing Project Manager | `ownerId` omitted or equal to self; owner = caller | 403 (policy) |
-| Details / list | All (not deleted) | Only `OwnerId == caller` | None until the Task module (section 1) |
+| Details / list | All (not deleted) | Only `OwnerId == caller` | Projects of their non-deleted tasks, details only (since 2026-11-11, `docs/task-design.md`) |
 | Update name/description | Any | Own | 403 (policy) |
 | Change owner | Any; new owner must be a Project Manager | 403 (policy) | 403 (policy) |
 | Delete (soft) | Any | Own | 403 (policy) |

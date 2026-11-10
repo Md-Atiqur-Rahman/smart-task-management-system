@@ -6,7 +6,7 @@ Updated 2026-11-11. This file describes the current truth, not the history. Anyt
 
 **বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard, AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project module is built (`docs/project-design.md`); Task, Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project and Task modules are built (`docs/project-design.md`, `docs/task-design.md`); Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -115,7 +115,7 @@ The developer reads Bangla and prefers explanations in simple Bangla with Englis
 
 ## What to do next
 
-Auth and Project are built. Everything below that is not about Auth is **proposed** until the developer confirms it in the PRD interview.
+Auth, Project and Task are built. Everything below that is not about them is **proposed** until the developer confirms it in the PRD interview.
 
 ### First task: the project PRD
 
