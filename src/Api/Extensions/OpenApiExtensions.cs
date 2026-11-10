@@ -1,4 +1,8 @@
+using System.Text.Json.Serialization;
+
 using Datavanced.SmartTaskManagement.Api.OpenApi;
+
+using HttpJsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
 
 namespace Datavanced.SmartTaskManagement.Api.Extensions;
 
@@ -13,6 +17,11 @@ internal static class OpenApiExtensions
     /// </summary>
     public static IServiceCollection AddOpenApiDocument(this IServiceCollection services)
     {
+        // Schemas are built from the global (Microsoft.AspNetCore.Http.Json) JsonOptions, not
+        // from MVC's AddJsonOptions ("Influence on OpenAPI: None"). The same string-enum
+        // converter as in AddApiControllers, so enum schemas list the names the API sends.
+        services.Configure<HttpJsonOptions>(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         services.AddOpenApi(DocumentName, options =>
         {
             options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();

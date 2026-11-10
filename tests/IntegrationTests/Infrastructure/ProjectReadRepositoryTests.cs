@@ -2,6 +2,7 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Queries.ListProjects;
 using Datavanced.SmartTaskManagement.Domain.Projects;
+using Datavanced.SmartTaskManagement.Domain.Tasks;
 using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence.ReadRepositories;
@@ -241,6 +242,108 @@ public sealed class ProjectReadRepositoryTests(SqlServerFixture fixture)
         page.Items.ShouldHaveSingleItem().OwnerName.ShouldBe(pm.FullName);
     }
 
+    [Fact]
+    public async Task List_AsTeamMemberWithAssignedTask_ReturnsThatProject()
+    {
+        var pm = await SaveUserAsync(Role.ProjectManager);
+        var member = await SaveUserAsync(Role.TeamMember);
+        var assigned = await SaveProjectAsync($"{_marker} assigned", pm.Id);
+        var other = await SaveProjectAsync($"{_marker} other", pm.Id);
+        await SaveTaskAsync(assigned.Id, assigneeId: member.Id);
+        await SaveTaskAsync(assigned.Id, status: TaskItemStatus.Completed);
+        await SaveTaskAsync(other.Id);
+
+        var page = await ListAsync(Query(search: _marker), member.Id, Role.TeamMember);
+
+        page.TotalCount.ShouldBe(1);
+        var item = page.Items.ShouldHaveSingleItem();
+        item.Id.ShouldBe(assigned.Id);
+        item.OwnerId.ShouldBe(pm.Id);
+        item.TaskCount.ShouldBe(1);
+        item.CompletedTaskCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task List_AsTeamMemberWhoseOnlyTaskIsDeleted_ReturnsNothing()
+    {
+        var pm = await SaveUserAsync(Role.ProjectManager);
+        var member = await SaveUserAsync(Role.TeamMember);
+        var project = await SaveProjectAsync($"{_marker} formerly assigned", pm.Id);
+        var task = await SaveTaskAsync(project.Id, assigneeId: member.Id);
+        await SoftDeleteTaskAsync(task.Id);
+
+        var page = await ListAsync(Query(search: _marker), member.Id, Role.TeamMember);
+
+        page.TotalCount.ShouldBe(0);
+        page.Items.ShouldBeEmpty();
+        (await GetByIdAsync(project.Id, member.Id, Role.TeamMember)).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetById_AsPmAssigneeOfAnotherPmsProject_ReturnsProject()
+    {
+        var owner = await SaveUserAsync(Role.ProjectManager);
+        var pmAssignee = await SaveUserAsync(Role.ProjectManager);
+        var project = await SaveProjectAsync($"{_marker} foreign", owner.Id);
+        await SaveTaskAsync(project.Id, assigneeId: pmAssignee.Id);
+
+        var details = (await GetByIdAsync(project.Id, pmAssignee.Id, Role.ProjectManager)).ShouldNotBeNull();
+
+        details.Id.ShouldBe(project.Id);
+        details.Owner.Id.ShouldBe(owner.Id);
+        var page = await ListAsync(Query(search: _marker), pmAssignee.Id, Role.ProjectManager);
+        page.Items.ShouldHaveSingleItem().Id.ShouldBe(project.Id);
+    }
+
+    [Fact]
+    public async Task List_AsOwner_CountsAllNonDeletedTasks()
+    {
+        var pm = await SaveUserAsync(Role.ProjectManager);
+        var member = await SaveUserAsync(Role.TeamMember);
+        var project = await SaveProjectAsync($"{_marker} counted", pm.Id);
+        await SaveTaskAsync(project.Id);
+        await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.Completed);
+        var deleted = await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.Completed);
+        await SoftDeleteTaskAsync(deleted.Id);
+
+        var asOwner = await ListAsync(Query(search: _marker), pm.Id, Role.ProjectManager);
+        var asAdmin = await ListAsync(Query(search: _marker), Guid.NewGuid(), Role.Admin);
+
+        foreach (var page in new[] { asOwner, asAdmin })
+        {
+            var item = page.Items.ShouldHaveSingleItem();
+            item.Id.ShouldBe(project.Id);
+            item.TaskCount.ShouldBe(2);
+            item.CompletedTaskCount.ShouldBe(1);
+        }
+    }
+
+    [Fact]
+    public async Task GetById_AsNonOwnerAssignee_CountsOnlyOwnTasksPerStatus()
+    {
+        var pm = await SaveUserAsync(Role.ProjectManager);
+        var member = await SaveUserAsync(Role.TeamMember);
+        var otherMember = await SaveUserAsync(Role.TeamMember);
+        var project = await SaveProjectAsync($"{_marker} shared", pm.Id);
+        await SaveTaskAsync(project.Id, assigneeId: member.Id);
+        await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.InProgress);
+        await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.InProgress);
+        await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.Cancelled);
+        var deleted = await SaveTaskAsync(project.Id, assigneeId: member.Id, status: TaskItemStatus.Completed);
+        await SoftDeleteTaskAsync(deleted.Id);
+        await SaveTaskAsync(project.Id, assigneeId: otherMember.Id, status: TaskItemStatus.Completed);
+        await SaveTaskAsync(project.Id, status: TaskItemStatus.ToDo);
+
+        var asAssignee = (await GetByIdAsync(project.Id, member.Id, Role.TeamMember)).ShouldNotBeNull();
+        var asOwner = (await GetByIdAsync(project.Id, pm.Id, Role.ProjectManager)).ShouldNotBeNull();
+        var listed = (await ListAsync(Query(search: _marker), member.Id, Role.TeamMember)).Items.ShouldHaveSingleItem();
+
+        asAssignee.TaskCounts.ShouldBe(new ProjectTaskCountsDto(ToDo: 1, InProgress: 2, Completed: 0, Cancelled: 1));
+        asOwner.TaskCounts.ShouldBe(new ProjectTaskCountsDto(ToDo: 2, InProgress: 2, Completed: 1, Cancelled: 1));
+        listed.TaskCount.ShouldBe(4);
+        listed.CompletedTaskCount.ShouldBe(0);
+    }
+
     private static ListProjectsQuery Query(
         string? search = null,
         Guid? ownerId = null,
@@ -291,6 +394,25 @@ public sealed class ProjectReadRepositoryTests(SqlServerFixture fixture)
         await using var context = fixture.CreateDbContext();
         var project = (await new ProjectRepository(context).GetByIdAsync(id, _ct)).ShouldNotBeNull();
         project.UpdateDetails(project.Name, "updated " + Guid.NewGuid().ToString("N"));
+        (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+    }
+
+    private async Task<TaskItem> SaveTaskAsync(
+        Guid projectId, Guid? assigneeId = null, TaskItemStatus status = TaskItemStatus.ToDo)
+    {
+        var task = TaskItem.Create(projectId, $"{_marker} task", null, TaskPriority.Medium, null, assigneeId);
+        task.ChangeStatus(status);
+        await using var context = fixture.CreateDbContext();
+        new TaskItemRepository(context).Add(task);
+        (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
+        return task;
+    }
+
+    private async Task SoftDeleteTaskAsync(Guid id)
+    {
+        await using var context = fixture.CreateDbContext();
+        var task = (await new TaskItemRepository(context).GetByIdAsync(id, _ct)).ShouldNotBeNull();
+        task.Delete(fixture.Time.GetUtcNow());
         (await new UnitOfWork(context).SaveChangesAsync(_ct)).IsSuccess.ShouldBeTrue();
     }
 

@@ -1,10 +1,12 @@
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Application.Features.Samples;
+using Datavanced.SmartTaskManagement.Application.Features.Tasks;
 using Datavanced.SmartTaskManagement.Application.Features.Users;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
 using Datavanced.SmartTaskManagement.Domain.Projects;
 using Datavanced.SmartTaskManagement.Domain.Samples;
+using Datavanced.SmartTaskManagement.Domain.Tasks;
 using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Interceptors;
@@ -42,10 +44,12 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<ISampleRepository, SampleRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+        builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
         builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         builder.Services.AddScoped<ISampleReadRepository, SampleReadRepository>();
         builder.Services.AddScoped<IUserReadRepository, UserReadRepository>();
         builder.Services.AddScoped<IProjectReadRepository, ProjectReadRepository>();
+        builder.Services.AddScoped<ITaskItemReadRepository, TaskItemReadRepository>();
 
         if (builder.Environment.IsDevelopment())
         {

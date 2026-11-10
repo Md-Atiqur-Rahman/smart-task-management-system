@@ -21,7 +21,10 @@ Out of scope here:
   assigned task", PRD 2) needs tasks. Until the Task module exists, a Team Member
   sees no projects (empty list, 404 on details). The Task module adds the
   assignment-based filter to the project read repository **[builder's call]**.
-- Task counts on projects (PRD 8: they come with the Task module).
+  Update 2026-11-11: the Task module now delivers it: assignees (any role) see
+  the projects of their non-deleted tasks, details only (`docs/task-design.md`).
+- Task counts on projects (PRD 8: they come with the Task module). Update
+  2026-11-11: delivered by the Task module (`docs/task-design.md`).
 - Removing the Sample slice: stays until the Task module is done, then removed
   in its own change following `docs/sample-flow.md` "Remove Sample"
   **[builder's call]** (keeps this change focused; Sample is the copy-source for
@@ -66,7 +69,7 @@ From PRD 2 and PRD 8; enforced in Application handlers using `ISecurityContext`
 | Operation | Admin | Project Manager | Team Member |
 | --- | --- | --- | --- |
 | Create | `ownerId` required; must be an existing Project Manager | `ownerId` omitted or equal to self; owner = caller | 403 (policy) |
-| Details / list | All (not deleted) | Only `OwnerId == caller` | None until the Task module (section 1) |
+| Details / list | All (not deleted) | Own projects, plus projects where they are assignee of a non-deleted task (those details only, read-only; since 2026-11-11, `docs/task-design.md`) | Projects of their non-deleted tasks, details only (since 2026-11-11, `docs/task-design.md`) |
 | Update name/description | Any | Own | 403 (policy) |
 | Change owner | Any; new owner must be a Project Manager | 403 (policy) | 403 (policy) |
 | Delete (soft) | Any | Own | 403 (policy) |
