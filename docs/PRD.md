@@ -2,7 +2,7 @@
 
 - Status: **Draft**, not yet approved. Final only when the developer approves it and
   the open-questions list is empty.
-- Updated: 2026-11-09
+- Updated: 2026-11-10
 - Sources: `docs/assignment.md` (the brief), the PRD interview with the developer,
   `docs/adr/` (decisions). Design and implementation details live in design
   documents under `docs/`, which reference this PRD instead of repeating it.
@@ -29,15 +29,15 @@ one role.
 
 | Capability | Admin | Project Manager | Team Member |
 | --- | --- | --- | --- |
-| See projects | All | Only own projects | Only projects where they have at least one assigned task (details only) |
+| See projects | All | Own projects, and projects where they have at least one assigned task (details only) | Only projects where they have at least one assigned task (details only) |
 | Create project | Yes; must choose a Project Manager as owner | Yes; always becomes the owner | No |
 | Update (name, description) / delete project | Any project | Own projects | No |
 | Change a project's owner | Yes; the new owner must be a Project Manager | No | No |
-| See tasks | All | All tasks in own projects | Only tasks assigned to them |
+| See tasks | All | All tasks in own projects, and tasks assigned to them | Only tasks assigned to them |
 | Create / update / delete task | Any | In own projects | No |
 | Assign task | To anyone | To Team Members or themselves; not to other PMs or Admins | No |
 | Search assignable users (by name or email; result shows only name and email) | Yes | Yes: **all** Team Members in the system, not only those already in own projects (a new TM has no tasks yet) | No |
-| Change task status | Any | In own projects | Only on tasks assigned to them; status is the only field they may change |
+| Change task status | Any | In own projects, and on tasks assigned to them | Only on tasks assigned to them; status is the only field they may change |
 | Use the AI description endpoint | Yes | Yes | No |
 | List users (search, paging) and change a user's role | Yes | No | No |
 | Create a user directly | No (users only self-register) | No | No |
@@ -55,6 +55,11 @@ one role.
   Visibility is therefore decided from current assignments on every request,
   never from data stored in the token.
 - Dashboard numbers are scoped exactly like the lists above.
+- CONFIRMED: whoever a task is assigned to can see that task and its project
+  (details only) and change the task's status, whatever their role. This covers
+  a Project Manager or Admin assigned to a task in a project they do not own,
+  and a previous project owner who is still assigned to tasks there. On a
+  project they do not own they may change only the status of their own tasks.
 
 ## 4. Registration and the first Admin (CONFIRMED)
 
@@ -177,11 +182,34 @@ one role.
   maximum 100. A list row shows name, owner name, created and updated time;
   details add the full description and the owner's name and email. Task counts
   come with the Task module.
-- PROPOSED: Project and Task are separate aggregates; a task references its
+- CONFIRMED: Project and Task are separate aggregates; a task references its
   project by `ProjectId`.
-- PROPOSED: status transitions: To Do -> In Progress or Cancelled; In Progress ->
-  Completed, Cancelled or To Do; Completed and Cancelled are final. An invalid
-  transition returns 409.
+- CONFIRMED: no status transition rules: a task may move from any status to any
+  other status, including reopening a Completed or Cancelled task, like the
+  default workflows of Azure Boards, Jira (team-managed) and Zoho. Setting the
+  current status again changes nothing. Priority has no transition rules either.
+- CONFIRMED: a task has a title (required, max 200), a description (optional,
+  max 4000), a status (To Do when created), a priority (Medium when not given), a
+  due date (optional, date only without time, past dates allowed) and an assignee
+  (optional). Created/updated times are kept
+  by the system.
+- CONFIRMED: deleting a task is a soft delete, like a project: it disappears from
+  lists, search, counts and the dashboard, and direct access returns 404 for
+  everyone including Admins. No restore feature.
+- CONFIRMED: task lists: one per project and one across all visible projects;
+  keyword search on title and description; filters on status, priority, assignee,
+  unassigned tasks only, and a due-date range; sort by title, priority, due date, status, created time or
+  updated time; server-side paging (default 20, maximum 100). A list row shows
+  title, status, priority, due date, assignee name, project name, created and
+  updated time; details add the full description, the assignee's email and the
+  project id.
+- CONFIRMED: separate operations for editing details (title, description,
+  priority, due date), changing the status, and assigning or unassigning, so a
+  Team Member can only ever reach the status operation.
+- CONFIRMED: project task counts: a project list row shows the total and the
+  completed number of tasks; project details show the count per status. Counts
+  follow visibility: a user who sees a project only through assigned tasks sees
+  only the counts of their own tasks. Deleted tasks are not counted.
 
 ## 9. Dashboard
 
@@ -220,7 +248,6 @@ migrations.
 
 | # | Question | Proposed default |
 | --- | --- | --- |
-| 4 | Task status transitions (section 8) | As proposed |
 | 6 | AI provider and model (section 10) | GitHub Models, after verifying official docs |
 
 ## Change log
@@ -238,3 +265,4 @@ migrations.
 | 2026-11-10 | Section 5 aligned with ADR 0014: fixed Redis key expiry instead of sliding; role change writes Redis first, then the database (503 and nothing saved when Redis is down) instead of deleting the key after a failed Redis update | ADR 0014 amended ADR 0013 during the design; PRD 5 still described the old behaviour |
 | 2026-11-10 | Reuse detection revokes only the presented token's family (one login's chain) instead of all of the user's tokens (ADR 0016) | Developer decision: after a role change the user's devices signed each other out in a loop, and anyone holding an old revoked token could sign the user out everywhere |
 | 2026-11-10 | Projects: fields, ownership (Admin chooses a PM owner; only an Admin can change the owner later, replacing "ownership does not change"), soft delete (open question 5 closed), list search/filter/sort/server-side paging, list and details contents, no demotion of a PM who owns projects | Developer confirmed in the Project module interview; a project must be handed to another PM when its PM leaves |
+| 2026-11-10 | Tasks: separate aggregate, no status transition rules (any status to any status; replaces the proposed transition table; open question 4 closed), fields, date-only due date with past dates allowed, soft delete, lists with search/filter/sort/paging, list and details contents, separate status and assignment operations, project task counts. Sections 2 and 3: whoever a task is assigned to sees it and its project and may change its status, whatever their role | Developer confirmed in the Task module interview; an Admin may assign anyone, and the assignee must be able to see the work; Azure Boards, Jira and Zoho allow any-to-any status changes by default, so final statuses would block normal reopening |
