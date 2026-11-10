@@ -1,6 +1,6 @@
 # Design: Project module
 
-- Status: Draft
+- Status: Implemented
 - Date: 2026-11-10
 - Requirements: `docs/PRD.md` sections 2, 3 and 8 (not repeated here; "PRD 8"
   means PRD section 8). Builds on the auth feature (`docs/auth-design.md`,
@@ -125,6 +125,11 @@ DTOs (PRD 8):
   user delete feature today) **[builder's call]**. Owner lookups for create and
   change owner use `IUserRepository.GetByIdAsync`, which excludes soft-deleted
   users, so a deleted user can never become an owner.
+- `IgnoreQueryFilters()` in EF Core applies to the whole query, not only to the
+  joined set. Because the owner join needs it, `ProjectReadRepository` adds an
+  explicit `!p.IsDeleted` for projects. Every set a future read query touches
+  (for example tasks in the Task module) must carry its own soft-delete
+  predicate whenever `IgnoreQueryFilters()` is used.
 
 ## 6. Owner rules in detail
 

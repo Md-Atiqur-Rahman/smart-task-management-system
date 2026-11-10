@@ -161,6 +161,10 @@ modules are added by copying Sample.
    `src/Api/Controllers/Samples/`, `tests/UnitTests/Domain/SampleTests.cs`,
    `tests/UnitTests/Application/Samples/`, `tests/IntegrationTests/Samples/`,
    and the Sample-based tests in `tests/IntegrationTests/Infrastructure/PersistenceTests.cs`.
+   `ProjectsController` uses `CreatedResponse` from
+   `src/Api/Controllers/Samples/CreatedResponse.cs`: move it to a shared place
+   (for example `src/Api/Controllers/CreatedResponse.cs`) before deleting the
+   Samples folder.
 2. Remove the two Sample repository registrations in `ConfigureDatabase`.
 3. Delete `src/Infrastructure/Persistence/Migrations/` and recreate the initial
    migration for the remaining model (command in step 4 above).
