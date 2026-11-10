@@ -26,6 +26,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
     public async Task<IActionResult> List(
         [FromQuery] ListUsersRequest request,
         [FromServices] IQueryHandler<ListUsersQuery, PagedResult<UserDto>> handler,
@@ -50,6 +51,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
     public async Task<IActionResult> ListAssignable(
         [FromQuery] ListAssignableUsersRequest request,
         [FromServices] IQueryHandler<ListAssignableUsersQuery, PagedResult<AssignableUserDto>> handler,

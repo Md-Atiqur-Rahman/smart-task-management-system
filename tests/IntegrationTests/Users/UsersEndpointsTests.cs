@@ -131,9 +131,46 @@ public sealed class UsersEndpointsTests(SqlServerFixture database, RedisFixture 
         items[0].TryGetProperty("passwordHash", out _).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Assignable_AsTeamMember_Returns403()
+    {
+        var member = await CreateUserAsync(Role.TeamMember);
+
+        using var response = await GetAsync("/api/users/assignable", member.Token);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task ChangeRole_TargetRefreshCookieAfterChange_IsRejectedOnRefresh()
+    {
+        var admin = await CreateUserAsync(Role.Admin);
+        var target = await CreateUserAsync(Role.TeamMember);
+
+        using var change = await PutRoleAsync(target.Id, Role.ProjectManager, admin.Token);
+        change.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var refresh = await _api.PostAsync($"{Route}/refresh", _ct, target.Cookie, AllowedOrigin);
+        refresh.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        var body = await refresh.Content.ReadFromJsonAsync<JsonElement>(_ct);
+        body.GetProperty("errorCode").GetString().ShouldBe("auth.invalid_refresh_token");
+    }
+
+    [Fact]
+    public async Task ListUsers_SearchByEmailOnly_FindsUser()
+    {
+        var admin = await CreateUserAsync(Role.Admin);
+        var target = await CreateUserAsync(Role.TeamMember);
+        using var response = await GetAsync($"/api/users?search={target.Email}", admin.Token);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(_ct);
+        body.GetProperty("items").EnumerateArray().Select(i => i.GetProperty("id").GetGuid()).ShouldBe([target.Id]);
+    }
+
     public void Dispose() => _api.Dispose();
 
-    private async Task<(Guid Id, string Token)> CreateUserAsync(Role role, string? marker = null)
+    private async Task<(Guid Id, string Token, string Email, string Cookie)> CreateUserAsync(Role role, string? marker = null)
     {
         var email = $"user-{marker ?? Guid.NewGuid().ToString("N")}-{Guid.NewGuid():N}@example.test";
         using var register = await _api.Client.PostAsJsonAsync(
@@ -154,7 +191,7 @@ public sealed class UsersEndpointsTests(SqlServerFixture database, RedisFixture 
             Uri($"{Route}/login"), new { email, password = Password }, _ct);
         login.EnsureSuccessStatusCode();
         var token = (await login.Content.ReadFromJsonAsync<JsonElement>(_ct)).GetProperty("accessToken").GetString()!;
-        return (id, token);
+        return (id, token, email, CookieValue(login));
     }
 
     private async Task<HttpResponseMessage> GetAsync(string path, string token)

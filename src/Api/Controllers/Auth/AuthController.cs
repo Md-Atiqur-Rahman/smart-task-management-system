@@ -128,6 +128,7 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType<CurrentUserDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
     public async Task<IActionResult> Me(
         [FromServices] IQueryHandler<GetCurrentUserQuery, CurrentUserDto> handler,
         CancellationToken cancellationToken)

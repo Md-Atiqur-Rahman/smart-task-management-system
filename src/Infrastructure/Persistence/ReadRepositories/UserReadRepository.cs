@@ -78,28 +78,6 @@ public sealed class UserReadRepository(AppDbContext context) : IUserReadReposito
             .ToPagedResultAsync(ToAssignableDto, query.Page, query.PageSize, ct);
     }
 
-    /// <summary>
-    /// Users whose name or email contains the term (all users when blank). Email is a value object
-    /// stored through a converter, so EF Core cannot translate a substring test on it; the search
-    /// predicate is raw SQL (term sent as a parameter, LIKE wildcards escaped) and everything else
-    /// (soft-delete filter, role, sort, paging, projection) stays LINQ on top of it.
-    /// </summary>
-    private IQueryable<User> SearchUsers(string? term)
-    {
-        var users = context.Set<User>();
-        if (string.IsNullOrWhiteSpace(term))
-        {
-            return users;
-        }
-
-        var pattern = "%" + EscapeLike(term.Trim()) + "%";
-        return users.FromSql(
-            $"SELECT * FROM Users WHERE FullName LIKE {pattern} ESCAPE '\\' OR Email LIKE {pattern} ESCAPE '\\'");
-    }
-
-    private static string EscapeLike(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal)
-        .Replace("[", "\\[", StringComparison.Ordinal);
+    private IQueryable<User> SearchUsers(string? term) =>
+        context.Set<User>().ApplySearch(term, u => u.FullName, u => (string)(object)u.Email);
 }

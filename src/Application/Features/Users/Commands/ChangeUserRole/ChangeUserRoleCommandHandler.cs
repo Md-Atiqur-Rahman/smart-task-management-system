@@ -11,6 +11,10 @@ namespace Datavanced.SmartTaskManagement.Application.Features.Users.Commands.Cha
 /// Redis first, then the database (design section 5, ADR 0014): the forward-only version write
 /// happens before the one save, so a failure can never leave old tokens working.
 /// </summary>
+/// <remarks>
+/// Known limitation: the last-Admin check is per request; two Admins demoting each other at the
+/// same moment can both pass it. Recovery: restart with a different AdminSeed:Email (design section 8).
+/// </remarks>
 internal sealed class ChangeUserRoleCommandHandler(
     IUserRepository users,
     IRefreshTokenRepository refreshTokens,

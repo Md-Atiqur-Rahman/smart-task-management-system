@@ -47,7 +47,10 @@ Behaviour:
 - "Last Admin" rule **[builder's call]**: the role-change handler refuses to
   change the role of the only remaining Admin (`users.last_admin`, 409), so the
   system can never lose its last Admin. It is a handler check (needs a count over
-  users), not an aggregate invariant.
+  users), not an aggregate invariant. Known limitation: the check is per
+  request; two Admins demoting each other at the same moment can both pass it.
+  Recovery: restart with a different `AdminSeed:Email` (seeding runs only when
+  no Admin exists, section 8).
 
 ### `RefreshToken` aggregate (`AggregateRoot<Guid>`, separate from `User`)
 
