@@ -187,7 +187,7 @@ Assemblies and namespaces are `Datavanced.SmartTaskManagement.<Layer>`, set once
 | Full verification (Git Bash) | `bash scripts/verify.sh` |
 | Full verification (Windows PowerShell 5.1) | `powershell -File scripts/verify.ps1` |
 | Start the database and Redis | `docker compose up -d db redis` (needs a local `.env` copied from `.env.example`) |
-| Local secrets | Set `Database:Name`, `Database:Password`, `Jwt:SigningKey`, `Redis:ConnectionString` and `AdminSeed:Email|Password|FullName` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the README |
+| Local secrets | Set `Database:Name`, `Database:Password`, `Jwt:SigningKey`, `Redis:ConnectionString` and `AdminSeed:Email`, `AdminSeed:Password`, `AdminSeed:FullName` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the README |
 | Run the API | `dotnet run --project src/Api --launch-profile https`, then open `https://localhost:7254/swagger` (Development only; the `http` profile uses port 5199) |
 | Regenerate the OpenAPI file | `bash scripts/generate-openapi.sh` and commit `docs/openapi.json` |
 | Full stack in Docker | `docker compose up -d` (local only; the compose file runs in Development mode; the API port comes from `API_PORT` in `.env`) |
