@@ -63,8 +63,10 @@ script (`scripts/verify.sh`), which is also the only CI step.
    g() { grep "^$1=" .env | cut -d= -f2- | tr -d '\r'; }; for kv in "Database:Name=$(g DB_NAME)" "Database:Password=$(g DB_PASSWORD)" "Jwt:SigningKey=$(g JWT_SIGNING_KEY)" "Redis:ConnectionString=127.0.0.1:$(g REDIS_PORT),password=$(g REDIS_PASSWORD)" "AdminSeed:Email=$(g ADMIN_SEED_EMAIL)" "AdminSeed:Password=$(g ADMIN_SEED_PASSWORD)" "AdminSeed:FullName=$(g ADMIN_SEED_FULL_NAME)"; do dotnet user-secrets set "${kv%%=*}" "${kv#*=}" --project src/Api; done
    ```
 
-   If a key is missing (an older `.env` copied before the `REDIS_*` and
-   `ADMIN_SEED_*` entries existed), re-copy `.env.example` first.
+   If a key is missing from an older `.env`, copy only that key from
+   `.env.example` into `.env`; do not overwrite the whole file (an existing
+   database volume keeps its old `DB_PASSWORD`). An empty value means the key is
+   missing.
 
    PowerShell:
 
