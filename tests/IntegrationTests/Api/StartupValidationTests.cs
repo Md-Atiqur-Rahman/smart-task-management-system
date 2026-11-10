@@ -22,6 +22,26 @@ public sealed class StartupValidationTests
         validation.Message.ShouldContain(key.Split(':')[1]);
     }
 
+    [Fact]
+    public void Startup_PartialAdminSeedSettings_FailsValidation()
+    {
+        using var factory = new ApiFactory().WithSetting("AdminSeed:Email", "admin@example.com");
+
+        var exception = Should.Throw<Exception>(() => factory.CreateClient());
+
+        var validation = FindValidationException(exception);
+        validation.ShouldNotBeNull($"Expected an OptionsValidationException, got: {exception}");
+        validation.Message.ShouldContain("AdminSeed");
+    }
+
+    [Fact]
+    public void Startup_NoAdminSeedSettings_Starts()
+    {
+        using var factory = new ApiFactory();
+
+        Should.NotThrow(() => factory.CreateClient());
+    }
+
     private static OptionsValidationException? FindValidationException(Exception? exception)
     {
         while (exception is not null)

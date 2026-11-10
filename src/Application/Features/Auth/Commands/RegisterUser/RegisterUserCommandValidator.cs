@@ -16,7 +16,7 @@ public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUse
             .NotEmpty()
             .MinimumLength(PasswordRules.MinLength)
             .MaximumLength(PasswordRules.MaxLength)
-            .Must(p => p.Any(char.IsLetter) && p.Any(char.IsDigit))
+            .Must(PasswordRules.HasLetterAndDigit)
             .WithMessage("'{PropertyName}' must contain at least one letter and one digit.");
     }
 }
