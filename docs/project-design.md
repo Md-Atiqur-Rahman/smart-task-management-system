@@ -21,7 +21,10 @@ Out of scope here:
   assigned task", PRD 2) needs tasks. Until the Task module exists, a Team Member
   sees no projects (empty list, 404 on details). The Task module adds the
   assignment-based filter to the project read repository **[builder's call]**.
-- Task counts on projects (PRD 8: they come with the Task module).
+  Update 2026-11-11: the Task module now delivers it: assignees (any role) see
+  the projects of their non-deleted tasks, details only (`docs/task-design.md`).
+- Task counts on projects (PRD 8: they come with the Task module). Update
+  2026-11-11: delivered by the Task module (`docs/task-design.md`).
 - Removing the Sample slice: stays until the Task module is done, then removed
   in its own change following `docs/sample-flow.md` "Remove Sample"
   **[builder's call]** (keeps this change focused; Sample is the copy-source for

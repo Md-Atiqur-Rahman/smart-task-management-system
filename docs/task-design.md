@@ -1,6 +1,6 @@
 # Design: Task module
 
-- Status: Approved by the developer (2026-11-10)
+- Status: Implemented (2026-11-11)
 - Date: 2026-11-10
 - Requirements: `docs/PRD.md` sections 2, 3 and 8 (not repeated here; "PRD 8"
   means PRD section 8). Builds on the Project module (`docs/project-design.md`),

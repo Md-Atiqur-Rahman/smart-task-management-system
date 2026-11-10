@@ -101,9 +101,13 @@ All routes are under `/api`. Full request and response shapes: `docs/openapi.jso
 | Auth | `GET /auth/me` | Any signed-in user |
 | Users | `GET /users`, `PUT /users/{id}/role` | Admin |
 | Users | `GET /users/assignable` | Admin, Project Manager |
-| Projects | `GET /projects`, `GET /projects/{id}` | Signed-in user (Admin all, Project Manager own; a Team Member sees none: empty list, 404 on details, until the Task module) |
+| Projects | `GET /projects`, `GET /projects/{id}` | Signed-in user (Admin all, Project Manager own; a Team Member or any assignee sees the projects of their tasks, details only) |
 | Projects | `POST /projects`, `PUT /projects/{id}`, `DELETE /projects/{id}` | Admin, Project Manager (own) |
 | Projects | `PUT /projects/{id}/owner` | Admin |
+| Tasks | `POST /projects/{projectId}/tasks`, `PUT /tasks/{id}`, `DELETE /tasks/{id}` | Admin, Project Manager (own project) |
+| Tasks | `GET /projects/{projectId}/tasks`, `GET /tasks`, `GET /tasks/{id}` | Signed-in user (Admin all, Project Manager own projects, others only tasks assigned to them) |
+| Tasks | `PUT /tasks/{id}/status` | Admin, owning Project Manager, or the assignee |
+| Tasks | `PUT /tasks/{id}/assignee` | Admin, owning Project Manager (null unassigns) |
 | Samples | `/samples` (copy-source feature) | Signed-in user |
 
 ### Authentication and the first Admin
