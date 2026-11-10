@@ -5,7 +5,7 @@ using Datavanced.SmartTaskManagement.Domain.Auth;
 using Datavanced.SmartTaskManagement.Domain.Results;
 using Datavanced.SmartTaskManagement.Domain.Users;
 
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
@@ -19,6 +19,7 @@ public sealed class RefreshSessionCommandHandlerTests
     private readonly AuthTestSupport _auth = new();
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly CapturingLogger _logger = new();
 
     public RefreshSessionCommandHandlerTests()
     {
@@ -40,6 +41,8 @@ public sealed class RefreshSessionCommandHandlerTests
         added.ShouldNotBeNull();
         old.RevokedAt.ShouldBe(_auth.Time.GetUtcNow());
         old.ReplacedById.ShouldBe(added.Id);
+        added.FamilyId.ShouldBe(old.FamilyId);
+        added.Id.ShouldNotBe(old.FamilyId);
         _auth.TokenService.Received(1).CreateAccessToken(user.Id, user.Role, user.TokenVersion);
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         await _auth.VersionStore.Received(1).SetIfHigherAsync(user.Id, user.TokenVersion, Arg.Any<CancellationToken>());
@@ -75,7 +78,7 @@ public sealed class RefreshSessionCommandHandlerTests
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.RefreshSuperseded);
-        await _auth.RefreshTokens.DidNotReceive().RevokeAllActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+        await _auth.RefreshTokens.DidNotReceive().RevokeActiveInFamilyAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -83,36 +86,60 @@ public sealed class RefreshSessionCommandHandlerTests
     public async Task Refresh_RotatedExactlyThirtySecondsAgo_IsReuseNotSuperseded()
     {
         var user = ExistingUser();
-        StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(30), replacedById: Guid.NewGuid());
+        var token = StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(30), replacedById: Guid.NewGuid());
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
-        await AssertFamilyRevokedAsync(user.Id);
+        await AssertFamilyRevokedAsync(token);
     }
 
     [Fact]
-    public async Task Refresh_RotatedThirtyOneSecondsAgo_RevokesAllActiveTokensOfUser()
+    public async Task Refresh_RotatedThirtyOneSecondsAgo_RevokesItsFamilyOnlyAndLogsWarning()
     {
         var user = ExistingUser();
-        StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(31), replacedById: Guid.NewGuid());
+        var token = StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(31), replacedById: Guid.NewGuid());
+        _auth.RefreshTokens.RevokeActiveInFamilyAsync(token.FamilyId, Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(1);
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
-        await AssertFamilyRevokedAsync(user.Id);
+        await AssertFamilyRevokedAsync(token);
+        await _auth.RefreshTokens.DidNotReceive().ListActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+        var warning = _logger.Entries.ShouldHaveSingleItem();
+        warning.Level.ShouldBe(LogLevel.Warning);
+        warning.Message.ShouldContain(token.FamilyId.ToString());
+        warning.Message.ShouldNotContain("raw");
+    }
+
+    [Fact]
+    public async Task Refresh_RevokedTokenOfDeadFamily_Returns401AndLogsNoWarning()
+    {
+        // Example: a token revoked by a role change; its family has no active tokens left.
+        var user = ExistingUser();
+        var token = StoredToken(user.Id, revokedAgo: TimeSpan.FromHours(1), replacedById: null);
+        _auth.RefreshTokens.RevokeActiveInFamilyAsync(token.FamilyId, Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(0);
+
+        var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
+
+        result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
+        await AssertFamilyRevokedAsync(token);
+        _logger.Entries.ShouldNotContain(e => e.Level >= LogLevel.Warning);
+        _logger.Entries.ShouldHaveSingleItem().Level.ShouldBe(LogLevel.Information);
     }
 
     [Fact]
     public async Task Refresh_RevokedByLogout_IsReuseNotGrace()
     {
         var user = ExistingUser();
-        StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(1), replacedById: null);
+        var token = StoredToken(user.Id, revokedAgo: TimeSpan.FromSeconds(1), replacedById: null);
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
         result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
-        await AssertFamilyRevokedAsync(user.Id);
+        await AssertFamilyRevokedAsync(token);
     }
 
     [Fact]
@@ -139,7 +166,7 @@ public sealed class RefreshSessionCommandHandlerTests
             _auth.Issuer,
             _auth.Time,
             Options.Create(new RefreshTokenOptions()),
-            NullLogger<RefreshSessionCommandHandler>.Instance);
+            _logger);
 
     private User ExistingUser()
     {
@@ -161,10 +188,26 @@ public sealed class RefreshSessionCommandHandlerTests
         return token;
     }
 
-    private async Task AssertFamilyRevokedAsync(Guid userId)
+    private async Task AssertFamilyRevokedAsync(RefreshToken token)
     {
-        await _auth.RefreshTokens.Received(1).RevokeAllActiveForUserAsync(userId, _auth.Time.GetUtcNow(), Arg.Any<CancellationToken>());
+        await _auth.RefreshTokens.Received(1).RevokeActiveInFamilyAsync(token.FamilyId, _auth.Time.GetUtcNow(), Arg.Any<CancellationToken>());
+        await _auth.RefreshTokens.Received(1).RevokeActiveInFamilyAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         _auth.RefreshTokens.DidNotReceive().Add(Arg.Any<RefreshToken>());
     }
+}
+
+/// <summary>Records formatted log entries so tests can assert level and content.</summary>
+internal sealed class CapturingLogger : ILogger<RefreshSessionCommandHandler>
+{
+    public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState : notnull => null;
+
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public void Log<TState>(
+        LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+        Entries.Add((logLevel, formatter(state, exception)));
 }

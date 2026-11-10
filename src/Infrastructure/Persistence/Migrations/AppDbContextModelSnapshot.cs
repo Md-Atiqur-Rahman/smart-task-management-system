@@ -33,6 +33,9 @@ namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("ReplacedById")
                         .HasColumnType("uniqueidentifier");
 
@@ -56,6 +59,8 @@ namespace Datavanced.SmartTaskManagement.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FamilyId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();

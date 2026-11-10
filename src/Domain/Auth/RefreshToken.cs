@@ -15,6 +15,7 @@ public sealed class RefreshToken : AggregateRoot<Guid>
     private RefreshToken(
         Guid id,
         Guid userId,
+        Guid familyId,
         string tokenHash,
         DateTimeOffset createdAt,
         DateTimeOffset expiresAt,
@@ -23,6 +24,7 @@ public sealed class RefreshToken : AggregateRoot<Guid>
         : base(id)
     {
         UserId = userId;
+        FamilyId = familyId;
         TokenHash = tokenHash;
         CreatedAt = createdAt;
         ExpiresAt = expiresAt;
@@ -31,6 +33,12 @@ public sealed class RefreshToken : AggregateRoot<Guid>
     }
 
     public Guid UserId { get; private set; }
+
+    /// <summary>
+    /// The chain of tokens started by one login or registration; rotation keeps it (ADR 0016).
+    /// A new family is named after its first token: FamilyId equals that token's Id.
+    /// </summary>
+    public Guid FamilyId { get; private set; }
 
     public string TokenHash { get; private set; }
 
@@ -48,21 +56,25 @@ public sealed class RefreshToken : AggregateRoot<Guid>
         Justification = "EF Core maps the SQL Server rowversion concurrency token to byte[].")]
     public byte[] RowVersion { get; private set; } = [];
 
+    /// <summary>Issues the first token of a new family (login, registration).</summary>
     public static RefreshToken Issue(Guid userId, string tokenHash, DateTimeOffset now, TimeSpan lifetime)
     {
-        Guard.NotNullOrWhiteSpace(tokenHash);
+        GuardIssue(tokenHash, lifetime);
+        var id = Guid.CreateVersion7();
+        return new RefreshToken(id, userId, familyId: id, tokenHash, now, now.Add(lifetime), revokedAt: null, replacedById: null);
+    }
 
-        if (tokenHash.Length != TokenHashLength)
+    /// <summary>Issues the next token of an existing family (rotation).</summary>
+    public static RefreshToken IssueInFamily(
+        Guid userId, string tokenHash, DateTimeOffset now, TimeSpan lifetime, Guid familyId)
+    {
+        GuardIssue(tokenHash, lifetime);
+        if (familyId == Guid.Empty)
         {
-            throw new ArgumentException($"Must be exactly {TokenHashLength} characters.", nameof(tokenHash));
+            throw new ArgumentException("Must not be empty.", nameof(familyId));
         }
 
-        if (lifetime <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, "Must be positive.");
-        }
-
-        return new RefreshToken(Guid.CreateVersion7(), userId, tokenHash, now, now.Add(lifetime), revokedAt: null, replacedById: null);
+        return new RefreshToken(Guid.CreateVersion7(), userId, familyId, tokenHash, now, now.Add(lifetime), revokedAt: null, replacedById: null);
     }
 
     /// <summary>Revokes the token; <paramref name="replacedById"/> is set when a rotation replaces it.</summary>
@@ -83,4 +95,19 @@ public sealed class RefreshToken : AggregateRoot<Guid>
     /// <summary>True when the token was revoked by rotation less than <paramref name="grace"/> ago.</summary>
     public bool IsWithinRotationGrace(DateTimeOffset now, TimeSpan grace) =>
         ReplacedById is not null && RevokedAt is { } revokedAt && now - revokedAt < grace;
+
+    private static void GuardIssue(string tokenHash, TimeSpan lifetime)
+    {
+        Guard.NotNullOrWhiteSpace(tokenHash);
+
+        if (tokenHash.Length != TokenHashLength)
+        {
+            throw new ArgumentException($"Must be exactly {TokenHashLength} characters.", nameof(tokenHash));
+        }
+
+        if (lifetime <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, "Must be positive.");
+        }
+    }
 }

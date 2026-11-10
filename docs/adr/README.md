@@ -19,3 +19,4 @@ Changing an accepted decision needs a new ADR that supersedes the old one.
 | [0013](0013-redis-shared-state.md) | Redis for shared security state across instances | Accepted |
 | [0014](0014-auth-endpoints-and-redis-amendments.md) | Auth endpoints and amendments to the Redis design | Accepted |
 | [0015](0015-auth-implementation-amendments.md) | Amendments made while implementing authentication | Accepted |
+| [0016](0016-refresh-token-families.md) | Refresh-token families; reuse detection revokes one family | Accepted |

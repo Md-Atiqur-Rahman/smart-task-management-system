@@ -48,6 +48,37 @@ public sealed class RefreshTokenTests
     }
 
     [Fact]
+    public void Issue_NewSession_StartsFamilyNamedAfterItself()
+    {
+        var token = NewToken();
+
+        token.FamilyId.ShouldBe(token.Id);
+    }
+
+    [Fact]
+    public void IssueInFamily_Rotation_KeepsFamilyWithNewId()
+    {
+        var first = NewToken();
+
+        var next = RefreshToken.IssueInFamily(
+            first.UserId, new string('b', RefreshToken.TokenHashLength), Now, TimeSpan.FromDays(7), first.FamilyId);
+
+        next.FamilyId.ShouldBe(first.FamilyId);
+        next.Id.ShouldNotBe(first.Id);
+        next.ExpiresAt.ShouldBe(Now.AddDays(7));
+    }
+
+    [Fact]
+    public void IssueInFamily_EmptyFamilyId_Throws() =>
+        Should.Throw<ArgumentException>(() => RefreshToken.IssueInFamily(
+            Guid.NewGuid(), new string('a', RefreshToken.TokenHashLength), Now, TimeSpan.FromDays(7), Guid.Empty));
+
+    [Fact]
+    public void IssueInFamily_HashOfWrongLength_Throws() =>
+        Should.Throw<ArgumentException>(() => RefreshToken.IssueInFamily(
+            Guid.NewGuid(), "short", Now, TimeSpan.FromDays(7), Guid.NewGuid()));
+
+    [Fact]
     public void Issue_HashOfWrongLength_Throws() =>
         Should.Throw<ArgumentException>(() => RefreshToken.Issue(Guid.NewGuid(), "short", Now, TimeSpan.FromDays(7)));
 }

@@ -58,6 +58,8 @@ user's active refresh tokens are revoked with one set-based `UPDATE` that execut
 immediately, not through `IUnitOfWork`. Reason: a `RowVersion` conflict in a
 batched `SaveChanges` would roll back every revocation silently, and the theft
 response must not depend on a concurrent rotation losing or winning.
+*Amended by ADR 0016: the `UPDATE` revokes only the presented token's family (one
+login's chain), not every token of the user.*
 
 ## Consequences
 

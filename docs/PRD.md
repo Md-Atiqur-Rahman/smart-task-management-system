@@ -90,8 +90,9 @@ one role.
 - Refresh token: random value from a cryptographic generator, lifetime
   **7 days** (in Options); stored in the database only as a hash.
 - Rotation: every refresh revokes the used refresh token and issues a new pair.
-- Reuse detection: presenting an already revoked refresh token revokes all of
-  that user's refresh tokens.
+- Reuse detection: presenting an already revoked refresh token revokes all
+  refresh tokens in that token's family (the chain started by one login); other
+  devices stay signed in (ADR 0016).
 - Grace period: a token revoked **by rotation less than 30 seconds ago** is not
   treated as reuse (several browser tabs refreshing at once). The request gets
   401 with nothing revoked and no new tokens; the client retries with the new
@@ -213,3 +214,4 @@ migrations.
 | 2026-11-09 | Refresh token only in an HttpOnly cookie (Path = refresh endpoint), access token only in memory; open question 8 closed | Developer confirmed; a copy in JavaScript-readable storage would defeat HttpOnly |
 | 2026-11-09 | Frontend in this repository, folder `FE/`; open question 7 closed | Developer confirmed |
 | 2026-11-09 | 30-second grace period for rotated refresh tokens (401, nothing revoked, client retries) | Developer confirmed; several tabs refreshing at once must not sign the user out everywhere |
+| 2026-11-10 | Reuse detection revokes only the presented token's family (one login's chain) instead of all of the user's tokens (ADR 0016) | Developer decision: after a role change the user's devices signed each other out in a loop, and anyone holding an old revoked token could sign the user out everywhere |

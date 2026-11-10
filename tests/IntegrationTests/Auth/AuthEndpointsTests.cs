@@ -173,13 +173,13 @@ public sealed class AuthEndpointsTests(SqlServerFixture database, RedisFixture r
         logout.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         ShouldDeleteCookie(logout);
 
-        // The other device first: replaying the logged-out cookie is reuse and revokes every device (design section 5).
-        using var other = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceTwo);
-        other.StatusCode.ShouldBe(HttpStatusCode.OK);
-
         using var again = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceOne);
         await ShouldBeProblem(again, HttpStatusCode.Unauthorized, "auth.invalid_refresh_token");
         ShouldDeleteCookie(again);
+
+        // Replaying the logged-out cookie touches only its own (already dead) family (ADR 0016).
+        using var other = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceTwo);
+        other.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
@@ -210,6 +210,45 @@ public sealed class AuthEndpointsTests(SqlServerFixture database, RedisFixture r
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(_ct);
         body.GetProperty("errorCode").GetString().ShouldBe(errorCode);
     }
+}
+
+/// <summary>Reuse detection with the grace period off (0 seconds), so a replay counts as reuse at once.</summary>
+[Collection(AuthCollectionDefinition.Name)]
+public sealed class RefreshTokenFamilyTests(SqlServerFixture database, RedisFixture redis) : IDisposable
+{
+    private readonly AuthApi _api = new(
+        database, redis.ConnectionString, factory => factory.WithSetting("RefreshToken:ReuseGraceSeconds", "0"));
+
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Refresh_ReplayOfRotatedToken_RevokesItsFamilyOnly_OtherDeviceStaysSignedIn()
+    {
+        var (email, deviceOne, _) = await _api.RegisterAsync(_ct);
+        var deviceTwo = await _api.LoginAsync(email, _ct);
+
+        using var rotate = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceOne);
+        rotate.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var rotated = CookieValue(rotate);
+
+        using var replay = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceOne);
+        replay.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await ErrorCodeAsync(replay)).ShouldBe("auth.invalid_refresh_token");
+
+        // The token issued by the rotation belongs to the stolen family and is revoked.
+        using var successor = await _api.PostAsync($"{Route}/refresh", _ct, cookie: rotated);
+        successor.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await ErrorCodeAsync(successor)).ShouldBe("auth.invalid_refresh_token");
+
+        // The other device's family is untouched.
+        using var other = await _api.PostAsync($"{Route}/refresh", _ct, cookie: deviceTwo);
+        other.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    public void Dispose() => _api.Dispose();
+
+    private async Task<string?> ErrorCodeAsync(HttpResponseMessage response) =>
+        (await response.Content.ReadFromJsonAsync<JsonElement>(_ct)).GetProperty("errorCode").GetString();
 }
 
 /// <summary>Has its own Redis container because it stops it; other tests keep theirs.</summary>

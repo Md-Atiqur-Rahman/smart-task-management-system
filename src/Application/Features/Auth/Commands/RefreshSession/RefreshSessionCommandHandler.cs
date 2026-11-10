@@ -41,7 +41,7 @@ internal sealed partial class RefreshSessionCommandHandler(
             return Invalid();
         }
 
-        var session = sessionIssuer.IssueSession(user);
+        var session = sessionIssuer.IssueSessionInFamily(user, token.FamilyId);
         token.Revoke(now, session.RefreshTokenId);
 
         var saved = await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -68,13 +68,26 @@ internal sealed partial class RefreshSessionCommandHandler(
             return Result.Failure<AuthTokens>(AuthErrors.RefreshSuperseded);
         }
 
-        // Reuse of a revoked token: treat the family as stolen and revoke every active token of the user.
-        // One set-based statement, so a concurrent rotation cannot roll the revocation back.
-        var revokedCount = await refreshTokens.RevokeAllActiveForUserAsync(token.UserId, now, cancellationToken);
-        LogReuseDetected(logger, token.UserId, revokedCount);
+        // Reuse of a revoked token: treat its family (one login's chain) as stolen and revoke only that
+        // family, so other devices stay signed in (ADR 0016). One set-based statement, so a concurrent
+        // rotation cannot roll the revocation back (ADR 0014 decision 5).
+        var revokedCount = await refreshTokens.RevokeActiveInFamilyAsync(token.FamilyId, now, cancellationToken);
+        if (revokedCount > 0)
+        {
+            LogReuseDetected(logger, token.UserId, token.FamilyId, revokedCount);
+        }
+        else
+        {
+            // The family is already dead (logout, role change, earlier reuse): nothing to protect.
+            LogRevokedTokenPresented(logger, token.UserId, token.FamilyId);
+        }
+
         return Invalid();
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Refresh token reuse detected for user {UserId}; {RevokedCount} active refresh tokens were revoked.")]
-    private static partial void LogReuseDetected(ILogger logger, Guid userId, int revokedCount);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Refresh token reuse detected for user {UserId}; {RevokedCount} active refresh tokens of family {FamilyId} were revoked.")]
+    private static partial void LogReuseDetected(ILogger logger, Guid userId, Guid familyId, int revokedCount);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "A revoked refresh token of user {UserId} was presented; family {FamilyId} has no active tokens.")]
+    private static partial void LogRevokedTokenPresented(ILogger logger, Guid userId, Guid familyId);
 }

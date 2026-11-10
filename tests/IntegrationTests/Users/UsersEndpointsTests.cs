@@ -157,6 +157,37 @@ public sealed class UsersEndpointsTests(SqlServerFixture database, RedisFixture 
     }
 
     [Fact]
+    public async Task ChangeRole_OldCookiesOfBothDevicesReplayed_DoNotSignOutNewSessions()
+    {
+        // Before ADR 0016 a revoked token triggered revoke-all-of-user: after a role change the old
+        // cookies of two devices signed out each other's new sessions in a loop.
+        var admin = await CreateUserAsync(Role.Admin);
+        var target = await CreateUserAsync(Role.TeamMember);
+        var oldDeviceOne = target.Cookie;
+        var oldDeviceTwo = await _api.LoginAsync(target.Email, _ct);
+
+        using var change = await PutRoleAsync(target.Id, Role.ProjectManager, admin.Token);
+        change.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var newDeviceOne = await _api.LoginAsync(target.Email, _ct);
+        var newDeviceTwo = await _api.LoginAsync(target.Email, _ct);
+
+        foreach (var old in new[] { oldDeviceOne, oldDeviceTwo })
+        {
+            using var replay = await _api.PostAsync($"{Route}/refresh", _ct, old, AllowedOrigin);
+            replay.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            var body = await replay.Content.ReadFromJsonAsync<JsonElement>(_ct);
+            body.GetProperty("errorCode").GetString().ShouldBe("auth.invalid_refresh_token");
+        }
+
+        foreach (var current in new[] { newDeviceOne, newDeviceTwo })
+        {
+            using var refresh = await _api.PostAsync($"{Route}/refresh", _ct, current, AllowedOrigin);
+            refresh.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+    }
+
+    [Fact]
     public async Task ListUsers_SearchByEmailOnly_FindsUser()
     {
         var admin = await CreateUserAsync(Role.Admin);

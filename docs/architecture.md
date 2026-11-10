@@ -59,8 +59,9 @@ Full design: `docs/auth-design.md`; decisions: ADR 0013, 0014, 0015.
 - **Sign-in.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`)
   calls command and query handlers like any feature. The access token is a JWT
   valid 10 minutes with a `tv` (token version) claim; the refresh token is random,
-  stored only as a hash, rotated on every use (reuse detection revokes the user's
-  refresh tokens) and travels only in an HttpOnly cookie.
+  stored only as a hash, rotated on every use (reuse detection revokes the
+  token's family, the chain of one login, ADR 0016) and travels only in an
+  HttpOnly cookie.
 - **Per request.** Pipeline order: `UseAuthentication` -> `TokenVersionMiddleware`
   -> `SecurityContextMiddleware` -> `UseAuthorization`. The middleware compares
   the token's version with the current one: Redis key

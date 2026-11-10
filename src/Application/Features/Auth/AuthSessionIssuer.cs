@@ -22,16 +22,20 @@ internal sealed partial class AuthSessionIssuer(
 {
     public AuthTokens Issue(User user) => IssueSession(user).Tokens;
 
-    /// <summary>Like <see cref="Issue"/>, also returns the id of the new refresh token (needed by rotation).</summary>
-    public IssuedSession IssueSession(User user)
+    /// <summary>A new session (login, registration): its refresh token starts a new family (ADR 0016).</summary>
+    public IssuedSession IssueSession(User user) => Create(user, familyId: null);
+
+    /// <summary>A rotated session: the new refresh token stays in <paramref name="familyId"/> (ADR 0016).</summary>
+    public IssuedSession IssueSessionInFamily(User user, Guid familyId) => Create(user, familyId);
+
+    private IssuedSession Create(User user, Guid? familyId)
     {
         var now = timeProvider.GetUtcNow();
         var generated = generator.Generate();
-        var refreshToken = RefreshToken.Issue(
-            user.Id,
-            generated.TokenHash,
-            now,
-            TimeSpan.FromDays(options.Value.LifetimeDays));
+        var lifetime = TimeSpan.FromDays(options.Value.LifetimeDays);
+        var refreshToken = familyId is { } family
+            ? RefreshToken.IssueInFamily(user.Id, generated.TokenHash, now, lifetime, family)
+            : RefreshToken.Issue(user.Id, generated.TokenHash, now, lifetime);
         refreshTokens.Add(refreshToken);
 
         var accessToken = tokenService.CreateAccessToken(user.Id, user.Role, user.TokenVersion);

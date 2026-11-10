@@ -20,7 +20,10 @@ public sealed class AuthApi : IDisposable
     public const string Password = "Passw0rd-for-tests";
     public const string CookieName = "__Secure-refresh_token";
 
-    public AuthApi(SqlServerFixture database, string redisConnectionString)
+    /// <param name="database">The SQL Server the host uses.</param>
+    /// <param name="redisConnectionString">The real Redis the host uses.</param>
+    /// <param name="configure">Extra settings applied before the host starts (for example a shorter grace period).</param>
+    public AuthApi(SqlServerFixture database, string redisConnectionString, Action<ApiFactory>? configure = null)
     {
         Factory = new ApiFactory()
             .WithDatabase(database.Options)
@@ -30,6 +33,7 @@ public sealed class AuthApi : IDisposable
             // the whole collection shares one client IP and one Redis counter.
             .WithSetting("RateLimiting:PermitLimit", "100000")
             .WithSetting("RateLimiting:AuthPermitLimit", "100000");
+        configure?.Invoke(Factory);
         Client = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 

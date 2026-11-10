@@ -60,6 +60,7 @@ not load the user **[builder's call]**.
 | Field | Rule |
 | --- | --- |
 | `UserId` | Reference by id |
+| `FamilyId` | Chain started by one login; rotation keeps it; indexed (added by ADR 0016) |
 | `TokenHash` | SHA-256 of the raw token, hex; unique index |
 | `CreatedAt`, `ExpiresAt` | From `TimeProvider`; lifetime from Options (7 days) |
 | `RevokedAt` | Null while active |
@@ -68,6 +69,8 @@ not load the user **[builder's call]**.
 
 Behaviour: `Issue(userId, tokenHash, now, lifetime)`, `Revoke(now, replacedById?)`
 returns `Result` (`auth.invalid_refresh_token` if already revoked), `IsActive(now)`.
+*Amended by ADR 0016:* `Issue` starts a new family (`FamilyId` = the token's own
+`Id`); rotation uses `IssueInFamily(userId, tokenHash, now, lifetime, familyId)`.
 
 The raw token is 32 bytes from `RandomNumberGenerator`, base64url encoded. Only
 the hash is stored (PRD 5). No salt: the value is random and high-entropy.
@@ -199,7 +202,9 @@ issue access token with the user's current `TokenVersion` -> issue refresh token
      Okta/Auth0, which issue tokens during their grace period).
    - Otherwise -> **reuse**: revoke all of the user's refresh tokens, log a
      warning (user id, no token value), 401 `auth.invalid_refresh_token`, clear
-     cookie.
+     cookie. *Amended by ADR 0016: only the presented token's family is revoked
+     (other devices stay signed in); the warning is logged only when that revoked
+     something, otherwise an Information entry.*
    - The window length is an option (`RefreshTokenReuseGraceSeconds`, default
      30, allowed 0-60), measured from `RevokedAt` of a token revoked by rotation
      (`ReplacedById` set). A token revoked by logout or by revoke-all has no

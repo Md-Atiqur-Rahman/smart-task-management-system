@@ -4,6 +4,8 @@ using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
@@ -71,22 +73,22 @@ public sealed class UserPersistenceTests(SqlServerFixture fixture)
     }
 
     [Fact]
-    public async Task RevokeAllActiveForUser_RevokesOnlyActiveTokensOfThatUser()
+    public async Task RevokeActiveInFamily_RevokesOnlyActiveTokensOfThatFamily()
     {
         var now = fixture.Time.GetUtcNow();
         var userId = Guid.NewGuid();
-        var active1 = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
-        var active2 = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
-        var revoked = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
+        var root = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
+        var active = RefreshToken.IssueInFamily(userId, UniqueHash(), now, TimeSpan.FromDays(7), root.FamilyId);
+        var revoked = RefreshToken.IssueInFamily(userId, UniqueHash(), now, TimeSpan.FromDays(7), root.FamilyId);
         var revokedAt = now.AddMinutes(-5);
         revoked.Revoke(revokedAt, null).IsSuccess.ShouldBeTrue();
-        var expired = RefreshToken.Issue(userId, UniqueHash(), now.AddDays(-10), TimeSpan.FromDays(7));
-        var other = RefreshToken.Issue(Guid.NewGuid(), UniqueHash(), now, TimeSpan.FromDays(7));
+        var expired = RefreshToken.IssueInFamily(userId, UniqueHash(), now.AddDays(-10), TimeSpan.FromDays(7), root.FamilyId);
+        var otherFamilySameUser = RefreshToken.Issue(userId, UniqueHash(), now, TimeSpan.FromDays(7));
 
         await using (var context = fixture.CreateDbContext())
         {
             var repository = new RefreshTokenRepository(context);
-            foreach (var token in new[] { active1, active2, revoked, expired, other })
+            foreach (var token in new[] { root, active, revoked, expired, otherFamilySameUser })
             {
                 repository.Add(token);
             }
@@ -95,17 +97,45 @@ public sealed class UserPersistenceTests(SqlServerFixture fixture)
         }
 
         await using var actionContext = fixture.CreateDbContext();
-        var count = await new RefreshTokenRepository(actionContext).RevokeAllActiveForUserAsync(userId, now, _ct);
+        var count = await new RefreshTokenRepository(actionContext).RevokeActiveInFamilyAsync(root.FamilyId, now, _ct);
 
         count.ShouldBe(2);
         await using var verify = fixture.CreateDbContext();
         var repo = new RefreshTokenRepository(verify);
         async Task<RefreshToken> Load(RefreshToken t) => (await repo.GetByHashAsync(t.TokenHash, _ct)).ShouldNotBeNull();
-        (await Load(active1)).RevokedAt.ShouldNotBeNull();
-        (await Load(active2)).RevokedAt.ShouldNotBeNull();
+        (await Load(root)).RevokedAt.ShouldNotBeNull();
+        (await Load(active)).RevokedAt.ShouldNotBeNull();
+        (await Load(active)).FamilyId.ShouldBe(root.Id);
         (await Load(revoked)).RevokedAt.ShouldBe(revokedAt);
         (await Load(expired)).RevokedAt.ShouldBeNull();
-        (await Load(other)).RevokedAt.ShouldBeNull();
+        (await Load(otherFamilySameUser)).RevokedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Migration_AddRefreshTokenFamilies_BackfillsFamilyIdWithOwnId()
+    {
+        const string BeforeFamilies = "20261109174148_AddUsersAndRefreshTokens";
+        var options = await fixture.CreateIsolatedDatabaseAsync(_ct);
+        var id = Guid.NewGuid();
+        var now = fixture.Time.GetUtcNow();
+
+        await using (var context = fixture.CreateDbContext(options))
+        {
+            await context.GetService<IMigrator>().MigrateAsync(BeforeFamilies, cancellationToken: _ct);
+            var hash = UniqueHash();
+            var expiresAt = now.AddDays(7);
+            await context.Database.ExecuteSqlAsync(
+                $"INSERT INTO [RefreshTokens] ([Id], [UserId], [TokenHash], [CreatedAt], [ExpiresAt]) VALUES ({id}, {Guid.NewGuid()}, {hash}, {now}, {expiresAt})",
+                _ct);
+        }
+
+        await using (var context = fixture.CreateDbContext(options))
+        {
+            await context.Database.MigrateAsync(_ct);
+            var token = await context.Set<RefreshToken>().AsNoTracking().SingleAsync(t => t.Id == id, _ct);
+
+            token.FamilyId.ShouldBe(id);
+        }
     }
 
     [Fact]
