@@ -1,3 +1,4 @@
+using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Application.Features.Samples;
 using Datavanced.SmartTaskManagement.Application.Features.Users;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
@@ -44,6 +45,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         builder.Services.AddScoped<ISampleReadRepository, SampleReadRepository>();
         builder.Services.AddScoped<IUserReadRepository, UserReadRepository>();
+        builder.Services.AddScoped<IProjectReadRepository, ProjectReadRepository>();
 
         if (builder.Environment.IsDevelopment())
         {
