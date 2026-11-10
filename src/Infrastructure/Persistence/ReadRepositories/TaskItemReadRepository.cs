@@ -23,7 +23,10 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
     // The whitelist: TaskSortFields key -> expression. Nothing else can be sorted on.
     // Enums are stored as strings, so priority and status sort by an explicit rank (SQL CASE),
     // never alphabetically. A missing due date sorts as the largest date: last ascending,
-    // first descending, without relying on the database's NULL ordering.
+    // first descending, without relying on the database's NULL ordering. Every enum value has its
+    // own rank; an unknown stored value falls back to UnknownRank (after every known value).
+    private const int UnknownRank = 4;
+
     private static readonly Dictionary<string, Expression<Func<TaskItem, object?>>> SortMap =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -32,13 +35,15 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
                 t.Priority == TaskPriority.Low ? 0
                 : t.Priority == TaskPriority.Medium ? 1
                 : t.Priority == TaskPriority.High ? 2
-                : 3,
+                : t.Priority == TaskPriority.Critical ? 3
+                : UnknownRank,
             [TaskSortFields.DueDate] = t => t.DueDate ?? DateOnly.MaxValue,
             [TaskSortFields.Status] = t =>
                 t.Status == TaskItemStatus.ToDo ? 0
                 : t.Status == TaskItemStatus.InProgress ? 1
                 : t.Status == TaskItemStatus.Completed ? 2
-                : 3,
+                : t.Status == TaskItemStatus.Cancelled ? 3
+                : UnknownRank,
             [TaskSortFields.CreatedAt] = t => t.CreatedAt,
             [TaskSortFields.UpdatedAt] = t => t.UpdatedAt,
         };
