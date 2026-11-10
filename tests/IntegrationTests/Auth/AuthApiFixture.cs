@@ -1,10 +1,13 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api;
 using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 
 namespace Datavanced.SmartTaskManagement.IntegrationTests.Auth;
 
@@ -20,11 +23,14 @@ public sealed class AuthApi : IDisposable
     public const string Password = "Passw0rd-for-tests";
     public const string CookieName = "__Secure-refresh_token";
 
+    private readonly SqlServerFixture _database;
+
     /// <param name="database">The SQL Server the host uses.</param>
     /// <param name="redisConnectionString">The real Redis the host uses.</param>
     /// <param name="configure">Extra settings applied before the host starts (for example a shorter grace period).</param>
     public AuthApi(SqlServerFixture database, string redisConnectionString, Action<ApiFactory>? configure = null)
     {
+        _database = database;
         Factory = new ApiFactory()
             .WithDatabase(database.Options)
             .WithRedis(redisConnectionString)
@@ -93,12 +99,53 @@ public sealed class AuthApi : IDisposable
         return CookieValue(response);
     }
 
+    /// <summary>Registers a user, promotes it to <paramref name="role"/> in the database, logs in.</summary>
+    public async Task<TestUser> CreateUserAsync(Role role, CancellationToken ct, string? marker = null)
+    {
+        var email = $"user-{marker ?? Guid.NewGuid().ToString("N")}-{Guid.NewGuid():N}@example.test";
+        using var register = await Client.PostAsJsonAsync(
+            Uri($"{Route}/register"), new { email, fullName = $"User {marker}", password = Password }, ct);
+        register.EnsureSuccessStatusCode();
+        var id = (await register.Content.ReadFromJsonAsync<JsonElement>(ct))
+            .GetProperty("user").GetProperty("id").GetGuid();
+
+        if (role != Role.TeamMember)
+        {
+            await using var context = _database.CreateDbContext();
+            var user = await context.Set<User>().SingleAsync(u => u.Id == id, ct);
+            user.ChangeRole(role);
+            await context.SaveChangesAsync(ct);
+        }
+
+        using var login = await Client.PostAsJsonAsync(
+            Uri($"{Route}/login"), new { email, password = Password }, ct);
+        login.EnsureSuccessStatusCode();
+        var token = (await login.Content.ReadFromJsonAsync<JsonElement>(ct)).GetProperty("accessToken").GetString()!;
+        return new TestUser(id, token, email, CookieValue(login));
+    }
+
+    public async Task<HttpResponseMessage> SendAsync(
+        HttpMethod method, string path, string token, object? body, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(method, Uri(path));
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await Client.SendAsync(request, ct);
+    }
+
     public void Dispose()
     {
         Client.Dispose();
         Factory.Dispose();
     }
 }
+
+/// <summary>A registered and logged-in test user.</summary>
+public sealed record TestUser(Guid Id, string Token, string Email, string Cookie);
 
 /// <summary>One SQL Server and one Redis container shared by all auth test classes.</summary>
 [CollectionDefinition(Name)]

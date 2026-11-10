@@ -2,6 +2,7 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
+using Datavanced.SmartTaskManagement.Domain.Projects;
 using Datavanced.SmartTaskManagement.Domain.Results;
 using Datavanced.SmartTaskManagement.Domain.Users;
 
@@ -14,11 +15,15 @@ namespace Datavanced.SmartTaskManagement.Application.Features.Users.Commands.Cha
 /// <remarks>
 /// Known limitation: the last-Admin check is per request; two Admins demoting each other at the
 /// same moment can both pass it. Recovery: restart with a different AdminSeed:Email (design section 8).
+/// Likewise the Project Manager demotion guard is per request: an owner change and a demotion of the
+/// new owner at the same moment can both pass; the project is then owned by a non-Project-Manager
+/// until an Admin changes the owner (design section 6). Documented, not prevented.
 /// </remarks>
 internal sealed class ChangeUserRoleCommandHandler(
     IUserRepository users,
     IRefreshTokenRepository refreshTokens,
     ITokenVersionStore tokenVersions,
+    IProjectRepository projects,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
     : ICommandHandler<ChangeUserRoleCommand>
@@ -36,6 +41,13 @@ internal sealed class ChangeUserRoleCommandHandler(
             && await users.CountByRoleAsync(Role.Admin, cancellationToken) == 1)
         {
             return Result.Failure(UserErrors.LastAdmin);
+        }
+
+        if (user.Role == Role.ProjectManager
+            && command.Role != Role.ProjectManager
+            && await projects.AnyOwnedByAsync(user.Id, cancellationToken))
+        {
+            return Result.Failure(UserErrors.OwnsProjects);
         }
 
         if (!user.ChangeRole(command.Role))

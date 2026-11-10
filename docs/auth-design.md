@@ -129,7 +129,7 @@ The Sample endpoints switch to `[Authorize]` in this work (Phase 2 checklist in
 exemption is removed from the test. After this work the four auth actions are the
 only anonymous actions. Sample integration and smoke tests get a token from a
 shared test helper (also used later by the Project and Task tests). Sample itself
-is deleted once the Project module exists.
+is deleted once the Project module exists. (Amended 2026-11-10: Sample stays as the copy-source until the Task module is done; see `docs/project-design.md` section 1.)
 
 ## 4. Tokens
 

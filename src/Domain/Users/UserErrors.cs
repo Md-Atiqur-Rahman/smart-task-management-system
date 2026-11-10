@@ -13,4 +13,7 @@ public static class UserErrors
 
     public static readonly Error LastAdmin =
         Error.Conflict("users.last_admin", "The last administrator cannot be changed or removed.");
+
+    public static readonly Error OwnsProjects =
+        Error.Conflict("users.owns_projects", "The user owns projects; give them to another Project Manager first.");
 }

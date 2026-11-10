@@ -7,8 +7,6 @@ using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.IntegrationTests.Auth;
 using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
-using Microsoft.EntityFrameworkCore;
-
 using static Datavanced.SmartTaskManagement.IntegrationTests.Auth.AuthApi;
 
 namespace Datavanced.SmartTaskManagement.IntegrationTests.Users;
@@ -201,44 +199,12 @@ public sealed class UsersEndpointsTests(SqlServerFixture database, RedisFixture 
 
     public void Dispose() => _api.Dispose();
 
-    private async Task<(Guid Id, string Token, string Email, string Cookie)> CreateUserAsync(Role role, string? marker = null)
-    {
-        var email = $"user-{marker ?? Guid.NewGuid().ToString("N")}-{Guid.NewGuid():N}@example.test";
-        using var register = await _api.Client.PostAsJsonAsync(
-            Uri($"{Route}/register"), new { email, fullName = $"User {marker}", password = Password }, _ct);
-        register.EnsureSuccessStatusCode();
-        var id = (await register.Content.ReadFromJsonAsync<JsonElement>(_ct))
-            .GetProperty("user").GetProperty("id").GetGuid();
+    private Task<TestUser> CreateUserAsync(Role role, string? marker = null) =>
+        _api.CreateUserAsync(role, _ct, marker);
 
-        if (role != Role.TeamMember)
-        {
-            await using var context = database.CreateDbContext();
-            var user = await context.Set<User>().SingleAsync(u => u.Id == id, _ct);
-            user.ChangeRole(role);
-            await context.SaveChangesAsync(_ct);
-        }
+    private Task<HttpResponseMessage> GetAsync(string path, string token) =>
+        _api.SendAsync(HttpMethod.Get, path, token, null, _ct);
 
-        using var login = await _api.Client.PostAsJsonAsync(
-            Uri($"{Route}/login"), new { email, password = Password }, _ct);
-        login.EnsureSuccessStatusCode();
-        var token = (await login.Content.ReadFromJsonAsync<JsonElement>(_ct)).GetProperty("accessToken").GetString()!;
-        return (id, token, email, CookieValue(login));
-    }
-
-    private async Task<HttpResponseMessage> GetAsync(string path, string token)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, Uri(path));
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return await _api.Client.SendAsync(request, _ct);
-    }
-
-    private async Task<HttpResponseMessage> PutRoleAsync(Guid id, Role role, string token)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Put, Uri($"/api/users/{id}/role"))
-        {
-            Content = JsonContent.Create(new { role = role.ToString() }),
-        };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return await _api.Client.SendAsync(request, _ct);
-    }
+    private Task<HttpResponseMessage> PutRoleAsync(Guid id, Role role, string token) =>
+        _api.SendAsync(HttpMethod.Put, $"/api/users/{id}/role", token, new { role = role.ToString() }, _ct);
 }

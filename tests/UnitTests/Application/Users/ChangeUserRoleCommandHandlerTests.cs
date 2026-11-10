@@ -2,6 +2,7 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Application.Features.Users.Commands.ChangeUserRole;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
+using Datavanced.SmartTaskManagement.Domain.Projects;
 using Datavanced.SmartTaskManagement.Domain.Results;
 using Datavanced.SmartTaskManagement.Domain.Users;
 
@@ -17,12 +18,14 @@ public sealed class ChangeUserRoleCommandHandlerTests
     private readonly IUserRepository _users = Substitute.For<IUserRepository>();
     private readonly IRefreshTokenRepository _refreshTokens = Substitute.For<IRefreshTokenRepository>();
     private readonly ITokenVersionStore _versions = Substitute.For<ITokenVersionStore>();
+    private readonly IProjectRepository _projects = Substitute.For<IProjectRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero));
 
     public ChangeUserRoleCommandHandlerTests()
     {
         _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Result.Success());
+        _projects.AnyOwnedByAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(false);
         _refreshTokens.ListActiveForUserAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
             .Returns([]);
     }
@@ -104,5 +107,51 @@ public sealed class ChangeUserRoleCommandHandlerTests
         result.Error.ShouldBe(UserErrors.NotFound);
     }
 
-    private ChangeUserRoleCommandHandler CreateHandler() => new(_users, _refreshTokens, _versions, _unitOfWork, _time);
+    [Fact]
+    public async Task ChangeRole_DemotingPmWhoOwnsProjects_ReturnsOwnsProjectsWithoutRedisOrSave()
+    {
+        var user = User.Register(Email.Create("a@x.com"), "Alice", "hash");
+        user.ChangeRole(Role.ProjectManager);
+        _users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+        _projects.AnyOwnedByAsync(user.Id, Arg.Any<CancellationToken>()).Returns(true);
+
+        var result = await CreateHandler().Handle(
+            new ChangeUserRoleCommand(user.Id, Role.TeamMember), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.ShouldBe(UserErrors.OwnsProjects);
+        user.Role.ShouldBe(Role.ProjectManager);
+        await _versions.DidNotReceive().SetIfHigherAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ChangeRole_DemotingPmWithoutProjects_Succeeds()
+    {
+        var user = User.Register(Email.Create("a@x.com"), "Alice", "hash");
+        user.ChangeRole(Role.ProjectManager);
+        _users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        var result = await CreateHandler().Handle(
+            new ChangeUserRoleCommand(user.Id, Role.TeamMember), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        user.Role.ShouldBe(Role.TeamMember);
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ChangeRole_PromotingTeamMember_DoesNotCheckProjects()
+    {
+        var user = User.Register(Email.Create("a@x.com"), "Alice", "hash");
+        _users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        var result = await CreateHandler().Handle(
+            new ChangeUserRoleCommand(user.Id, Role.ProjectManager), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        await _projects.DidNotReceive().AnyOwnedByAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    private ChangeUserRoleCommandHandler CreateHandler() => new(_users, _refreshTokens, _versions, _projects, _unitOfWork, _time);
 }

@@ -4,9 +4,9 @@ Updated 2026-11-10. This file describes the current truth, not the history. Anyt
 
 ## At a glance
 
-**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) তৈরি হয়েছে; Project, Task, Dashboard, AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
+**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task, Dashboard, AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`); Project, Task, Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project module is built (`docs/project-design.md`); Task, Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -31,7 +31,7 @@ Evaluation: architecture, code quality, security, backend, frontend, design patt
 
 ## Current state
 
-The foundation and the Auth feature are finished and verified; the other Smart Task features are still to be built.
+The foundation, the Auth feature and the Project module are finished and verified; the other Smart Task features are still to be built.
 
 ### Repositories (all private on GitHub)
 
@@ -48,9 +48,11 @@ A fourth private repository is an archive of the long template build history and
 - Four source projects (Domain, Application, Infrastructure, Api) and three test projects (UnitTests, IntegrationTests, ArchitectureTests), plus a small `tests/WeavingProbe` library used only to probe NullGuard behaviour.
 - A runnable `Sample` feature (5 endpoints: create, list with search/sort/paging, get by id, complete, soft delete), all `[Authorize]`. It is the copy-source for every new feature. See `docs/sample-flow.md`.
 - **Auth: built.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`; the only anonymous actions), `UsersController` (Admin: list users and change a role; Admin or Project Manager: assignable users), `User` and `RefreshToken` aggregates, a first-Admin seed from secret configuration, and `[RequireAllowedOrigin]` (Origin check against `Cors:AllowedOrigins`) on refresh and logout. The refresh token lives only in the `__Secure-refresh_token` HttpOnly cookie. Details: `docs/auth-design.md`, ADR 0013 to 0015.
+- **Project: built.** `ProjectsController`: `POST` and `GET /api/projects` (list with search, sort by `name`/`createdAt`/`updatedAt`, paging, `ownerId` filter), `GET`, `PUT` and `DELETE /api/projects/{id}`, and `PUT /api/projects/{id}/owner` (Admin only). Create, update and delete: Admin or Project Manager; a Project Manager sees and changes only their own projects, Admin all, Team Member sees none until the Task module adds assignment-based visibility. Delete is a soft delete. The owner must be a Project Manager. Demotion guard: changing the role of a Project Manager who still owns projects returns 409 `users.owns_projects`. Design: `docs/project-design.md`.
+- **Lesson for the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
-- 322 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
+- 427 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
 - `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
 - Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
 - Claude Code files: `CLAUDE.md`, `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
@@ -59,7 +61,7 @@ A fourth private repository is an archive of the long template build history and
 
 ### Not started
 
-Project, Task, Dashboard, the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
+Task, Dashboard, the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
 
 ## Locked decisions and why
 
@@ -112,7 +114,7 @@ The developer reads Bangla and prefers explanations in simple Bangla with Englis
 
 ## What to do next
 
-Auth is built. Everything below that is not about Auth is **proposed** until the developer confirms it in the PRD interview.
+Auth and Project are built. Everything below that is not about Auth is **proposed** until the developer confirms it in the PRD interview.
 
 ### First task: the project PRD
 
@@ -121,7 +123,7 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 ### Build order
 
 1. ~~Auth (users, roles, register, login, refresh, logout)~~ built
-2. Project module
+2. ~~Project module~~ built
 3. Task module
 4. Dashboard
 5. AI endpoint

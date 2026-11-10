@@ -30,8 +30,9 @@ one role.
 | Capability | Admin | Project Manager | Team Member |
 | --- | --- | --- | --- |
 | See projects | All | Only own projects | Only projects where they have at least one assigned task (details only) |
-| Create project | Yes | Yes (becomes owner) | No |
-| Update / delete project | Any project; ownership does not change | Own projects | No |
+| Create project | Yes; must choose a Project Manager as owner | Yes; always becomes the owner | No |
+| Update (name, description) / delete project | Any project | Own projects | No |
+| Change a project's owner | Yes; the new owner must be a Project Manager | No | No |
 | See tasks | All | All tasks in own projects | Only tasks assigned to them |
 | Create / update / delete task | Any | In own projects | No |
 | Assign task | To anyone | To Team Members or themselves; not to other PMs or Admins | No |
@@ -156,12 +157,31 @@ one role.
   paginate; task create, update, delete, assign, status, priority, due date,
   search, sort, paginate. Statuses: To Do, In Progress, Completed, Cancelled.
   Priorities: Low, Medium, High, Critical.
+- CONFIRMED: a project has a name (required, max 200), a description (optional,
+  max 2000) and an owner (always a Project Manager); created/updated times are
+  kept by the system. No status or deadline.
+- CONFIRMED: an Admin creating a project must choose a Project Manager as owner;
+  a Project Manager creating a project is always its owner. Only an Admin can
+  change the owner later (for example when a PM leaves), and only to another
+  Project Manager. The previous owner loses access immediately (section 3).
+- CONFIRMED: a Project Manager who owns at least one (not deleted) project cannot
+  be demoted; the role change returns 409 until the projects are given to
+  another Project Manager.
+- CONFIRMED: deleting a project is a soft delete. The project and its tasks
+  disappear from lists and search, and direct access returns 404, for everyone
+  including Admins. Admin and the owning PM can delete. No restore feature;
+  restoring is a database operation.
+- CONFIRMED: project list: keyword search on name and description; Admins can
+  filter by owner; sort by name, created time or updated time; pagination,
+  search, filter and sort are server-side (database), default page size 20,
+  maximum 100. A list row shows name, owner name, created and updated time;
+  details add the full description and the owner's name and email. Task counts
+  come with the Task module.
 - PROPOSED: Project and Task are separate aggregates; a task references its
   project by `ProjectId`.
 - PROPOSED: status transitions: To Do -> In Progress or Cancelled; In Progress ->
   Completed, Cancelled or To Do; Completed and Cancelled are final. An invalid
   transition returns 409.
-- PROPOSED: deleting a project is a soft delete and hides its tasks.
 
 ## 9. Dashboard
 
@@ -201,7 +221,6 @@ migrations.
 | # | Question | Proposed default |
 | --- | --- | --- |
 | 4 | Task status transitions (section 8) | As proposed |
-| 5 | Project delete behaviour (section 8) | Soft delete, tasks hidden |
 | 6 | AI provider and model (section 10) | GitHub Models, after verifying official docs |
 
 ## Change log
@@ -218,3 +237,4 @@ migrations.
 | 2026-11-09 | 30-second grace period for rotated refresh tokens (401, nothing revoked, client retries) | Developer confirmed; several tabs refreshing at once must not sign the user out everywhere |
 | 2026-11-10 | Section 5 aligned with ADR 0014: fixed Redis key expiry instead of sliding; role change writes Redis first, then the database (503 and nothing saved when Redis is down) instead of deleting the key after a failed Redis update | ADR 0014 amended ADR 0013 during the design; PRD 5 still described the old behaviour |
 | 2026-11-10 | Reuse detection revokes only the presented token's family (one login's chain) instead of all of the user's tokens (ADR 0016) | Developer decision: after a role change the user's devices signed each other out in a loop, and anyone holding an old revoked token could sign the user out everywhere |
+| 2026-11-10 | Projects: fields, ownership (Admin chooses a PM owner; only an Admin can change the owner later, replacing "ownership does not change"), soft delete (open question 5 closed), list search/filter/sort/server-side paging, list and details contents, no demotion of a PM who owns projects | Developer confirmed in the Project module interview; a project must be handed to another PM when its PM leaves |
