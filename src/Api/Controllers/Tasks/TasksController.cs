@@ -4,6 +4,8 @@ using Datavanced.SmartTaskManagement.Api.Errors;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks;
+using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.AssignTask;
+using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.ChangeTaskStatus;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.CreateTask;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.DeleteTask;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.UpdateTask;
@@ -63,7 +65,7 @@ public sealed class TasksController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
     public async Task<IActionResult> ListProjectTasks(
         Guid projectId,
-        [FromQuery] ListTasksRequest request,
+        [FromQuery] ListProjectTasksRequest request,
         [FromServices] IQueryHandler<ListProjectTasksQuery, PagedResult<TaskListItemDto>> handler,
         [FromServices] IOptions<PagingOptions> paging,
         CancellationToken cancellationToken)
@@ -172,6 +174,48 @@ public sealed class TasksController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(new DeleteTaskCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
+    }
+
+    [Authorize]
+    [HttpPut(ByIdRoute + "/status")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
+    public async Task<IActionResult> ChangeStatus(
+        Guid id,
+        [FromBody] ChangeTaskStatusRequest request,
+        [FromServices] ICommandHandler<ChangeTaskStatusCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        if (request.Status is not { } status)
+        {
+            return ValidationProblem();
+        }
+
+        var result = await handler.Handle(new ChangeTaskStatusCommand(id, status), cancellationToken);
+        return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
+    }
+
+    [Authorize(Policy = AuthorizationPolicies.ProjectManagerOrAdmin)]
+    [HttpPut(ByIdRoute + "/assignee")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
+    public async Task<IActionResult> Assign(
+        Guid id,
+        [FromBody] AssignTaskRequest request,
+        [FromServices] ICommandHandler<AssignTaskCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(new AssignTaskCommand(id, request.AssigneeId), cancellationToken);
         return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
     }
 }
