@@ -4,9 +4,6 @@ using System.Text.Json;
 
 using Datavanced.SmartTaskManagement.IntegrationTests.Auth;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 /// <summary>
@@ -25,34 +22,6 @@ public static class AuthenticatedClient
                 AuthApi.Uri($"{AuthApi.Route}/register"),
                 new { email = AuthApi.NewEmail(), fullName = "Rahim Uddin", password = AuthApi.Password },
                 ct);
-            return await AttachTokenAsync(client, response, ct);
-        }
-        catch
-        {
-            client.Dispose();
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Logs in as the seeded Admin. The factory must be configured with the
-    /// AdminSeed:Email / Password / FullName settings.
-    /// </summary>
-    public static async Task<HttpClient> ForSeedAdminAsync(ApiFactory factory, CancellationToken ct)
-    {
-        var configuration = factory.Services.GetRequiredService<IConfiguration>();
-        var email = configuration["AdminSeed:Email"];
-        var password = configuration["AdminSeed:Password"];
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
-        {
-            throw new InvalidOperationException("The factory has no AdminSeed:Email / AdminSeed:Password settings.");
-        }
-
-        var client = factory.CreateClient();
-        try
-        {
-            using var response = await client.PostAsJsonAsync(
-                AuthApi.Uri($"{AuthApi.Route}/login"), new { email, password }, ct);
             return await AttachTokenAsync(client, response, ct);
         }
         catch

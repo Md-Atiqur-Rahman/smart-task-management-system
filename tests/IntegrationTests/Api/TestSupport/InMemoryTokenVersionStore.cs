@@ -25,13 +25,6 @@ public sealed class InMemoryTokenVersionStore : ITokenVersionStore
         return Task.CompletedTask;
     }
 
-    public Task RemoveAsync(Guid userId, CancellationToken ct)
-    {
-        ThrowIfOutage();
-        _versions.TryRemove(userId, out _);
-        return Task.CompletedTask;
-    }
-
     private void ThrowIfOutage()
     {
         if (SimulateOutage)

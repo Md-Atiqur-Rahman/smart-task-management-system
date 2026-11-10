@@ -4,7 +4,7 @@ namespace Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 /// Shared (cross-instance) copy of each user's current token version; SQL Server stays the
 /// source of truth (ADR 0013). Entries only move forward and expire a fixed time after the
 /// last write; a read never extends the expiry. Every method throws
-/// <see cref="SharedStateUnavailableException"/> when the store is unreachable or times out.
+/// <see cref="SharedStateUnavailableException"/> when the store is unreachable, times out or returns an error.
 /// </summary>
 public interface ITokenVersionStore
 {
@@ -13,6 +13,4 @@ public interface ITokenVersionStore
 
     /// <summary>Stores the version only when the entry is missing or lower, and then (re)sets the fixed expiry.</summary>
     Task SetIfHigherAsync(Guid userId, int version, CancellationToken ct);
-
-    Task RemoveAsync(Guid userId, CancellationToken ct);
 }

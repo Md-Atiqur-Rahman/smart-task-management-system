@@ -324,8 +324,8 @@ The middleware:
 
 - `RedisOptions` (`ConnectionString` secret, `ConnectTimeoutMs`,
   `OperationTimeoutMs`); one `IConnectionMultiplexer` singleton in Infrastructure.
-- `ITokenVersionStore` (Application interface): `GetAsync`, `SetIfHigherAsync`,
-  `RemoveAsync`; Lua compare-and-set; key `auth:token-version:<userId>`.
+- `ITokenVersionStore` (Application interface): `GetAsync`, `SetIfHigherAsync`
+  (`RemoveAsync` was removed: nothing called it); Lua compare-and-set; key `auth:token-version:<userId>`.
 - Expiry: **fixed**, set when the key is written or loaded, not refreshed on
   read; length in options (default 1 hour) **[builder's call]**. A sliding expiry
   (ADR 0013's text) would keep a wrong value alive forever while the user keeps

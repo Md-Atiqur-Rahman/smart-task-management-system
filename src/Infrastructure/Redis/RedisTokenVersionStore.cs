@@ -45,12 +45,6 @@ public sealed class RedisTokenVersionStore(IConnectionMultiplexer connection, IO
             [version.ToString(CultureInfo.InvariantCulture), ttlSeconds.ToString(CultureInfo.InvariantCulture)]));
     }
 
-    public async Task RemoveAsync(Guid userId, CancellationToken ct)
-    {
-        ct.ThrowIfCancellationRequested();
-        await ExecuteAsync(db => db.KeyDeleteAsync(KeyFor(userId)));
-    }
-
     private async Task<T> ExecuteAsync<T>(Func<IDatabase, Task<T>> operation)
     {
         try

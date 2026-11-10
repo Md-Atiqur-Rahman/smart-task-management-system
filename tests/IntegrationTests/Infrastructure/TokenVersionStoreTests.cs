@@ -68,18 +68,6 @@ public sealed class TokenVersionStoreTests(RedisFixture redis) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Remove_ExistingKey_GetReturnsNull()
-    {
-        var (store, _) = CreateStore(redis.ConnectionString);
-        var userId = Guid.NewGuid();
-        await store.SetIfHigherAsync(userId, 2, _ct);
-
-        await store.RemoveAsync(userId, _ct);
-
-        (await store.GetAsync(userId, _ct)).ShouldBeNull();
-    }
-
-    [Fact]
     public async Task Get_RedisUnreachable_ThrowsSharedStateUnavailable()
     {
         var (store, _) = CreateStore("127.0.0.1:1,password=unused", connectTimeoutMs: 200, operationTimeoutMs: 200);

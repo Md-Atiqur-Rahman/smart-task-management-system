@@ -11,8 +11,6 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
     public const string ConcurrencyConflictCode = "concurrency.conflict";
 
-    public const string DuplicateKeyCode = PersistenceErrors.DuplicateKeyCode;
-
     // SQL Server error numbers: 2601 = duplicate key in a unique index, 2627 = unique/primary key constraint violation.
     private const int DuplicateIndexNumber = 2601;
     private const int DuplicateKeyNumber = 2627;
