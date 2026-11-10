@@ -93,6 +93,20 @@ public sealed class TokenVersionStoreTests(RedisFixture redis) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SetIfHigher_RedisServerError_ThrowsSharedStateUnavailableWithRedisInner()
+    {
+        var (store, connection) = CreateStore(redis.ConnectionString);
+        var userId = Guid.NewGuid();
+        // A non-integer value makes the script's tonumber() return nil; comparing nil raises a script error.
+        await connection.GetDatabase().StringSetAsync(RedisTokenVersionStore.KeyFor(userId), "not-a-number");
+
+        var exception = await Should.ThrowAsync<SharedStateUnavailableException>(
+            () => store.SetIfHigherAsync(userId, 2, _ct));
+
+        exception.InnerException.ShouldBeAssignableTo<RedisException>();
+    }
+
+    [Fact]
     public async Task Health_RedisUnreachable_ReportsUnhealthy()
     {
         var (_, connection) = CreateStore("127.0.0.1:1,password=unused", connectTimeoutMs: 200, operationTimeoutMs: 200);

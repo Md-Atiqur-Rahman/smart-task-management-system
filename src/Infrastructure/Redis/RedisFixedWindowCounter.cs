@@ -30,17 +30,20 @@ public sealed class RedisFixedWindowCounter(IConnectionMultiplexer connection) :
             var result = await connection.GetDatabase().ScriptEvaluateAsync(IncrementScript, [key], [windowMs]);
             return (long)result;
         }
-        catch (RedisConnectionException ex)
+        catch (RedisException ex)
         {
+            // Connection and server errors (LOADING, READONLY, OOM, ...; RedisException is their base
+            // type): the rate limit fails open on any Redis error (ADR 0013, ADR 0015).
             throw new SharedStateUnavailableException(ex);
         }
         catch (RedisTimeoutException ex)
         {
+            // Not a RedisException (derives from TimeoutException); same handling.
             throw new SharedStateUnavailableException(ex);
         }
-        catch (RedisServerException ex)
+        catch (RedisCommandException ex)
         {
-            // LOADING, READONLY, MASTERDOWN, OOM, ...: the rate limit fails open on any Redis error (ADR 0013).
+            // Not a RedisException (derives from Exception); a command the client refuses to send.
             throw new SharedStateUnavailableException(ex);
         }
     }

@@ -57,12 +57,20 @@ public sealed class RedisTokenVersionStore(IConnectionMultiplexer connection, IO
         {
             return await operation(connection.GetDatabase());
         }
-        catch (RedisConnectionException ex)
+        catch (RedisException ex)
         {
+            // Connection and server errors (RedisException is their base type): the shared state cannot
+            // be trusted right now, so the version check fails closed (503).
             throw new SharedStateUnavailableException(ex);
         }
         catch (RedisTimeoutException ex)
         {
+            // Not a RedisException (derives from TimeoutException); same handling.
+            throw new SharedStateUnavailableException(ex);
+        }
+        catch (RedisCommandException ex)
+        {
+            // Not a RedisException (derives from Exception); a command the client refuses to send.
             throw new SharedStateUnavailableException(ex);
         }
     }
