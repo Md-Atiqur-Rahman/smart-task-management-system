@@ -13,7 +13,7 @@ Every Sample file starts with `// SAMPLE: copy-source, delete or rename`.
 | `POST /api/samples/{id}/complete` | Domain state change returning `Result` | 204 | 404; 409 if already completed or changed concurrently |
 | `DELETE /api/samples/{id}` | Soft delete | 204 | 404; 409 if changed concurrently |
 
-All endpoints are `[AllowAnonymous]` with `// SAMPLE ONLY: replace with [Authorize] in Phase 2`.
+All endpoints are `[Authorize]` (a valid access token is required; 401 without one).
 Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
 400 responses also carry an `errors` map (field -> messages).
 
@@ -77,7 +77,7 @@ Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
 4. Migration: `dotnet tool restore`, then
    `Database__Name=design-time Database__Password=design-time dotnet ef migrations add <Name> --project src/Infrastructure --startup-project src/Api --output-dir Persistence/Migrations`.
 5. Api: copy `Controllers/Samples/`; every action needs `[Authorize]` (new features are
-   NOT anonymous; `[AllowAnonymous]` outside `Samples` fails an architecture test) and
+   NOT anonymous; `[AllowAnonymous]` outside the four `AuthController` actions fails an architecture test) and
    `[ProducesResponseType]` for every status.
 6. Tests: copy the unit, integration and smoke tests and adapt.
 7. Regenerate and commit `docs/openapi.json`: `bash scripts/generate-openapi.sh`.
@@ -105,7 +105,9 @@ Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
    If you change `DB_PORT`, also set `Database:Port`.
 4. `dotnet run --project src/Api --launch-profile http` (Development: the initial
    migration applies automatically).
-5. Open `http://localhost:5199/swagger` (Development only):
+5. Open `http://localhost:5199/swagger` (Development only). Sign in first:
+   `POST /api/auth/register` (or `POST /api/auth/login`), copy the `accessToken` from
+   the response, click "Authorize" and paste it. Then:
    1. `POST /api/samples` with `{ "name": "first" }` -> 201, copy the `id`.
    2. `POST /api/samples` with `{ "name": "" }` -> 400 with `errors.Name`.
    3. `GET /api/samples?page=1&pageSize=5&sortBy=name` -> 200.
@@ -113,30 +115,30 @@ Every error is ProblemDetails (`application/problem+json`) with an `errorCode`;
    5. `GET /api/samples/{id}` -> 200; with a random GUID -> 404.
    6. `POST /api/samples/{id}/complete` -> 204; again -> 409.
    7. `DELETE /api/samples/{id}` -> 204; again -> 404.
-   The "Authorize" button accepts a JWT (Phase 2 issues tokens).
+   Without a token every Sample call returns 401 (ProblemDetails with `errorCode`).
 
 ## Phase 2 checklist (authentication)
 
-Phase 2 of the template adds authentication; it is the only Phase 2 item (see
-the Roadmap in `README.md`). Feature modules are added by copying Sample.
+Done. Phase 2 added authentication (see the Roadmap in `README.md`). Feature
+modules are added by copying Sample.
 
-1. Replace every `[AllowAnonymous]` that carries
-   `// SAMPLE ONLY: replace with [Authorize] in Phase 2` with `[Authorize]`
-   (or a named policy). Search for the marker text.
-2. Keep architecture test 5: once no anonymous controller remains, also remove
-   the Sample exemption so `[AllowAnonymous]` is allowed nowhere unless a new,
-   reviewed exception is added.
-3. Add the Bearer security requirement per protected operation: register an
-   operation transformer like `AuthOperationTransformer` from
-   https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/customize-openapi?view=aspnetcore-10.0
-   next to `BearerSecuritySchemeTransformer` (which already declares the scheme).
+1. [x] Every Sample action is `[Authorize]`; the `// SAMPLE ONLY: replace with
+   [Authorize] in Phase 2` markers are gone.
+2. [x] Architecture test 5 has no Sample exemption: `[AllowAnonymous]` is allowed
+   only on the four `AuthController` actions (Register, Login, Refresh, Logout;
+   ADR 0014).
+3. [x] The Bearer security requirement is added per protected operation by
+   `AuthOperationTransformer` (from
+   https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/customize-openapi?view=aspnetcore-10.0)
+   next to `BearerSecuritySchemeTransformer` (which declares the scheme).
    Operations with `[AllowAnonymous]` get no requirement.
-4. Add tests: no token -> 401, valid token -> success, wrong role -> 403
-   (ProblemDetails with `errorCode`).
-5. Regenerate and commit `docs/openapi.json` (`bash scripts/generate-openapi.sh`);
-   `scripts/verify` fails until you do.
-6. Update this document's Swagger steps: use the "Authorize" button with a token
-   from the Phase 2 login endpoint.
+4. [x] Tests: no token -> 401, valid token -> success, wrong role -> 403
+   (ProblemDetails with `errorCode`) in
+   `tests/IntegrationTests/Samples/SampleAuthorizationTests.cs`; the Sample tests
+   use `AuthenticatedClient`.
+5. [x] `docs/openapi.json` regenerated and committed
+   (`bash scripts/generate-openapi.sh`).
+6. [x] The Swagger steps above register or log in and use the "Authorize" button.
 
 ## Remove Sample
 

@@ -12,7 +12,7 @@ namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 
 /// <summary>GET list and GET by id through HTTP against real SQL Server.</summary>
 [Collection(SqlServerCollectionDefinition.Name)]
-public sealed class SampleReadTests(SqlServerFixture database) : IDisposable
+public sealed class SampleReadTests(SqlServerFixture database) : IAsyncLifetime, IDisposable
 {
     private readonly SampleApi _api = new(database);
     private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
@@ -139,6 +139,10 @@ public sealed class SampleReadTests(SqlServerFixture database) : IDisposable
         body.GetProperty("errors").EnumerateObject()
             .ShouldContain(p => p.Name.Equals(field, StringComparison.OrdinalIgnoreCase));
     }
+
+    public ValueTask InitializeAsync() => new(_api.SignInAsync(_ct));
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     public void Dispose() => _api.Dispose();
 

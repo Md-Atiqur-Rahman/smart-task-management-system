@@ -1,7 +1,6 @@
 using System.Reflection;
 
 using Datavanced.SmartTaskManagement.Api.Controllers.Auth;
-using Datavanced.SmartTaskManagement.Api.Controllers.Samples;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +10,11 @@ namespace Datavanced.SmartTaskManagement.ArchitectureTests;
 /// <summary>
 /// Rule 5: every controller action declares [Authorize] or [AllowAnonymous]
 /// (on the action or its controller); [AllowAnonymous] is allowed only on the four
-/// AuthController actions (ADR 0014) and, until Task 14, in the Sample namespace. There is no
-/// authorization fallback policy, so this rule is the only guard.
+/// AuthController actions (ADR 0014). There is no authorization fallback policy, so this rule is
+/// the only guard.
 /// </summary>
 public sealed class ControllerAuthorizationTests
 {
-    // Exactly the Sample controller's namespace; a ".Samples" segment elsewhere is not exempt.
-    private static readonly string SampleNamespace = typeof(SamplesController).Namespace!;
-
     // ADR 0014: exactly these four actions of AuthController may be anonymous.
     private static readonly string[] AllowedAnonymousAuthActions =
         [nameof(AuthController.Register), nameof(AuthController.Login), nameof(AuthController.Refresh), nameof(AuthController.Logout)];
@@ -35,10 +31,10 @@ public sealed class ControllerAuthorizationTests
     }
 
     [Fact]
-    public void AllowAnonymous_OnlyOnAllowListedAuthActionsOrInSampleNamespace()
+    public void AllowAnonymous_OnlyOnAllowListedAuthActions()
     {
         var unexpected = Actions()
-            .Where(a => Has<AllowAnonymousAttribute>(a) && !IsSample(a.DeclaringType!) && !IsAllowListed(a))
+            .Where(a => Has<AllowAnonymousAttribute>(a) && !IsAllowListed(a))
             .Select(Describe)
             .ToList();
 
@@ -70,9 +66,6 @@ public sealed class ControllerAuthorizationTests
 
     private static bool IsAllowListed(MethodInfo action) =>
         action.DeclaringType == typeof(AuthController) && AllowedAnonymousAuthActions.Contains(action.Name);
-
-    private static bool IsSample(Type controller) =>
-        string.Equals(controller.Namespace, SampleNamespace, StringComparison.Ordinal);
 
     private static string Describe(MethodInfo action) => $"{action.DeclaringType!.FullName}.{action.Name}";
 }

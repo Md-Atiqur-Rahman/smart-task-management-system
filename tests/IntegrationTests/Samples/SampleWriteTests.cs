@@ -20,7 +20,7 @@ namespace Datavanced.SmartTaskManagement.IntegrationTests.Samples;
 
 /// <summary>POST, complete and DELETE through HTTP against real SQL Server.</summary>
 [Collection(SqlServerCollectionDefinition.Name)]
-public sealed class SampleWriteTests(SqlServerFixture database) : IDisposable
+public sealed class SampleWriteTests(SqlServerFixture database) : IAsyncLifetime, IDisposable
 {
     private readonly SampleApi _api = new(database);
     private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
@@ -159,6 +159,10 @@ public sealed class SampleWriteTests(SqlServerFixture database) : IDisposable
         result.Error.Type.ShouldBe(ErrorType.Conflict);
         result.Error.Code.ShouldBe(UnitOfWork.ConcurrencyConflictCode);
     }
+
+    public ValueTask InitializeAsync() => new(_api.SignInAsync(_ct));
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     public void Dispose() => _api.Dispose();
 

@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 
+using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 using Datavanced.SmartTaskManagement.IntegrationTests.Infrastructure;
 
 using Serilog.Events;
@@ -19,7 +20,7 @@ public sealed class LoggingConfigurationTests(SqlServerFixture database)
     {
         var ct = TestContext.Current.CancellationToken;
         using var factory = new ApiFactory().WithDatabase(database.Options);
-        using var client = factory.CreateClient();
+        using var client = await AuthenticatedClient.ForNewTeamMemberAsync(factory, ct);
 
         using var response = await client.PostAsJsonAsync(
             new Uri("/api/samples", UriKind.Relative), new { name = "logging" }, ct);
