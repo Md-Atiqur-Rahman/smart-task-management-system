@@ -11,7 +11,7 @@ namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Redis;
 
 public static class HostApplicationBuilderExtensions
 {
-    /// <summary>Validated RedisOptions, one lazily connected multiplexer, token version store, health check.</summary>
+    /// <summary>Validated RedisOptions, one lazily connected multiplexer, token version store, rate limit counter, health check.</summary>
     public static TBuilder ConfigureRedis<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
@@ -27,6 +27,7 @@ public static class HostApplicationBuilderExtensions
                 RedisConnection.BuildConfiguration(provider.GetRequiredService<IOptions<RedisOptions>>().Value)));
 
         builder.Services.AddSingleton<ITokenVersionStore, RedisTokenVersionStore>();
+        builder.Services.AddSingleton<IFixedWindowCounter, RedisFixedWindowCounter>();
         builder.Services.AddHealthChecks().AddCheck<RedisHealthCheck>("redis");
         return builder;
     }

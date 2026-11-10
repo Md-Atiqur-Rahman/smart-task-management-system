@@ -1,5 +1,6 @@
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Redis;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
 using Microsoft.AspNetCore.Hosting;
@@ -38,10 +39,22 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private bool _useRealRedis;
 
+    private TimeProvider? _timeProvider;
+
     public CapturingSink LogSink { get; } = new();
 
     /// <summary>The in-memory token version store used unless <see cref="WithRedis"/> is called.</summary>
     public InMemoryTokenVersionStore TokenVersions { get; } = new();
+
+    /// <summary>The in-memory rate limit counter used unless <see cref="WithRedis"/> is called.</summary>
+    public InMemoryFixedWindowCounter RateLimitCounter { get; } = new();
+
+    /// <summary>Replaces the host's TimeProvider (for example a fixed clock).</summary>
+    public ApiFactory WithTimeProvider(TimeProvider timeProvider)
+    {
+        _timeProvider = timeProvider;
+        return this;
+    }
 
     public ApiFactory WithEnvironment(string environment)
     {
@@ -88,6 +101,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             {
                 services.RemoveAll<ITokenVersionStore>();
                 services.AddSingleton<ITokenVersionStore>(TokenVersions);
+                services.RemoveAll<IFixedWindowCounter>();
+                services.AddSingleton<IFixedWindowCounter>(RateLimitCounter);
+            }
+
+            if (_timeProvider is not null)
+            {
+                services.RemoveAll<TimeProvider>();
+                services.AddSingleton(_timeProvider);
             }
 
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);

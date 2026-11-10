@@ -25,7 +25,11 @@ public sealed class AuthApi : IDisposable
         Factory = new ApiFactory()
             .WithDatabase(database.Options)
             .WithRedis(redisConnectionString)
-            .WithSetting("Cors:AllowedOrigins:0", AllowedOrigin);
+            .WithSetting("Cors:AllowedOrigins:0", AllowedOrigin)
+            // These tests cover the auth flows, not rate limiting (SharedRateLimitingTests):
+            // the whole collection shares one client IP and one Redis counter.
+            .WithSetting("RateLimiting:PermitLimit", "100000")
+            .WithSetting("RateLimiting:AuthPermitLimit", "100000");
         Client = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 

@@ -1,5 +1,6 @@
 using Datavanced.SmartTaskManagement.Api.Auth;
 using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Api.RateLimiting;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Features.Auth;
 using Datavanced.SmartTaskManagement.Application.Features.Auth.Commands.Login;
@@ -26,6 +27,7 @@ public sealed class AuthController : ControllerBase
     public const string Route = "api/auth";
 
     [AllowAnonymous]
+    [AuthRateLimit]
     [HttpPost("register")]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
@@ -50,6 +52,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
+    [AuthRateLimit]
     [HttpPost("login")]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
