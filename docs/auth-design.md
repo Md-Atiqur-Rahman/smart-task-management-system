@@ -83,7 +83,10 @@ tokens of a user as tracked aggregates).
 `Revoke` on each, so the revocation is saved in the **same `SaveChangesAsync`**
 as the rest of the operation (atomic, no transaction API needed on
 `IUnitOfWork`). A user has few active tokens (one per device), so loading them is
-cheap. No set-based update **[builder's call]**.
+cheap. No set-based update **[builder's call]**. *Amended: reuse detection is
+the exception, it uses one immediate set-based `UPDATE` (ADR 0014 decision 5),
+limited to the token's family (ADR 0016); the role change still loads, revokes
+and saves once.*
 
 ## 3. Endpoints (src/Api/Controllers/Auth, src/Api/Controllers/Users)
 
@@ -205,14 +208,16 @@ issue access token with the user's current `TokenVersion` -> issue refresh token
      cookie. *Amended by ADR 0016: only the presented token's family is revoked
      (other devices stay signed in); the warning is logged only when that revoked
      something, otherwise an Information entry.*
-   - The window length is an option (`RefreshTokenReuseGraceSeconds`, default
+   - The window length is an option (`RefreshToken:ReuseGraceSeconds`, default
      30, allowed 0-60), measured from `RevokedAt` of a token revoked by rotation
      (`ReplacedById` set). A token revoked by logout or by revoke-all has no
      grace.
 4. Active -> load the user; revoke this token (`ReplacedById` = new token), issue
    a new refresh token and a new access token with the user's current role and
    version; save. A `RowVersion` conflict (another instance rotated the same token
-   at the same moment, PRD 7) -> 401 for the loser.
+   at the same moment, PRD 7) -> 401 `auth.refresh_superseded` for the loser,
+   nothing issued and the cookie kept (the winner's response carries the new
+   cookie; the client retries once).
 
 Why the grace period (developer confirmed): browsers restore several tabs at
 once, and each tab refreshes on start with the same cookie. Without a grace
@@ -251,8 +256,9 @@ delete both failed after the commit, Redis kept the old version, and once Redis
 answered again the old tokens would pass for up to 10 minutes. Redis first
 removes that window. Amended in ADR 0014.
 
-Reuse detection (refresh step 3) revokes all tokens the same way (load, revoke,
-one save); it does not touch `TokenVersion`.
+Reuse detection (refresh step 3) does not touch `TokenVersion`. *Amended: it
+does not use load, revoke, one save; it revokes with one immediate set-based
+`UPDATE` (ADR 0014 decision 5), only in the presented token's family (ADR 0016).*
 
 ### Version check on every authenticated request (ADR 0013)
 

@@ -81,9 +81,11 @@ one role.
   increment also revokes all of the
   user's refresh tokens, so a role change applies immediately on all devices and
   instances.
-- Redis versions only move forward (compare-and-set); Redis entries have a
-  sliding expiry; if the Redis update fails after the database update, the key is
-  deleted so the next request reloads it (ADR 0013).
+- Redis versions only move forward (compare-and-set); each Redis entry expires a
+  fixed time (default 1 hour) after it is written, and a read never extends it. A
+  role change writes the new version to Redis first and saves the database only
+  after that; if Redis is unavailable the role change returns 503 and nothing is
+  saved (ADR 0014).
 - **Logout is per device:** it revokes only the current refresh token.
   `TokenVersion` does not change; other devices stay signed in. The logged-out
   device's access token expires on its own within 10 minutes.
@@ -214,4 +216,5 @@ migrations.
 | 2026-11-09 | Refresh token only in an HttpOnly cookie (Path = refresh endpoint), access token only in memory; open question 8 closed | Developer confirmed; a copy in JavaScript-readable storage would defeat HttpOnly |
 | 2026-11-09 | Frontend in this repository, folder `FE/`; open question 7 closed | Developer confirmed |
 | 2026-11-09 | 30-second grace period for rotated refresh tokens (401, nothing revoked, client retries) | Developer confirmed; several tabs refreshing at once must not sign the user out everywhere |
+| 2026-11-10 | Section 5 aligned with ADR 0014: fixed Redis key expiry instead of sliding; role change writes Redis first, then the database (503 and nothing saved when Redis is down) instead of deleting the key after a failed Redis update | ADR 0014 amended ADR 0013 during the design; PRD 5 still described the old behaviour |
 | 2026-11-10 | Reuse detection revokes only the presented token's family (one login's chain) instead of all of the user's tokens (ADR 0016) | Developer decision: after a role change the user's devices signed each other out in a loop, and anyone holding an old revoked token could sign the user out everywhere |

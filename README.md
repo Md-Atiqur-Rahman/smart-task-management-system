@@ -161,6 +161,10 @@ docker compose down
 - **Redis is required.** When it is down, authenticated requests return 503
   (`auth.unavailable`); register and login still work (a failed token version
   publish is only logged); `/health` reports Redis unhealthy.
+- **With `AdminSeed` configured, the host cannot start while SQL Server is
+  unreachable**: the seed runs at startup and needs the database. In Docker
+  Compose, `restart: on-failure` retries until SQL Server is up; elsewhere the
+  orchestrator must restart the process.
 
 ## Create a project from this template
 
