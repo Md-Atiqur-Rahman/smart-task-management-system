@@ -95,6 +95,43 @@ public sealed class AuthEndpointsTests(SqlServerFixture database, RedisFixture r
     }
 
     [Fact]
+    public async Task Refresh_TwoInParallelWithSameCookie_NeitherDeletesCookieAndWinnerCookieWorks()
+    {
+        // Several rounds raise the chance that both requests read the token before either saves
+        // (the RowVersion conflict path); a later read hits the grace path. Both must keep the cookie.
+        for (var round = 0; round < 5; round++)
+        {
+            var (_, cookie, _) = await _api.RegisterAsync(_ct);
+
+            var responses = await Task.WhenAll(
+                _api.PostAsync($"{Route}/refresh", _ct, cookie: cookie),
+                _api.PostAsync($"{Route}/refresh", _ct, cookie: cookie));
+            try
+            {
+                foreach (var response in responses)
+                {
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        await ShouldBeProblem(response, HttpStatusCode.Unauthorized, "auth.refresh_superseded");
+                        RefreshSetCookies(response).ShouldBeEmpty();
+                    }
+                }
+
+                var winner = responses.First(r => r.StatusCode == HttpStatusCode.OK);
+                using var retry = await _api.PostAsync($"{Route}/refresh", _ct, cookie: CookieValue(winner));
+                retry.StatusCode.ShouldBe(HttpStatusCode.OK);
+            }
+            finally
+            {
+                foreach (var response in responses)
+                {
+                    response.Dispose();
+                }
+            }
+        }
+    }
+
+    [Fact]
     public async Task Refresh_GarbageCookie_Returns401AndDeletesCookie()
     {
         using var response = await _api.PostAsync($"{Route}/refresh", _ct, cookie: "garbage");

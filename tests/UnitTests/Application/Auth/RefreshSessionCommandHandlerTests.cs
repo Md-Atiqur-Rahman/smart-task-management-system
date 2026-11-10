@@ -116,7 +116,7 @@ public sealed class RefreshSessionCommandHandlerTests
     }
 
     [Fact]
-    public async Task Refresh_ConcurrencyConflictOnSave_ReturnsInvalidRefreshToken()
+    public async Task Refresh_ConcurrencyConflictOnSave_ReturnsRefreshSuperseded()
     {
         var user = ExistingUser();
         StoredToken(user.Id);
@@ -125,7 +125,8 @@ public sealed class RefreshSessionCommandHandlerTests
 
         var result = await CreateHandler().Handle(new RefreshSessionCommand("raw"), CancellationToken.None);
 
-        result.Error.ShouldBe(AuthErrors.InvalidRefreshToken);
+        // The other request won the rotation; its cookie must survive (the controller deletes it only on invalid).
+        result.Error.ShouldBe(AuthErrors.RefreshSuperseded);
         await _auth.VersionStore.DidNotReceive().SetIfHigherAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
     }
 

@@ -47,8 +47,11 @@ internal sealed partial class RefreshSessionCommandHandler(
         var saved = await unitOfWork.SaveChangesAsync(cancellationToken);
         if (saved.IsFailure)
         {
-            // A stale RowVersion means another request rotated the same token first.
-            return Invalid();
+            // A conflict (stale RowVersion) means another request rotated the same token first and
+            // its response carries the new cookie: report a superseded token so the cookie is kept.
+            return saved.Error.Type == ErrorType.Conflict
+                ? Result.Failure<AuthTokens>(AuthErrors.RefreshSuperseded)
+                : Result.Failure<AuthTokens>(saved.Error);
         }
 
         await sessionIssuer.PublishTokenVersionAsync(user, cancellationToken);
