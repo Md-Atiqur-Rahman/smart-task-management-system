@@ -1,7 +1,9 @@
 using System.Text;
 
+using Datavanced.SmartTaskManagement.Api.Auth;
 using Datavanced.SmartTaskManagement.Api.Middleware;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,7 +44,13 @@ internal static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthorizationPolicies.AdminOnly, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireRole(nameof(Role.Admin)))
+            .AddPolicy(AuthorizationPolicies.ProjectManagerOrAdmin, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireRole(nameof(Role.Admin), nameof(Role.ProjectManager)));
 
         return services;
     }
