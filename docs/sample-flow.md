@@ -161,7 +161,7 @@ modules are added by copying Sample.
    `src/Api/Controllers/Samples/`, `tests/UnitTests/Domain/SampleTests.cs`,
    `tests/UnitTests/Application/Samples/`, `tests/IntegrationTests/Samples/`,
    and the Sample-based tests in `tests/IntegrationTests/Infrastructure/PersistenceTests.cs`.
-   `ProjectsController` uses `CreatedResponse` from
+   `ProjectsController` and `TasksController` use `CreatedResponse` from
    `src/Api/Controllers/Samples/CreatedResponse.cs`: move it to a shared place
    (for example `src/Api/Controllers/CreatedResponse.cs`) before deleting the
    Samples folder.
