@@ -4,6 +4,7 @@ using Datavanced.SmartTaskManagement.Api.Errors;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Paging;
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
+using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.ChangeProjectOwner;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.CreateProject;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.DeleteProject;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.UpdateProject;
@@ -119,6 +120,30 @@ public sealed class ProjectsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(new DeleteProjectCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
+    }
+
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
+    [HttpPut("{id:guid}/owner")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
+    public async Task<IActionResult> ChangeOwner(
+        Guid id,
+        [FromBody] ChangeProjectOwnerRequest request,
+        [FromServices] ICommandHandler<ChangeProjectOwnerCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        if (request.OwnerId is not { } ownerId)
+        {
+            return ValidationProblem();
+        }
+
+        var result = await handler.Handle(new ChangeProjectOwnerCommand(id, ownerId), cancellationToken);
         return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
     }
 }
