@@ -19,6 +19,7 @@ internal static class LoggingExtensions
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(provider)
             .Enrich.FromLogContext()
+            .Enrich.WithProperty("InstanceId", configuration["Instance:Id"] ?? Environment.MachineName)
             .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture),
             preserveStaticLogger: true);
         return services;

@@ -31,6 +31,22 @@ public sealed class LoggingConfigurationTests(SqlServerFixture database)
         events.ShouldContain(e => e.MessageTemplate.Text.StartsWith("Handled {RequestName}", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task LogEvents_CarryInstanceId()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var factory = new ApiFactory().WithSetting("Instance:Id", "test-1");
+        using var client = factory.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/test/anonymous", UriKind.Relative), ct);
+        response.EnsureSuccessStatusCode();
+
+        var events = factory.LogSink.Events;
+        events.ShouldNotBeEmpty();
+        events.ShouldAllBe(e => e.Properties.ContainsKey("InstanceId")
+            && e.Properties["InstanceId"].ToString() == "\"test-1\"");
+    }
+
     private static string Source(LogEvent logEvent) =>
         logEvent.Properties.TryGetValue("SourceContext", out var value)
             ? value.ToString().Trim('"')

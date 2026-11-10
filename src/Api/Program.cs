@@ -9,6 +9,7 @@ builder.ConfigureApplication();
 builder.ConfigureInfrastructure();
 
 builder.Services.AddSerilogLogging(builder.Configuration);
+builder.Services.AddTrustedForwardedHeaders(builder.Configuration);
 builder.Services.AddExceptionHandling();
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCorsPolicy(builder.Configuration);
@@ -18,6 +19,7 @@ builder.Services.AddOpenApiDocument();
 
 var app = builder.Build();
 
+app.UseTrustedForwardedHeaders();
 app.UseExceptionHandling();
 app.UseHttpsAndSecurityHeaders();
 app.UseRequestLogging();
