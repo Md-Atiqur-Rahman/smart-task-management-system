@@ -101,7 +101,7 @@ All routes are under `/api`. Full request and response shapes: `docs/openapi.jso
 | Auth | `GET /auth/me` | Any signed-in user |
 | Users | `GET /users`, `PUT /users/{id}/role` | Admin |
 | Users | `GET /users/assignable` | Admin, Project Manager |
-| Projects | `GET /projects`, `GET /projects/{id}` | Signed-in user (Admin all, Project Manager own) |
+| Projects | `GET /projects`, `GET /projects/{id}` | Signed-in user (Admin all, Project Manager own; a Team Member sees none: empty list, 404 on details, until the Task module) |
 | Projects | `POST /projects`, `PUT /projects/{id}`, `DELETE /projects/{id}` | Admin, Project Manager (own) |
 | Projects | `PUT /projects/{id}/owner` | Admin |
 | Samples | `/samples` (copy-source feature) | Signed-in user |
