@@ -1,3 +1,4 @@
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Ai;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.LiveEvents;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
@@ -23,6 +24,7 @@ public static class HostApplicationBuilderExtensions
         builder.ConfigureLiveEvents();
         builder.ConfigureSecurity();
         builder.ConfigureEmail();
+        builder.ConfigureAi();
         builder.ConfigureNotifications();
 
         // After ConfigureDatabase: hosted services start in registration order (development migration first).
