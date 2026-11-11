@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SmartTask — Smart Task Management System</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-0.01em}
+.st .card{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFFFFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.st .btn:hover{background:#F3F4F6}
+.st .btn:disabled{opacity:.5;cursor:not-allowed}
+.st .btn-primary{background:#0F766E;border-color:#0F766E;color:#FFFFFF}
+.st .btn-primary:hover{background:#115E59}
+.st .btn-danger{background:#B91C1C;border-color:#B91C1C;color:#FFFFFF}
+.st .btn-danger:hover{background:#991B1B}
+.st .btn-ghost{border-color:transparent;background:transparent}
+.st .btn-sm{min-height:32px;padding:0 10px;font-size:13px}
+.st .input{width:100%;min-height:40px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#FFFFFF;color:#111827;font:400 14px Inter,system-ui,sans-serif}
+.st .input:focus{outline:2px solid #14B8A6;outline-offset:0;border-color:#0F766E}
+.st textarea.input{min-height:110px;resize:vertical;line-height:1.5}
+.st label.lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.st .err{color:#B91C1C;font-size:12px;margin-top:4px}
+.st table{width:100%;border-collapse:collapse;font-size:14px}
+.st th{text-align:left;font-size:12px;font-weight:600;color:#4B5563;text-transform:uppercase;letter-spacing:.04em;padding:10px 14px;border-bottom:1px solid #E5E7EB;background:#F9FAFB;white-space:nowrap}
+.st td{padding:12px 14px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+.st tr:last-child td{border-bottom:0}
+.st .nav{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border-radius:8px;border:0;background:transparent;color:#CBD5E1;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;text-align:left}
+.st .nav:hover{background:#1E293B;color:#FFFFFF}
+.st .nav-on{background:#134E4A;color:#FFFFFF}
+.st .muted{color:#4B5563}
+</style>
+</helmet>
+<div class="st" style="min-height: 100vh; background: #F6F7F9; color: #111827; font-family: Inter, system-ui, sans-serif; font-size: 14px">
+
+<sc-if value="{{isLoginScreen}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh">
+  <div style="flex: 1 1 420px; background: #0F172A; color: #E2E8F0; padding: 56px 48px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M8 12l3 3 5-6"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF">SmartTask</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px; max-width: 460px">
+      <h1 style="font-size: 40px; line-height: 1.1; color: #FFFFFF">Plan projects. Ship tasks. Keep everyone in step.</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #CBD5E1">A secure task manager for teams, with role-based access, a live dashboard and an AI helper that turns rough notes into clear, actionable task descriptions.</p>
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px">
+        <div style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"></path></svg><span>JWT sign-in with rotating refresh tokens</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5"></path><path d="M17 11l2 2 3-4"></path></svg><span>Admin, Project Manager and Team Member roles</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"></path></svg><span>AI-improved task descriptions</span></div>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #94A3B8">ASP.NET Core 10 · Angular · SQL Server</p>
+  </div>
+
+  <div style="flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: 48px 24px">
+    <div class="card" style="width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+      <sc-if value="{{isLoginMode}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h2 style="font-size: 26px">Sign in</h2>
+          <p class="muted" style="margin: 0">Welcome back. Use your work email.</p>
+        </div>
+        <div>
+          <label class="lbl" for="login-email">Email</label>
+          <input class="input" id="login-email" type="email" value="{{loginEmail}}" onChange="{{onLoginEmail}}" placeholder="you@company.com">
+        </div>
+        <div>
+          <label class="lbl" for="login-pass">Password</label>
+          <input class="input" id="login-pass" type="password" value="{{loginPass}}" onChange="{{onLoginPass}}" placeholder="At least 8 characters">
+        </div>
+        <sc-if value="{{hasLoginError}}" hint-placeholder-val="{{ false }}">
+          <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 10px 12px; border-radius: 8px; font-size: 13px">{{loginError}}</div>
+        </sc-if>
+        <button class="btn btn-primary" style="width: 100%; min-height: 44px" onClick="{{doLogin}}">Sign in</button>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 600; color: #4B5563; text-transform: uppercase; letter-spacing: .04em">Demo accounts</span>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{demoAccounts}}" as="d" hint-placeholder-count="3">
+              <button class="btn btn-sm" style="flex-direction: column; gap: 2px; min-height: 52px; white-space: normal" onClick="{{d.fill}}"><strong style="font-size: 13px">{{d.role}}</strong><span style="font-size: 11px; color: #4B5563">{{d.name}}</span></button>
+            </sc-for>
+          </div>
+        </div>
+        <p class="muted" style="margin: 0; text-align: center">New here? <button class="btn btn-ghost btn-sm" style="color: #0F766E; padding: 0 4px" onClick="{{toRegister}}">Create an account</button></p>
+      </sc-if>
+
+      <sc-if value="{{isRegisterMode}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h2 style="font-size: 26px">Create account</h2>
+          <p class="muted" style="margin: 0">New accounts start as Team Member. An Admin can grant other roles.</p>
+        </div>
+        <div>
+          <label class="lbl" for="reg-name">Full name</label>
+          <input class="input" id="reg-name" value="{{reg.name}}" onChange="{{onRegName}}">
+          <sc-if value="{{regErr.hasName}}" hint-placeholder-val="{{ false }}"><div class="err">{{regErr.name}}</div></sc-if>
+        </div>
+        <div>
+          <label class="lbl" for="reg-email">Email</label>
+          <input class="input" id="reg-email" type="email" value="{{reg.email}}" onChange="{{onRegEmail}}">
+          <sc-if value="{{regErr.hasEmail}}" hint-placeholder-val="{{ false }}"><div class="err">{{regErr.email}}</div></sc-if>
+        </div>
+        <div>
+          <label class="lbl" for="reg-pass">Password</label>
+          <input class="input" id="reg-pass" type="password" value="{{reg.password}}" onChange="{{onRegPass}}" placeholder="8+ characters, a number and a letter">
+          <sc-if value="{{regErr.hasPassword}}" hint-placeholder-val="{{ false }}"><div class="err">{{regErr.password}}</div></sc-if>
+        </div>
+        <div>
+          <label class="lbl" for="reg-confirm">Confirm password</label>
+          <input class="input" id="reg-confirm" type="password" value="{{reg.confirm}}" onChange="{{onRegConfirm}}">
+          <sc-if value="{{regErr.hasConfirm}}" hint-placeholder-val="{{ false }}"><div class="err">{{regErr.confirm}}</div></sc-if>
+        </div>
+        <button class="btn btn-primary" style="width: 100%; min-height: 44px" onClick="{{doRegister}}">Create account</button>
+        <p class="muted" style="margin: 0; text-align: center">Already have an account? <button class="btn btn-ghost btn-sm" style="color: #0F766E; padding: 0 4px" onClick="{{toLogin}}">Sign in</button></p>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isAppScreen}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh">
+  <aside style="flex: 1 1 232px; background: #0F172A; padding: 20px 14px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M8 12l3 3 5-6"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700; color: #FFFFFF">SmartTask</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{navItems}}" as="n" hint-placeholder-count="3">
+        <button class="{{n.cls}}" onClick="{{n.go}}">
+          <sc-if value="{{n.isDash}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg></sc-if>
+          <sc-if value="{{n.isProj}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg></sc-if>
+          <sc-if value="{{n.isTask}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg></sc-if>
+          <span style="flex: 1">{{n.label}}</span>
+          <span style="font-size: 12px; color: #94A3B8">{{n.count}}</span>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="margin-top: auto; border-top: 1px solid #1E293B; padding-top: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px">
+        <span style="width: 36px; height: 36px; border-radius: 999px; background: #134E4A; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">{{me.initials}}</span>
+        <div style="display: flex; flex-direction: column; min-width: 0">
+          <span style="color: #FFFFFF; font-weight: 600; font-size: 14px">{{me.name}}</span>
+          <span style="color: #94A3B8; font-size: 12px">{{me.role}}</span>
+        </div>
+      </div>
+      <button class="nav" onClick="{{doLogout}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"></path></svg><span>Log out</span></button>
+    </div>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 32px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 12px; color: #4B5563">{{crumb}}</span>
+        <h1 style="font-size: 24px">{{pageTitle}}</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+        <label class="lbl" for="viewas" style="margin: 0; font-weight: 500; color: #4B5563">Viewing as</label>
+        <select class="input" id="viewas" style="width: auto; min-width: 230px" value="{{me.id}}" onChange="{{onSwitchUser}}">
+          <sc-for list="{{userOptions}}" as="u" hint-placeholder-count="5"><option value="{{u.id}}">{{u.label}}</option></sc-for>
+        </select>
+      </div>
+    </header>
+
+    <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1280px; width: 100%">
+
+      <sc-if value="{{isDashboard}}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+          <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+            <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+              <span class="muted" style="font-size: 13px; font-weight: 500">{{k.label}}</span>
+              <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; font-weight: 700">{{k.value}}</span>
+              <span style="font-size: 12px; color: #4B5563">{{k.sub}}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px">
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px">
+            <h3 style="font-size: 16px">Tasks by status</h3>
+            <sc-for list="{{statusBars}}" as="b" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{b.label}}</span><strong>{{b.count}}</strong></div>
+                <div style="height: 10px; background: #F1F5F9; border-radius: 999px; overflow: hidden"><div style="{{b.barStyle}}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px">
+            <h3 style="font-size: 16px">Tasks by priority</h3>
+            <sc-for list="{{prioBars}}" as="b" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{b.label}}</span><strong>{{b.count}}</strong></div>
+                <div style="height: 10px; background: #F1F5F9; border-radius: 999px; overflow: hidden"><div style="{{b.barStyle}}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px">
+            <h3 style="font-size: 16px">Completed vs pending</h3>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap">
+              <div style="{{donutStyle}}" role="img" aria-label="{{donutLabel}}">
+                <div style="width: 92px; height: 92px; border-radius: 999px; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center">
+                  <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px; font-weight: 700">{{completionPct}}%</span>
+                  <span style="font-size: 11px; color: #4B5563">done</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #0F766E"></span><span>Completed</span><strong style="margin-left: 8px">{{completedCount}}</strong></div>
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FDBA74"></span><span>Pending</span><strong style="margin-left: 8px">{{pendingCount}}</strong></div>
+                <span style="font-size: 12px; color: #4B5563">Cancelled tasks are not counted.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="overflow: hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #E5E7EB; flex-wrap: wrap; gap: 8px">
+            <h3 style="font-size: 16px">Upcoming due tasks <span style="font-weight: 500; color: #4B5563; font-size: 13px">· next 7 days and overdue</span></h3>
+            <button class="btn btn-sm" onClick="{{goTasks}}">View all tasks</button>
+          </div>
+          <sc-if value="{{hasUpcoming}}" hint-placeholder-val="{{ true }}">
+            <div style="overflow-x: auto">
+              <table>
+                <thead><tr><th>Task</th><th>Project</th><th>Assignee</th><th>Priority</th><th>Due</th></tr></thead>
+                <tbody>
+                  <sc-for list="{{upcoming}}" as="t" hint-placeholder-count="4">
+                    <tr>
+                      <td style="font-weight: 600">{{t.title}}</td>
+                      <td class="muted">{{t.projectName}}</td>
+                      <td>{{t.assigneeName}}</td>
+                      <td><span style="{{t.prioStyle}}">{{t.priority}}</span></td>
+                      <td><div style="display: flex; flex-direction: column"><span>{{t.dueText}}</span><span style="{{t.dueFlagStyle}}">{{t.dueFlag}}</span></div></td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </sc-if>
+          <sc-if value="{{noUpcoming}}" hint-placeholder-val="{{ false }}">
+            <p class="muted" style="margin: 0; padding: 24px 20px">Nothing due in the next 7 days.</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isProjects}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; flex: 1 1 480px">
+            <div style="flex: 1 1 260px">
+              <label class="lbl" for="pq">Search projects</label>
+              <input class="input" id="pq" type="search" value="{{pq}}" onChange="{{onPq}}" placeholder="Name or description">
+            </div>
+            <div style="flex: 0 1 220px">
+              <label class="lbl" for="psort">Sort by</label>
+              <select class="input" id="psort" value="{{psort}}" onChange="{{onPsort}}">
+                <option value="updated-desc">Recently updated</option>
+                <option value="name-asc">Name A–Z</option>
+                <option value="name-desc">Name Z–A</option>
+                <option value="created-asc">Oldest first</option>
+                <option value="tasks-desc">Most tasks</option>
+              </select>
+            </div>
+          </div>
+          <sc-if value="{{canCreateProject}}" hint-placeholder-val="{{ true }}">
+            <button class="btn btn-primary" onClick="{{openNewProject}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New project</button>
+          </sc-if>
+        </div>
+
+        <div class="card" style="overflow: hidden">
+          <div style="overflow-x: auto">
+            <table>
+              <thead><tr><th>Project</th><th>Owner</th><th>Tasks</th><th>Progress</th><th>Created</th><th style="text-align: right">Actions</th></tr></thead>
+              <tbody>
+                <sc-for list="{{projRows}}" as="p" hint-placeholder-count="5">
+                  <tr>
+                    <td style="min-width: 240px">
+                      <button class="btn btn-ghost" style="padding: 0; min-height: 0; font-weight: 600; color: #0F766E; text-align: left; white-space: normal" onClick="{{p.view}}">{{p.name}}</button>
+                      <div class="muted" style="font-size: 13px; margin-top: 2px">{{p.descShort}}</div>
+                    </td>
+                    <td>{{p.ownerName}}</td>
+                    <td>{{p.taskCount}}</td>
+                    <td style="min-width: 150px">
+                      <div style="display: flex; align-items: center; gap: 8px"><div style="flex: 1; height: 8px; background: #F1F5F9; border-radius: 999px; overflow: hidden"><div style="{{p.progStyle}}"></div></div><span style="font-size: 12px; color: #4B5563; width: 34px">{{p.progress}}%</span></div>
+                    </td>
+                    <td class="muted" style="white-space: nowrap">{{p.createdText}}</td>
+                    <td style="text-align: right; white-space: nowrap">
+                      <button class="btn btn-sm" onClick="{{p.view}}">View</button>
+                      <sc-if value="{{p.canManage}}" hint-placeholder-val="{{ true }}">
+                        <button class="btn btn-sm" onClick="{{p.edit}}">Edit</button>
+                        <button class="btn btn-sm" style="color: #B91C1C" onClick="{{p.del}}">Delete</button>
+                      </sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <sc-if value="{{projEmpty}}" hint-placeholder-val="{{ false }}">
+            <p class="muted" style="margin: 0; padding: 28px 20px; text-align: center">No projects match your search.</p>
+          </sc-if>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 1px solid #E5E7EB">
+            <span class="muted" style="font-size: 13px">{{projPager.summary}}</span>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <button class="btn btn-sm" disabled="{{projPager.prevDisabled}}" onClick="{{projPager.prev}}" aria-label="Previous page">‹</button>
+              <sc-for list="{{projPager.pages}}" as="pg" hint-placeholder-count="2">
+                <button class="{{pg.cls}}" onClick="{{pg.go}}" aria-label="Page {{pg.n}}">{{pg.n}}</button>
+              </sc-for>
+              <button class="btn btn-sm" disabled="{{projPager.nextDisabled}}" onClick="{{projPager.next}}" aria-label="Next page">›</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isProjectDetail}}" hint-placeholder-val="{{ false }}">
+        <div><button class="btn btn-sm" onClick="{{goProjects}}">‹ Back to projects</button></div>
+        <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px; max-width: 720px">
+              <h2 style="font-size: 22px">{{detail.name}}</h2>
+              <p class="muted" style="margin: 0; line-height: 1.6">{{detail.description}}</p>
+              <span style="font-size: 13px; color: #4B5563">Owner: <strong style="color: #111827">{{detail.ownerName}}</strong> · Created {{detail.createdText}}</span>
+            </div>
+            <sc-if value="{{detail.canManage}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; gap: 8px; align-items: flex-start">
+                <button class="btn" onClick="{{detail.edit}}">Edit</button>
+                <button class="btn btn-primary" onClick="{{detail.addTask}}">Add task</button>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px">
+            <sc-for list="{{detail.counts}}" as="c" hint-placeholder-count="4">
+              <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+                <span style="font-size: 12px; color: #4B5563">{{c.label}}</span>
+                <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px; font-weight: 700">{{c.count}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="card" style="overflow: hidden">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #E5E7EB"><h3 style="font-size: 16px">Tasks in this project</h3></div>
+          <div style="overflow-x: auto">
+            <table>
+              <thead><tr><th>Task</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th><th style="text-align: right">Actions</th></tr></thead>
+              <tbody>
+                <sc-for list="{{detail.tasks}}" as="t" hint-placeholder-count="3">
+                  <tr>
+                    <td style="min-width: 220px"><div style="font-weight: 600">{{t.title}}</div><div class="muted" style="font-size: 13px">{{t.descShort}}</div></td>
+                    <td>{{t.assigneeName}}</td>
+                    <td><span style="{{t.prioStyle}}">{{t.priority}}</span></td>
+                    <td>
+                      <sc-if value="{{t.statusEditable}}" hint-placeholder-val="{{ false }}">
+                        <select class="input" style="width: auto; min-height: 34px; padding: 4px 8px; font-size: 13px" value="{{t.status}}" onChange="{{t.onStatus}}" aria-label="Status of {{t.title}}">
+                          <sc-for list="{{t.statusOptions}}" as="o" hint-placeholder-count="2"><option value="{{o}}">{{o}}</option></sc-for>
+                        </select>
+                      </sc-if>
+                      <sc-if value="{{t.statusLocked}}" hint-placeholder-val="{{ true }}"><span style="{{t.statusStyle}}">{{t.status}}</span></sc-if>
+                    </td>
+                    <td style="white-space: nowrap"><span>{{t.dueText}}</span><div style="{{t.dueFlagStyle}}">{{t.dueFlag}}</div></td>
+                    <td style="text-align: right; white-space: nowrap">
+                      <sc-if value="{{t.canEdit}}" hint-placeholder-val="{{ true }}">
+                        <button class="btn btn-sm" onClick="{{t.edit}}">Edit</button>
+                        <button class="btn btn-sm" style="color: #B91C1C" onClick="{{t.del}}">Delete</button>
+                      </sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <sc-if value="{{detail.noTasks}}" hint-placeholder-val="{{ false }}">
+            <p class="muted" style="margin: 0; padding: 24px 20px; text-align: center">No tasks yet.</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isTasks}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; flex: 1 1 640px">
+            <div style="flex: 1 1 240px">
+              <label class="lbl" for="tq">Search tasks</label>
+              <input class="input" id="tq" type="search" value="{{tq}}" onChange="{{onTq}}" placeholder="Title, description or project">
+            </div>
+            <div style="flex: 0 1 160px">
+              <label class="lbl" for="tstatus">Status</label>
+              <select class="input" id="tstatus" value="{{tstatus}}" onChange="{{onTstatus}}">
+                <option value="All">All statuses</option><option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div style="flex: 0 1 160px">
+              <label class="lbl" for="tprio">Priority</label>
+              <select class="input" id="tprio" value="{{tprio}}" onChange="{{onTprio}}">
+                <option value="All">All priorities</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+              </select>
+            </div>
+            <div style="flex: 0 1 190px">
+              <label class="lbl" for="tsort">Sort by</label>
+              <select class="input" id="tsort" value="{{tsort}}" onChange="{{onTsort}}">
+                <option value="due-asc">Due date (soonest)</option>
+                <option value="due-desc">Due date (latest)</option>
+                <option value="prio-desc">Priority (high first)</option>
+                <option value="title-asc">Title A–Z</option>
+                <option value="status-asc">Status</option>
+              </select>
+            </div>
+          </div>
+          <sc-if value="{{canCreateTask}}" hint-placeholder-val="{{ true }}">
+            <button class="btn btn-primary" onClick="{{openNewTaskTop}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New task</button>
+          </sc-if>
+        </div>
+        <sc-if value="{{isTM}}" hint-placeholder-val="{{ false }}">
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A8A; padding: 10px 14px; border-radius: 8px; font-size: 13px">As a Team Member you see only tasks assigned to you, and you can change their status.</div>
+        </sc-if>
+
+        <div class="card" style="overflow: hidden">
+          <div style="overflow-x: auto">
+            <table>
+              <thead><tr><th>Task</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th><th style="text-align: right">Actions</th></tr></thead>
+              <tbody>
+                <sc-for list="{{taskRows}}" as="t" hint-placeholder-count="5">
+                  <tr>
+                    <td style="min-width: 240px"><div style="font-weight: 600">{{t.title}}</div><div class="muted" style="font-size: 13px">{{t.projectName}}</div></td>
+                    <td style="white-space: nowrap">{{t.assigneeName}}</td>
+                    <td><span style="{{t.prioStyle}}">{{t.priority}}</span></td>
+                    <td>
+                      <sc-if value="{{t.statusEditable}}" hint-placeholder-val="{{ false }}">
+                        <select class="input" style="width: auto; min-height: 34px; padding: 4px 8px; font-size: 13px" value="{{t.status}}" onChange="{{t.onStatus}}" aria-label="Status of {{t.title}}">
+                          <sc-for list="{{t.statusOptions}}" as="o" hint-placeholder-count="2"><option value="{{o}}">{{o}}</option></sc-for>
+                        </select>
+                      </sc-if>
+                      <sc-if value="{{t.statusLocked}}" hint-placeholder-val="{{ true }}"><span style="{{t.statusStyle}}">{{t.status}}</span></sc-if>
+                    </td>
+                    <td style="white-space: nowrap"><span>{{t.dueText}}</span><div style="{{t.dueFlagStyle}}">{{t.dueFlag}}</div></td>
+                    <td style="text-align: right; white-space: nowrap">
+                      <sc-if value="{{t.canEdit}}" hint-placeholder-val="{{ true }}">
+                        <button class="btn btn-sm" onClick="{{t.edit}}">Edit</button>
+                        <button class="btn btn-sm" style="color: #B91C1C" onClick="{{t.del}}">Delete</button>
+                      </sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <sc-if value="{{taskEmpty}}" hint-placeholder-val="{{ false }}">
+            <p class="muted" style="margin: 0; padding: 28px 20px; text-align: center">No tasks match these filters.</p>
+          </sc-if>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 1px solid #E5E7EB">
+            <span class="muted" style="font-size: 13px">{{taskPager.summary}}</span>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <button class="btn btn-sm" disabled="{{taskPager.prevDisabled}}" onClick="{{taskPager.prev}}" aria-label="Previous page">‹</button>
+              <sc-for list="{{taskPager.pages}}" as="pg" hint-placeholder-count="3">
+                <button class="{{pg.cls}}" onClick="{{pg.go}}" aria-label="Page {{pg.n}}">{{pg.n}}</button>
+              </sc-for>
+              <button class="btn btn-sm" disabled="{{taskPager.nextDisabled}}" onClick="{{taskPager.next}}" aria-label="Next page">›</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+</sc-if>
+
+<sc-if value="{{isProjectModal}}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; inset: 0; background: rgba(15,23,42,.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50">
+    <div class="card" role="dialog" aria-modal="true" aria-label="{{modalTitle}}" style="width: 100%; max-width: 520px; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 92vh; overflow-y: auto">
+      <h2 style="font-size: 20px">{{modalTitle}}</h2>
+      <div>
+        <label class="lbl" for="pf-name">Project name</label>
+        <input class="input" id="pf-name" value="{{form.name}}" onChange="{{onFName}}" placeholder="e.g. Customer Portal Revamp">
+        <sc-if value="{{fe.hasName}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.name}}</div></sc-if>
+      </div>
+      <div>
+        <label class="lbl" for="pf-desc">Description</label>
+        <textarea class="input" id="pf-desc" value="{{form.description}}" onChange="{{onFDesc}}" placeholder="What is this project about?"></textarea>
+        <div style="display: flex; justify-content: space-between"><sc-if value="{{fe.hasDescription}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.description}}</div></sc-if><span style="font-size: 12px; color: #4B5563; margin-left: auto">{{descCount}} / 500</span></div>
+      </div>
+      <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}">
+        <div>
+          <label class="lbl" for="pf-owner">Project manager</label>
+          <select class="input" id="pf-owner" value="{{form.ownerId}}" onChange="{{onFOwner}}">
+            <sc-for list="{{pmOptions}}" as="u" hint-placeholder-count="2"><option value="{{u.id}}">{{u.name}}</option></sc-for>
+          </select>
+        </div>
+      </sc-if>
+      <div style="display: flex; justify-content: flex-end; gap: 8px">
+        <button class="btn" onClick="{{closeModal}}">Cancel</button>
+        <button class="btn btn-primary" onClick="{{saveProject}}">Save project</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isTaskModal}}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; inset: 0; background: rgba(15,23,42,.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50">
+    <div class="card" role="dialog" aria-modal="true" aria-label="{{modalTitle}}" style="width: 100%; max-width: 680px; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 92vh; overflow-y: auto">
+      <h2 style="font-size: 20px">{{modalTitle}}</h2>
+      <div>
+        <label class="lbl" for="tf-title">Title</label>
+        <input class="input" id="tf-title" value="{{form.title}}" onChange="{{onFTitle}}" placeholder="Short, clear task name">
+        <sc-if value="{{fe.hasTitle}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.title}}</div></sc-if>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+        <div>
+          <label class="lbl" for="tf-project">Project</label>
+          <select class="input" id="tf-project" value="{{form.projectId}}" onChange="{{onFProject}}">
+            <sc-for list="{{taskProjectOptions}}" as="o" hint-placeholder-count="3"><option value="{{o.id}}">{{o.name}}</option></sc-for>
+          </select>
+          <sc-if value="{{fe.hasProjectId}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.projectId}}</div></sc-if>
+        </div>
+        <div>
+          <label class="lbl" for="tf-assignee">Assign to</label>
+          <select class="input" id="tf-assignee" value="{{form.assigneeId}}" onChange="{{onFAssignee}}">
+            <option value="">Unassigned</option>
+            <sc-for list="{{assigneeOptions}}" as="u" hint-placeholder-count="4"><option value="{{u.id}}">{{u.label}}</option></sc-for>
+          </select>
+        </div>
+        <div>
+          <label class="lbl" for="tf-prio">Priority</label>
+          <select class="input" id="tf-prio" value="{{form.priority}}" onChange="{{onFPriority}}">
+            <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl" for="tf-due">Due date</label>
+          <input class="input" id="tf-due" type="date" value="{{form.due}}" onChange="{{onFDue}}">
+          <sc-if value="{{fe.hasDue}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.due}}</div></sc-if>
+        </div>
+      </div>
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-bottom: 6px; flex-wrap: wrap">
+          <label class="lbl" for="tf-desc" style="margin: 0">Description</label>
+          <sc-if value="{{canUseAI}}" hint-placeholder-val="{{ true }}">
+            <button class="btn btn-sm" style="border-color: #99F6E4; background: #F0FDFA; color: #115E59" disabled="{{aiDisabled}}" onClick="{{improveAI}}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"></path></svg>
+              {{aiButtonLabel}}
+            </button>
+          </sc-if>
+        </div>
+        <textarea class="input" id="tf-desc" value="{{form.description}}" onChange="{{onFDesc}}" placeholder="Rough notes are fine — e.g. 'fix login bug on mobile, users cant reset pwd'"></textarea>
+        <div style="display: flex; justify-content: space-between"><sc-if value="{{fe.hasDescription}}" hint-placeholder-val="{{ false }}"><div class="err">{{fe.description}}</div></sc-if><span style="font-size: 12px; color: #4B5563; margin-left: auto">{{descCount}} / 2000</span></div>
+      </div>
+      <sc-if value="{{aiHasError}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; padding: 10px 12px; border-radius: 8px; font-size: 13px">{{ai.error}}</div>
+      </sc-if>
+      <sc-if value="{{aiHasSuggestion}}" hint-placeholder-val="{{ false }}">
+        <div style="border: 1px solid #99F6E4; background: #F0FDFA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap">
+            <strong style="color: #115E59">AI suggestion</strong>
+            <span style="font-size: 12px; color: #115E59">Review before using · grammar, clarity, steps, acceptance criteria</span>
+          </div>
+          <div style="white-space: pre-wrap; font-size: 13px; line-height: 1.6; color: #111827; background: #FFFFFF; border: 1px solid #CCFBF1; border-radius: 8px; padding: 12px">{{ai.suggestion}}</div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end">
+            <button class="btn btn-sm" onClick="{{discardAI}}">Discard</button>
+            <button class="btn btn-sm btn-primary" onClick="{{acceptAI}}">Use this description</button>
+          </div>
+        </div>
+      </sc-if>
+      <div style="display: flex; justify-content: flex-end; gap: 8px">
+        <button class="btn" onClick="{{closeModal}}">Cancel</button>
+        <button class="btn btn-primary" onClick="{{saveTask}}">Save task</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{isDeleteModal}}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; inset: 0; background: rgba(15,23,42,.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50">
+    <div class="card" role="alertdialog" aria-modal="true" aria-label="Confirm delete" style="width: 100%; max-width: 440px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="font-size: 20px">{{deleteTitle}}</h2>
+      <p class="muted" style="margin: 0; line-height: 1.6">{{deleteText}}</p>
+      <div style="display: flex; justify-content: flex-end; gap: 8px">
+        <button class="btn" onClick="{{closeModal}}">Cancel</button>
+        <button class="btn btn-danger" onClick="{{confirmDelete}}">Delete</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="position: fixed; bottom: 24px; right: 24px; background: #0F172A; color: #FFFFFF; padding: 12px 16px; border-radius: 10px; font-size: 14px; z-index: 60; max-width: 360px">{{toast}}</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+var TODAY = '2026-11-09';
+var STATUSES = ['To Do', 'In Progress', 'Completed', 'Cancelled'];
+var PRIOS = ['Low', 'Medium', 'High', 'Critical'];
+var TRANS = { 'To Do': ['In Progress', 'Cancelled'], 'In Progress': ['Completed', 'Cancelled', 'To Do'], 'Completed': [], 'Cancelled': [] };
+var STATUS_COLOR = { 'To Do': ['#E2E8F0', '#334155', '#64748B'], 'In Progress': ['#DBEAFE', '#1E40AF', '#2563EB'], 'Completed': ['#CCFBF1', '#115E59', '#0F766E'], 'Cancelled': ['#F3F4F6', '#4B5563', '#9CA3AF'] };
+var PRIO_COLOR = { 'Low': ['#F1F5F9', '#475569', '#94A3B8'], 'Medium': ['#E0E7FF', '#3730A3', '#6366F1'], 'High': ['#FFEDD5', '#9A3412', '#F97316'], 'Critical': ['#FEE2E2', '#991B1B', '#B91C1C'] };
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var PAGE_SIZE = 5;
+
+function dnum(s) { var p = s.split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000; }
+function daysFromToday(s) { return dnum(s) - dnum(TODAY); }
+function fmtDate(s) { if (!s) return '—'; var p = s.split('-'); return MONTHS[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0]; }
+function badge(c) { return 'display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:' + c[0] + ';color:' + c[1]; }
+function shorten(s, n) { return s.length > n ? s.slice(0, n - 1).trim() + '…' : s; }
+function initials(n) { return n.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase(); }
+function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+
+function seed() {
+  return {
+    users: [
+      { id: 'u1', name: 'Tanvir Hasan', email: 'admin@smarttask.dev', role: 'Admin' },
+      { id: 'u2', name: 'Rafi Ahmed', email: 'rafi@smarttask.dev', role: 'Project Manager' },
+      { id: 'u4', name: 'Sadia Islam', email: 'sadia@smarttask.dev', role: 'Project Manager' },
+      { id: 'u3', name: 'Nusrat Jahan', email: 'nusrat@smarttask.dev', role: 'Team Member' },
+      { id: 'u5', name: 'Arif Chowdhury', email: 'arif@smarttask.dev', role: 'Team Member' }
+    ],
+    projects: [
+      { id: 'p1', name: 'Customer Portal Revamp', description: 'Rebuild the self-service portal so customers can track orders, download invoices and raise support tickets.', ownerId: 'u2', created: '2026-08-04', updated: '2026-11-07' },
+      { id: 'p2', name: 'Mobile Banking App', description: 'Native-feel Angular PWA for balance checks, transfers and bill payments.', ownerId: 'u2', created: '2026-07-15', updated: '2026-11-05' },
+      { id: 'p3', name: 'Inventory Sync Service', description: 'Background service that keeps warehouse stock in sync with the online store every five minutes.', ownerId: 'u4', created: '2026-09-01', updated: '2026-11-08' },
+      { id: 'p4', name: 'HR Onboarding Flow', description: 'Digital onboarding checklist for new hires: documents, equipment and first-week training.', ownerId: 'u4', created: '2026-06-20', updated: '2026-10-28' },
+      { id: 'p5', name: 'Data Warehouse Migration', description: 'Move reporting tables from the legacy server to the new SQL Server cluster with zero downtime.', ownerId: 'u2', created: '2026-05-11', updated: '2026-10-30' },
+      { id: 'p6', name: 'Marketing Website', description: 'Refresh the public website with a new design, faster pages and a blog.', ownerId: 'u4', created: '2026-09-22', updated: '2026-11-02' },
+      { id: 'p7', name: 'Payment Gateway Integration', description: 'Add card and mobile wallet payments to checkout with full audit logging.', ownerId: 'u2', created: '2026-10-03', updated: '2026-11-06' }
+    ],
+    tasks: [
+      { id: 't1', projectId: 'p1', title: 'Design order tracking page', description: 'Wireframe and final design for the order tracking page.', status: 'Completed', priority: 'Medium', due: '2026-10-25', assigneeId: 'u3' },
+      { id: 't2', projectId: 'p1', title: 'Invoice PDF download', description: 'Let customers download invoices as PDF from the order details page.', status: 'In Progress', priority: 'High', due: '2026-11-12', assigneeId: 'u3' },
+      { id: 't3', projectId: 'p1', title: 'Support ticket form', description: 'Form with category, message and file attachment.', status: 'To Do', priority: 'Medium', due: '2026-11-20', assigneeId: 'u5' },
+      { id: 't4', projectId: 'p2', title: 'Fix login timeout on slow networks', description: 'Users on 3G get logged out before the token refresh finishes.', status: 'In Progress', priority: 'Critical', due: '2026-11-10', assigneeId: 'u3' },
+      { id: 't5', projectId: 'p2', title: 'Bill payment screen', description: 'Pay electricity, gas and internet bills from saved billers.', status: 'To Do', priority: 'High', due: '2026-11-14', assigneeId: 'u5' },
+      { id: 't6', projectId: 'p2', title: 'Accessibility audit', description: 'Check contrast, labels and keyboard navigation on all screens.', status: 'To Do', priority: 'Medium', due: '2026-11-07', assigneeId: 'u3' },
+      { id: 't7', projectId: 'p3', title: 'Stock delta calculator', description: 'Compute only changed stock rows to reduce load.', status: 'Completed', priority: 'High', due: '2026-10-30', assigneeId: 'u5' },
+      { id: 't8', projectId: 'p3', title: 'Retry failed sync jobs', description: 'Retry with back-off and alert after three failures.', status: 'In Progress', priority: 'High', due: '2026-11-13', assigneeId: 'u5' },
+      { id: 't9', projectId: 'p4', title: 'Equipment request checklist', description: 'Laptop, monitor and access card requests in one form.', status: 'Completed', priority: 'Low', due: '2026-10-15', assigneeId: 'u3' },
+      { id: 't10', projectId: 'p4', title: 'Welcome email template', description: 'Friendly welcome email with first-day schedule.', status: 'Cancelled', priority: 'Low', due: '2026-10-20', assigneeId: 'u5' },
+      { id: 't11', projectId: 'p5', title: 'Map legacy tables', description: 'Document every legacy reporting table and its new target.', status: 'Completed', priority: 'Medium', due: '2026-09-30', assigneeId: 'u3' },
+      { id: 't12', projectId: 'p5', title: 'Dry-run migration', description: 'Run the full migration against a staging copy and compare row counts.', status: 'To Do', priority: 'Critical', due: '2026-11-15', assigneeId: 'u5' },
+      { id: 't13', projectId: 'p6', title: 'New homepage hero', description: 'Hero section with product screenshot and sign-up button.', status: 'In Progress', priority: 'Medium', due: '2026-11-18', assigneeId: 'u3' },
+      { id: 't14', projectId: 'p6', title: 'Blog CMS setup', description: 'Pick and configure a headless CMS for the blog.', status: 'To Do', priority: 'Low', due: '2026-11-28', assigneeId: 'u5' },
+      { id: 't15', projectId: 'p7', title: 'Card payment sandbox test', description: 'Run card payments end to end in the provider sandbox.', status: 'To Do', priority: 'High', due: '2026-11-11', assigneeId: 'u3' },
+      { id: 't16', projectId: 'p7', title: 'Payment audit log', description: 'Log every payment attempt with result and masked card number.', status: 'To Do', priority: 'Critical', due: '2026-11-21', assigneeId: 'u5' }
+    ]
+  };
+}
+
+function improveText(title, desc) {
+  var t = ' ' + desc.trim().replace(/\s+/g, ' ') + ' ';
+  var fixes = [[/ i /g, ' I '], [/ pls /gi, ' please '], [/ plz /gi, ' please '], [/ asap /gi, ' as soon as possible '], [/ cant /gi, ' cannot '], [/ dont /gi, ' do not '], [/ wont /gi, ' will not '], [/ doesnt /gi, ' does not '], [/ pwd /gi, ' password '], [/ u /gi, ' users '], [/ msg /gi, ' message '], [/ btn /gi, ' button '], [/ w\/ /gi, ' with ']];
+  fixes.forEach(function (f) { t = t.replace(f[0], f[1]); });
+  t = t.trim();
+  var sentences = t.split(/[.,;]\s+|\.$/).map(function (s) { return s.trim(); }).filter(Boolean)
+    .map(function (s) { return s.charAt(0).toUpperCase() + s.slice(1); });
+  var summary = sentences.map(function (s) { return /[.!?]$/.test(s) ? s : s + '.'; }).join(' ');
+  var subject = title && title.trim() ? title.trim() : 'this task';
+  return 'Summary\n' + summary + '\n\n' +
+    'Goal\nComplete "' + subject + '" so that the change works as described, is covered by tests and is ready for review.\n\n' +
+    'Steps\n1. Confirm the scope and any open questions with the project manager.\n2. Reproduce or review the current behaviour.\n3. Implement the change described in the summary.\n4. Add or update automated tests that cover the change.\n5. Update related documentation if behaviour changes.\n\n' +
+    'Acceptance criteria\n- The behaviour described in the summary works as expected.\n- Existing tests pass and new tests cover the change.\n- A reviewer has approved the change.';
+}
+
+class Component extends DCLogic {
+  state = (function () {
+    var d = seed();
+    return {
+      screen: 'login', authMode: 'login', loginEmail: '', loginPass: '', loginError: '',
+      reg: { name: '', email: '', password: '', confirm: '' }, regErr: {},
+      users: d.users, projects: d.projects, tasks: d.tasks, nextId: 100,
+      userId: 'u1', view: 'dashboard', selProjectId: null,
+      pq: '', psort: 'updated-desc', ppage: 1,
+      tq: '', tstatus: 'All', tprio: 'All', tsort: 'due-asc', tpage: 1,
+      modal: null, form: {}, fe: {}, editingId: null, deleteTarget: null,
+      ai: { loading: false, suggestion: '', error: '' }, toast: ''
+    };
+  })();
+
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+
+  componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._ait); }
+
+  renderVals() {
+    var s = this.state;
+    var self = this;
+    var users = s.users;
+    var userById = function (id) { return users.find(function (u) { return u.id === id; }); };
+    var me = userById(s.userId) || users[0];
+    var role = me.role;
+    var isAdmin = role === 'Admin', isPM = role === 'Project Manager', isTM = role === 'Team Member';
+
+    var liveProjects = s.projects.filter(function (p) { return !p.deleted; });
+    var projById = function (id) { return liveProjects.find(function (p) { return p.id === id; }); };
+    var liveTasks = s.tasks.filter(function (t) { return !!projById(t.projectId); });
+    var ownsProject = function (pid) { var p = projById(pid); return !!p && p.ownerId === me.id; };
+    var visTasks = isAdmin ? liveTasks : isPM ? liveTasks.filter(function (t) { return ownsProject(t.projectId); }) : liveTasks.filter(function (t) { return t.assigneeId === me.id; });
+    var visProjects = isAdmin ? liveProjects : isPM ? liveProjects.filter(function (p) { return p.ownerId === me.id; }) : liveProjects.filter(function (p) { return liveTasks.some(function (t) { return t.projectId === p.id && t.assigneeId === me.id; }); });
+    var canManageP = function (p) { return isAdmin || (isPM && p.ownerId === me.id); };
+    var canEditT = function (t) { return isAdmin || (isPM && ownsProject(t.projectId)); };
+    var canStatusT = function (t) { return canEditT(t) || t.assigneeId === me.id; };
+    var userName = function (id) { var u = userById(id); return u ? u.name : 'Unassigned'; };
+
+    var dueInfo = function (t) {
+      var open = t.status === 'To Do' || t.status === 'In Progress';
+      var d = daysFromToday(t.due);
+      var flag = '', color = '#4B5563';
+      if (open && d < 0) { flag = 'Overdue by ' + (-d) + (d === -1 ? ' day' : ' days'); color = '#B91C1C'; }
+      else if (open && d === 0) { flag = 'Due today'; color = '#9A3412'; }
+      else if (open && d <= 7) { flag = 'In ' + d + (d === 1 ? ' day' : ' days'); color = '#9A3412'; }
+      return { dueText: fmtDate(t.due), dueFlag: flag, dueFlagStyle: 'font-size:12px;font-weight:600;color:' + color };
+    };
+
+    var setStatus = function (t) {
+      return function (e) {
+        var next = e.target.value;
+        if (next === t.status) return;
+        if (TRANS[t.status].indexOf(next) === -1) { self.showToast('409 Conflict: cannot move from ' + t.status + ' to ' + next + '.'); return; }
+        self.setState({ tasks: self.state.tasks.map(function (x) { return x.id === t.id ? Object.assign({}, x, { status: next }) : x; }) });
+        self.showToast('Status changed to ' + next + '.');
+      };
+    };
+
+    var taskRow = function (t) {
+      var editable = canStatusT(t) && TRANS[t.status].length > 0;
+      var p = projById(t.projectId);
+      return Object.assign({}, t, dueInfo(t), {
+        projectName: p ? p.name : '',
+        assigneeName: userName(t.assigneeId),
+        descShort: shorten(t.description || '', 70),
+        prioStyle: badge(PRIO_COLOR[t.priority]),
+        statusStyle: badge(STATUS_COLOR[t.status]),
+        statusEditable: editable,
+        statusLocked: !editable,
+        statusOptions: [t.status].concat(TRANS[t.status]),
+        onStatus: setStatus(t),
+        canEdit: canEditT(t),
+        edit: function () { self.openTask(t); },
+        del: function () { self.setState({ modal: 'delete', deleteTarget: { kind: 'task', id: t.id, name: t.title } }); }
+      });
+    };
+
+    var pager = function (total, page, key) {
+      var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      var cur = Math.min(page, pages);
+      var from = total === 0 ? 0 : (cur - 1) * PAGE_SIZE + 1;
+      var to = Math.min(total, cur * PAGE_SIZE);
+      var go = function (n) { return function () { var o = {}; o[key] = n; self.setState(o); }; };
+      var list = [];
+      for (var i = 1; i <= pages; i++) list.push({ n: i, go: go(i), cls: i === cur ? 'btn btn-sm btn-primary' : 'btn btn-sm' });
+      return {
+        cur: cur, pages: list,
+        summary: total === 0 ? 'No results' : 'Showing ' + from + '–' + to + ' of ' + total,
+        prevDisabled: cur <= 1, nextDisabled: cur >= pages,
+        prev: go(Math.max(1, cur - 1)), next: go(Math.min(pages, cur + 1))
+      };
+    };
+
+    // Dashboard
+    var byStatus = {}; STATUSES.forEach(function (x) { byStatus[x] = 0; });
+    var byPrio = {}; PRIOS.forEach(function (x) { byPrio[x] = 0; });
+    visTasks.forEach(function (t) { byStatus[t.status]++; byPrio[t.priority]++; });
+    var maxS = Math.max.apply(null, STATUSES.map(function (x) { return byStatus[x]; }).concat([1]));
+    var maxP = Math.max.apply(null, PRIOS.map(function (x) { return byPrio[x]; }).concat([1]));
+    var completed = byStatus['Completed'];
+    var pending = byStatus['To Do'] + byStatus['In Progress'];
+    var pct = completed + pending === 0 ? 0 : Math.round(completed * 100 / (completed + pending));
+    var overdueCount = visTasks.filter(function (t) { return (t.status === 'To Do' || t.status === 'In Progress') && daysFromToday(t.due) < 0; }).length;
+    var upcoming = visTasks.filter(function (t) { return (t.status === 'To Do' || t.status === 'In Progress') && daysFromToday(t.due) <= 7; })
+      .sort(function (a, b) { return a.due < b.due ? -1 : 1; }).map(taskRow);
+
+    // Projects list
+    var pq = s.pq.trim().toLowerCase();
+    var pList = visProjects.filter(function (p) { return !pq || p.name.toLowerCase().indexOf(pq) > -1 || p.description.toLowerCase().indexOf(pq) > -1; })
+      .map(function (p) {
+        var ts = liveTasks.filter(function (t) { return t.projectId === p.id; });
+        var done = ts.filter(function (t) { return t.status === 'Completed'; }).length;
+        var countable = ts.filter(function (t) { return t.status !== 'Cancelled'; }).length;
+        return Object.assign({}, p, { taskCount: ts.length, progress: countable ? Math.round(done * 100 / countable) : 0 });
+      });
+    var psorts = {
+      'updated-desc': function (a, b) { return a.updated < b.updated ? 1 : -1; },
+      'name-asc': function (a, b) { return a.name.localeCompare(b.name); },
+      'name-desc': function (a, b) { return b.name.localeCompare(a.name); },
+      'created-asc': function (a, b) { return a.created < b.created ? -1 : 1; },
+      'tasks-desc': function (a, b) { return b.taskCount - a.taskCount; }
+    };
+    pList.sort(psorts[s.psort] || psorts['updated-desc']);
+    var projPager = pager(pList.length, s.ppage, 'ppage');
+    var projRows = pList.slice((projPager.cur - 1) * PAGE_SIZE, projPager.cur * PAGE_SIZE).map(function (p) {
+      return Object.assign({}, p, {
+        ownerName: userName(p.ownerId), descShort: shorten(p.description, 80), createdText: fmtDate(p.created),
+        progStyle: 'height:8px;border-radius:999px;background:#0F766E;width:' + p.progress + '%',
+        canManage: canManageP(p),
+        view: function () { self.setState({ view: 'projectDetail', selProjectId: p.id }); },
+        edit: function () { self.openProject(p); },
+        del: function () { self.setState({ modal: 'delete', deleteTarget: { kind: 'project', id: p.id, name: p.name } }); }
+      });
+    });
+
+    // Project detail
+    var sel = s.view === 'projectDetail' ? projById(s.selProjectId) : null;
+    var detail = { counts: [], tasks: [], noTasks: true };
+    if (sel) {
+      var dts = (isTM ? visTasks : liveTasks).filter(function (t) { return t.projectId === sel.id; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; });
+      detail = {
+        name: sel.name, description: sel.description, ownerName: userName(sel.ownerId), createdText: fmtDate(sel.created),
+        canManage: canManageP(sel),
+        edit: function () { self.openProject(sel); },
+        addTask: function () { self.openTask(null, sel.id); },
+        counts: STATUSES.map(function (st) { return { label: st, count: dts.filter(function (t) { return t.status === st; }).length }; }),
+        tasks: dts.map(taskRow), noTasks: dts.length === 0
+      };
+    }
+
+    // Tasks list
+    var tq = s.tq.trim().toLowerCase();
+    var tList = visTasks.filter(function (t) {
+      if (s.tstatus !== 'All' && t.status !== s.tstatus) return false;
+      if (s.tprio !== 'All' && t.priority !== s.tprio) return false;
+      if (!tq) return true;
+      var pn = (projById(t.projectId) || {}).name || '';
+      return t.title.toLowerCase().indexOf(tq) > -1 || (t.description || '').toLowerCase().indexOf(tq) > -1 || pn.toLowerCase().indexOf(tq) > -1;
+    });
+    var tsorts = {
+      'due-asc': function (a, b) { return a.due < b.due ? -1 : 1; },
+      'due-desc': function (a, b) { return a.due < b.due ? 1 : -1; },
+      'prio-desc': function (a, b) { return PRIOS.indexOf(b.priority) - PRIOS.indexOf(a.priority); },
+      'title-asc': function (a, b) { return a.title.localeCompare(b.title); },
+      'status-asc': function (a, b) { return STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status); }
+    };
+    tList.sort(tsorts[s.tsort] || tsorts['due-asc']);
+    var taskPager = pager(tList.length, s.tpage, 'tpage');
+    var taskRows = tList.slice((taskPager.cur - 1) * PAGE_SIZE, taskPager.cur * PAGE_SIZE).map(taskRow);
+
+    var manageable = liveProjects.filter(canManageP);
+    var field = function (k) { return function (e) { var f = Object.assign({}, self.state.form); f[k] = e.target.value; self.setState({ form: f }); }; };
+    var fe = s.fe || {};
+    var feOut = {};
+    ['name', 'description', 'title', 'projectId', 'due'].forEach(function (k) { feOut[k] = fe[k] || ''; feOut['has' + k.charAt(0).toUpperCase() + k.slice(1)] = !!fe[k]; });
+    var re = s.regErr || {};
+    var reOut = {};
+    ['name', 'email', 'password', 'confirm'].forEach(function (k) { reOut[k] = re[k] || ''; reOut['has' + k.charAt(0).toUpperCase() + k.slice(1)] = !!re[k]; });
+    var regField = function (k) { return function (e) { var r = Object.assign({}, self.state.reg); r[k] = e.target.value; self.setState({ reg: r }); }; };
+
+    var nav = function (key, label, count) {
+      return { label: label, count: count, cls: (s.view === key || (key === 'projects' && s.view === 'projectDetail')) ? 'nav nav-on' : 'nav', isDash: key === 'dashboard', isProj: key === 'projects', isTask: key === 'tasks', go: function () { self.setState({ view: key }); } };
+    };
+    var titles = { dashboard: 'Dashboard', projects: 'Projects', projectDetail: sel ? sel.name : 'Project', tasks: 'Tasks' };
+    var crumbs = { dashboard: 'Overview · ' + (isAdmin ? 'all projects' : isPM ? 'your projects' : 'your tasks'), projects: 'Manage projects', projectDetail: 'Projects / Details', tasks: 'Manage tasks' };
+    var modalTitles = { project: s.editingId ? 'Edit project' : 'New project', task: s.editingId ? 'Edit task' : 'New task' };
+    var descLen = (s.form.description || '').length;
+    var dt = s.deleteTarget;
+
+    return {
+      isLoginScreen: s.screen === 'login', isAppScreen: s.screen === 'app',
+      isLoginMode: s.authMode === 'login', isRegisterMode: s.authMode === 'register',
+      loginEmail: s.loginEmail, loginPass: s.loginPass, loginError: s.loginError, hasLoginError: !!s.loginError,
+      onLoginEmail: function (e) { self.setState({ loginEmail: e.target.value }); },
+      onLoginPass: function (e) { self.setState({ loginPass: e.target.value }); },
+      doLogin: function () { self.login(); },
+      toRegister: function () { self.setState({ authMode: 'register', regErr: {}, loginError: '' }); },
+      toLogin: function () { self.setState({ authMode: 'login', regErr: {} }); },
+      demoAccounts: [['Admin', 'u1'], ['Project Manager', 'u2'], ['Team Member', 'u3']].map(function (r) {
+        var u = userById(r[1]);
+        return { role: r[0], name: u.name, fill: function () { self.setState({ loginEmail: u.email, loginPass: 'Passw0rd!', loginError: '' }); } };
+      }),
+      reg: s.reg, regErr: reOut,
+      onRegName: regField('name'), onRegEmail: regField('email'), onRegPass: regField('password'), onRegConfirm: regField('confirm'),
+      doRegister: function () { self.register(); },
+
+      me: { id: me.id, name: me.name, role: me.role, initials: initials(me.name) },
+      isAdmin: isAdmin, isTM: isTM,
+      userOptions: users.map(function (u) { return { id: u.id, label: u.name + ' — ' + u.role }; }),
+      onSwitchUser: function (e) { self.setState({ userId: e.target.value, ppage: 1, tpage: 1, view: self.state.view === 'projectDetail' ? 'projects' : self.state.view }); self.showToast('Now viewing as ' + userById(e.target.value).name + ' (' + userById(e.target.value).role + ').'); },
+      doLogout: function () { self.setState({ screen: 'login', authMode: 'login', loginPass: '', modal: null, view: 'dashboard' }); self.showToast('Signed out. Refresh token revoked.'); },
+      navItems: [nav('dashboard', 'Dashboard', ''), nav('projects', 'Projects', String(visProjects.length)), nav('tasks', 'Tasks', String(visTasks.length))],
+      pageTitle: titles[s.view], crumb: crumbs[s.view],
+      isDashboard: s.view === 'dashboard', isProjects: s.view === 'projects', isProjectDetail: s.view === 'projectDetail' && !!sel, isTasks: s.view === 'tasks',
+      goTasks: function () { self.setState({ view: 'tasks' }); },
+      goProjects: function () { self.setState({ view: 'projects' }); },
+
+      kpis: [
+        { label: 'Total projects', value: visProjects.length, sub: isTM ? 'Projects you work on' : 'Active projects' },
+        { label: 'Total tasks', value: visTasks.length, sub: 'Across all statuses' },
+        { label: 'Completed', value: completed, sub: pct + '% of non-cancelled tasks' },
+        { label: 'Pending', value: pending, sub: overdueCount + ' overdue' }
+      ],
+      statusBars: STATUSES.map(function (x) { return { label: x, count: byStatus[x], barStyle: 'height:10px;border-radius:999px;background:' + STATUS_COLOR[x][2] + ';width:' + Math.round(byStatus[x] * 100 / maxS) + '%' }; }),
+      prioBars: PRIOS.slice().reverse().map(function (x) { return { label: x, count: byPrio[x], barStyle: 'height:10px;border-radius:999px;background:' + PRIO_COLOR[x][2] + ';width:' + Math.round(byPrio[x] * 100 / maxP) + '%' }; }),
+      completionPct: pct, completedCount: completed, pendingCount: pending,
+      donutStyle: 'width:132px;height:132px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:conic-gradient(#0F766E 0 ' + pct + '%, #FDBA74 ' + pct + '% 100%)',
+      donutLabel: pct + ' percent of tasks completed',
+      upcoming: upcoming, hasUpcoming: upcoming.length > 0, noUpcoming: upcoming.length === 0,
+
+      pq: s.pq, psort: s.psort,
+      onPq: function (e) { self.setState({ pq: e.target.value, ppage: 1 }); },
+      onPsort: function (e) { self.setState({ psort: e.target.value, ppage: 1 }); },
+      canCreateProject: isAdmin || isPM,
+      openNewProject: function () { self.openProject(null); },
+      projRows: projRows, projEmpty: pList.length === 0, projPager: projPager,
+      detail: detail,
+
+      tq: s.tq, tstatus: s.tstatus, tprio: s.tprio, tsort: s.tsort,
+      onTq: function (e) { self.setState({ tq: e.target.value, tpage: 1 }); },
+      onTstatus: function (e) { self.setState({ tstatus: e.target.value, tpage: 1 }); },
+      onTprio: function (e) { self.setState({ tprio: e.target.value, tpage: 1 }); },
+      onTsort: function (e) { self.setState({ tsort: e.target.value, tpage: 1 }); },
+      canCreateTask: (isAdmin || isPM) && manageable.length > 0,
+      openNewTaskTop: function () { self.openTask(null, null); },
+      taskRows: taskRows, taskEmpty: tList.length === 0, taskPager: taskPager,
+
+      isProjectModal: s.modal === 'project', isTaskModal: s.modal === 'task', isDeleteModal: s.modal === 'delete',
+      modalTitle: modalTitles[s.modal] || '',
+      form: s.form, fe: feOut, descCount: descLen,
+      onFName: field('name'), onFDesc: field('description'), onFOwner: field('ownerId'),
+      onFTitle: field('title'), onFProject: field('projectId'), onFAssignee: field('assigneeId'), onFPriority: field('priority'), onFDue: field('due'),
+      pmOptions: users.filter(function (u) { return u.role === 'Project Manager'; }),
+      taskProjectOptions: manageable.map(function (p) { return { id: p.id, name: p.name }; }),
+      assigneeOptions: users.filter(function (u) { return u.role !== 'Admin'; }).map(function (u) { return { id: u.id, label: u.name + ' (' + u.role + ')' }; }),
+      closeModal: function () { clearTimeout(self._ait); self.setState({ modal: null, fe: {}, ai: { loading: false, suggestion: '', error: '' } }); },
+      saveProject: function () { self.saveProject(); },
+      saveTask: function () { self.saveTask(); },
+
+      canUseAI: isAdmin || isPM,
+      ai: s.ai, aiHasSuggestion: !!s.ai.suggestion, aiHasError: !!s.ai.error,
+      aiDisabled: s.ai.loading || !(s.form.description || '').trim(),
+      aiButtonLabel: s.ai.loading ? 'Improving…' : 'Improve with AI',
+      improveAI: function () { self.improve(); },
+      acceptAI: function () { self.setState({ form: Object.assign({}, self.state.form, { description: self.state.ai.suggestion }), ai: { loading: false, suggestion: '', error: '' } }); self.showToast('AI description applied. You can still edit it.'); },
+      discardAI: function () { self.setState({ ai: { loading: false, suggestion: '', error: '' } }); },
+
+      deleteTitle: dt ? (dt.kind === 'project' ? 'Delete project?' : 'Delete task?') : '',
+      deleteText: dt ? (dt.kind === 'project' ? '“' + dt.name + '” will be removed (soft delete) and its tasks will be hidden. An Admin can restore it from the database.' : '“' + dt.name + '” will be removed.') : '',
+      confirmDelete: function () { self.doDelete(); },
+
+      toast: s.toast, hasToast: !!s.toast
+    };
+  }
+
+  login() {
+    var s = this.state;
+    var email = s.loginEmail.trim().toLowerCase();
+    if (!isEmail(email) || s.loginPass.length < 8) { this.setState({ loginError: 'Enter a valid email and a password of at least 8 characters.' }); return; }
+    var u = s.users.find(function (x) { return x.email === email; });
+    if (!u) { this.setState({ loginError: 'Invalid email or password.' }); return; }
+    this.setState({ screen: 'app', userId: u.id, view: 'dashboard', loginError: '', loginPass: '' });
+    this.showToast('Signed in as ' + u.name + '.');
+  }
+
+  register() {
+    var r = this.state.reg, e = {};
+    if (r.name.trim().length < 2) e.name = 'Name must be at least 2 characters.';
+    if (!isEmail(r.email.trim())) e.email = 'Enter a valid email address.';
+    else if (this.state.users.some(function (u) { return u.email === r.email.trim().toLowerCase(); })) e.email = 'This email is already registered.';
+    if (r.password.length < 8 || !/[0-9]/.test(r.password) || !/[A-Za-z]/.test(r.password)) e.password = 'Use 8+ characters with at least one letter and one number.';
+    if (r.confirm !== r.password) e.confirm = 'Passwords do not match.';
+    if (Object.keys(e).length) { this.setState({ regErr: e }); return; }
+    var id = 'u' + this.state.nextId;
+    var u = { id: id, name: r.name.trim(), email: r.email.trim().toLowerCase(), role: 'Team Member' };
+    this.setState({ users: this.state.users.concat([u]), nextId: this.state.nextId + 1, userId: id, screen: 'app', view: 'dashboard', reg: { name: '', email: '', password: '', confirm: '' }, regErr: {}, authMode: 'login' });
+    this.showToast('Account created. Welcome, ' + u.name + '!');
+  }
+
+  openProject(p) {
+    var me = this.state.users.find((u) => u.id === this.state.userId);
+    this.setState({ modal: 'project', editingId: p ? p.id : null, fe: {}, form: p ? { name: p.name, description: p.description, ownerId: p.ownerId } : { name: '', description: '', ownerId: me.role === 'Project Manager' ? me.id : 'u2' } });
+  }
+
+  saveProject() {
+    var s = this.state, f = s.form, e = {};
+    var name = (f.name || '').trim();
+    if (name.length < 3 || name.length > 100) e.name = 'Name must be 3 to 100 characters.';
+    else if (s.projects.some(function (p) { return !p.deleted && p.id !== s.editingId && p.name.toLowerCase() === name.toLowerCase(); })) e.name = 'A project with this name already exists.';
+    if ((f.description || '').length > 500) e.description = 'Description must be 500 characters or fewer.';
+    if (Object.keys(e).length) { this.setState({ fe: e }); return; }
+    if (s.editingId) {
+      this.setState({ projects: s.projects.map(function (p) { return p.id === s.editingId ? Object.assign({}, p, { name: name, description: (f.description || '').trim(), ownerId: f.ownerId, updated: TODAY }) : p; }), modal: null });
+      this.showToast('Project updated.');
+    } else {
+      var id = 'p' + s.nextId;
+      this.setState({ projects: s.projects.concat([{ id: id, name: name, description: (f.description || '').trim(), ownerId: f.ownerId, created: TODAY, updated: TODAY }]), nextId: s.nextId + 1, modal: null, psort: 'updated-desc', ppage: 1 });
+      this.showToast('Project created.');
+    }
+  }
+
+  openTask(t, presetPid) {
+    var s = this.state;
+    var me = s.users.find((u) => u.id === s.userId);
+    var manageable = s.projects.filter((p) => !p.deleted && (me.role === 'Admin' || (me.role === 'Project Manager' && p.ownerId === me.id)));
+    this.setState({
+      modal: 'task', editingId: t ? t.id : null, fe: {}, ai: { loading: false, suggestion: '', error: '' },
+      form: t ? { title: t.title, description: t.description, projectId: t.projectId, assigneeId: t.assigneeId || '', priority: t.priority, due: t.due }
+        : { title: '', description: '', projectId: presetPid || (manageable[0] ? manageable[0].id : ''), assigneeId: '', priority: 'Medium', due: '2026-11-16' }
+    });
+  }
+
+  saveTask() {
+    var s = this.state, f = s.form, e = {};
+    var title = (f.title || '').trim();
+    if (title.length < 3 || title.length > 120) e.title = 'Title must be 3 to 120 characters.';
+    if (!f.projectId) e.projectId = 'Choose a project.';
+    if (!f.due) e.due = 'Choose a due date.';
+    else if (!s.editingId && daysFromToday(f.due) < 0) e.due = 'Due date cannot be in the past.';
+    if ((f.description || '').length > 2000) e.description = 'Description must be 2000 characters or fewer.';
+    if (Object.keys(e).length) { this.setState({ fe: e }); return; }
+    var data = { title: title, description: (f.description || '').trim(), projectId: f.projectId, assigneeId: f.assigneeId || null, priority: f.priority, due: f.due };
+    if (s.editingId) {
+      this.setState({ tasks: s.tasks.map(function (t) { return t.id === s.editingId ? Object.assign({}, t, data) : t; }), modal: null });
+      this.showToast('Task updated.');
+    } else {
+      this.setState({ tasks: s.tasks.concat([Object.assign({ id: 't' + s.nextId, status: 'To Do' }, data)]), nextId: s.nextId + 1, modal: null });
+      this.showToast('Task created.');
+    }
+  }
+
+  improve() {
+    var f = this.state.form;
+    var d = (f.description || '').trim();
+    if (!d) { this.setState({ ai: { loading: false, suggestion: '', error: 'Write a short description first.' } }); return; }
+    if (d.length > 2000) { this.setState({ ai: { loading: false, suggestion: '', error: 'Description is too long for the AI helper (max 2000 characters).' } }); return; }
+    this.setState({ ai: { loading: true, suggestion: '', error: '' } });
+    clearTimeout(this._ait);
+    this._ait = setTimeout(() => {
+      this.setState({ ai: { loading: false, suggestion: improveText(this.state.form.title || '', d), error: '' } });
+    }, 1200);
+  }
+
+  doDelete() {
+    var s = this.state, dt = s.deleteTarget;
+    if (!dt) return;
+    if (dt.kind === 'project') {
+      this.setState({ projects: s.projects.map(function (p) { return p.id === dt.id ? Object.assign({}, p, { deleted: true }) : p; }), modal: null, deleteTarget: null, view: s.view === 'projectDetail' ? 'projects' : s.view });
+      this.showToast('Project deleted.');
+    } else {
+      this.setState({ tasks: s.tasks.filter(function (t) { return t.id !== dt.id; }), modal: null, deleteTarget: null });
+      this.showToast('Task deleted.');
+    }
+  }
+}
+</script>
+</body>
+</html>

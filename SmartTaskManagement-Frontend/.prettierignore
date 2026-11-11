@@ -1,0 +1,8 @@
+/dist
+/coverage
+/.angular
+/certs
+/docs
+package-lock.json
+/test-results
+/playwright-report

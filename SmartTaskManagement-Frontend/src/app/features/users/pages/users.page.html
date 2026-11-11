@@ -1,0 +1,130 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="muted small">Admin only · people register themselves as Team Members</p>
+      <h1>Users</h1>
+    </div>
+  </div>
+
+  <form role="search" class="toolbar" (submit)="$event.preventDefault()">
+    <div class="field grow">
+      <label class="label" for="user-search">Search users</label>
+      <input
+        class="input"
+        id="user-search"
+        type="search"
+        placeholder="Name or email"
+        [value]="query().search"
+        (input)="onSearch($event)"
+      />
+    </div>
+    <div class="field fixed">
+      <label class="label" for="user-role">Role</label>
+      <select class="input" id="user-role" (change)="update({ role: value($event) })">
+        <option value="">All roles</option>
+        @for (role of roles; track role) {
+          <option [value]="role" [selected]="role === query().role">{{ roleLabel(role) }}</option>
+        }
+      </select>
+    </div>
+    <div class="field fixed">
+      <label class="label" for="user-sort">Sort by</label>
+      <select class="input" id="user-sort" (change)="update({ sort: value($event) })">
+        @for (sort of sorts; track sort.value) {
+          <option [value]="sort.value" [selected]="sort.value === query().sort">
+            {{ sort.label }}
+          </option>
+        }
+      </select>
+    </div>
+  </form>
+
+  @if (notice(); as text) {
+    <div class="alert alert-info" role="status">{{ text }}</div>
+  }
+  @if (error(); as e) {
+    <div class="alert alert-error" role="alert">
+      {{ e.message }}
+      @if (e.ownerId) {
+        <a [routerLink]="['/projects']" [queryParams]="{ ownerId: e.ownerId }"
+          >View their projects</a
+        >
+      }
+    </div>
+  }
+
+  <section class="card" aria-label="Users">
+    @let s = state();
+    @if (s.status === 'loading') {
+      <p class="empty muted" role="status">Loading users…</p>
+    } @else if (s.status === 'error') {
+      <div class="empty">
+        <p class="alert alert-error" role="alert">{{ s.message }}</p>
+      </div>
+    } @else {
+      @if (s.data.items.length === 0) {
+        <p class="empty muted">No users match your search.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of s.data.items; track user.id) {
+                <tr>
+                  <td class="strong">
+                    {{ user.fullName }}
+                    @if (user.id === me()?.id) {
+                      <span class="muted">(you)</span>
+                    }
+                  </td>
+                  <td class="muted">{{ user.email }}</td>
+                  <td>
+                    <select
+                      class="input input-sm"
+                      [attr.aria-label]="'Role of ' + user.fullName"
+                      (change)="askRoleChange(user, $event)"
+                    >
+                      @for (role of roles; track role) {
+                        <option [value]="role" [selected]="role === user.role">
+                          {{ roleLabel(role) }}
+                        </option>
+                      }
+                    </select>
+                  </td>
+                  <td class="muted nowrap">{{ user.createdAt | date: 'mediumDate' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <app-pager
+        noun="users"
+        [page]="s.data.page"
+        [pageSize]="s.data.pageSize"
+        [totalCount]="s.data.totalCount"
+        (pageChange)="update({ page: $event })"
+        (pageSizeChange)="update({ pageSize: $event })"
+      />
+    }
+  </section>
+</div>
+
+@if (pending(); as change) {
+  <app-confirm-dialog
+    heading="Change role?"
+    [message]="confirmText(change)"
+    confirmText="Change role"
+    [danger]="false"
+    [busy]="busy()"
+    (confirmed)="confirmRoleChange()"
+    (cancelled)="pending.set(null)"
+  />
+}

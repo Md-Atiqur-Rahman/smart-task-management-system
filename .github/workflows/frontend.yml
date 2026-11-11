@@ -1,0 +1,67 @@
+# Frontend CI runs ONE check: <frontend folder>/scripts/verify.sh (lint, Prettier,
+# type-check, unit tests, production build, npm audit). This file holds no check
+# logic of its own and no project or folder name: the frontend folder is found by
+# the "*-Frontend" suffix (ADR 0019). E2E tests are not run here (they need the
+# whole backend stack; frontend-design.md section 13).
+# Action versions (checked 2026-11-11 with `gh api repos/<action>/releases/latest`):
+#   https://github.com/actions/checkout     latest v7.0.1 -> actions/checkout@v7
+#   https://github.com/actions/setup-node   latest v7.1.0 -> actions/setup-node@v7
+#   setup-node inputs node-version-file, cache, cache-dependency-path: its action.yml at v7.1.0.
+# Runs only for frontend changes (and changes to this file).
+name: Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*-Frontend/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '*-Frontend/**'
+      - '.github/workflows/frontend.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Exactly one top-level folder ending in -Frontend; its name is derived,
+      # never written here.
+      - name: Locate the frontend folder
+        id: frontend
+        run: |
+          shopt -s nullglob
+          folders=(*-Frontend/)
+          if [ "${#folders[@]}" -ne 1 ]; then
+            echo "expected exactly one *-Frontend folder, found ${#folders[@]}" >&2
+            exit 1
+          fi
+          echo "dir=${folders[0]%/}" >> "$GITHUB_OUTPUT"
+
+      # Node version from the frontend .nvmrc; npm cache keyed on package-lock.json.
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ${{ steps.frontend.outputs.dir }}/.nvmrc
+          cache: npm
+          cache-dependency-path: ${{ steps.frontend.outputs.dir }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ steps.frontend.outputs.dir }}
+        run: npm ci
+
+      - name: Verify
+        working-directory: ${{ steps.frontend.outputs.dir }}
+        run: bash scripts/verify.sh

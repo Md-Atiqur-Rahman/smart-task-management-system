@@ -1,0 +1,92 @@
+<app-auth-layout>
+  <form
+    class="card auth-card"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+    aria-labelledby="register-title"
+  >
+    <div class="auth-heading">
+      <h1 id="register-title">Create account</h1>
+      <p class="muted">New accounts start as Team Member. An Admin can change your role.</p>
+    </div>
+
+    @if (error(); as message) {
+      <div class="alert alert-error" role="alert">{{ message }}</div>
+    }
+
+    <div class="field">
+      <label class="label" for="fullName">Full name</label>
+      <input
+        class="input"
+        id="fullName"
+        formControlName="fullName"
+        autocomplete="name"
+        maxlength="100"
+        [attr.aria-invalid]="!!controlError(form.controls.fullName, 'Full name')"
+        aria-describedby="fullName-error"
+      />
+      <span class="error" id="fullName-error">{{
+        controlError(form.controls.fullName, 'Full name')
+      }}</span>
+    </div>
+
+    <div class="field">
+      <label class="label" for="reg-email">Email</label>
+      <input
+        class="input"
+        id="reg-email"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        [attr.aria-invalid]="!!controlError(form.controls.email, 'Email')"
+        aria-describedby="reg-email-error"
+      />
+      <span class="error" id="reg-email-error">{{
+        controlError(form.controls.email, 'Email')
+      }}</span>
+    </div>
+
+    <div class="field">
+      <label class="label" for="reg-password">Password</label>
+      <input
+        class="input"
+        id="reg-password"
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+        [attr.aria-invalid]="!!controlError(form.controls.password, 'Password')"
+        aria-describedby="password-rules reg-password-error"
+      />
+      <ul class="checklist" id="password-rules">
+        @for (rule of rules(); track rule.text) {
+          <li [class.ok]="rule.ok" [class.no]="!rule.ok">
+            {{ rule.ok ? '✓' : '✗' }} {{ rule.text }}
+          </li>
+        }
+      </ul>
+      <span class="error" id="reg-password-error">{{
+        controlError(form.controls.password, 'Password')
+      }}</span>
+    </div>
+
+    <div class="field">
+      <label class="label" for="confirmPassword">Confirm password</label>
+      <input
+        class="input"
+        id="confirmPassword"
+        type="password"
+        formControlName="confirmPassword"
+        autocomplete="new-password"
+        [attr.aria-invalid]="!!confirmError()"
+        aria-describedby="confirm-error"
+      />
+      <span class="error" id="confirm-error">{{ confirmError() }}</span>
+    </div>
+
+    <button type="submit" class="btn btn-primary full" [disabled]="submitting()">
+      {{ submitting() ? 'Creating account…' : 'Create account' }}
+    </button>
+    <p class="muted center">Already have an account? <a routerLink="/login">Sign in</a></p>
+  </form>
+</app-auth-layout>

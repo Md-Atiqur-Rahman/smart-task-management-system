@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Projects</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st{min-height:100vh;background:#F6F7F9;color:#111827;font:14px/1.45 Inter,system-ui,sans-serif}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.st p{margin:0}
+.st .card{background:#FFF;border:1px solid #E5E7EB;border-radius:12px}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none}
+.st .btn:focus-visible,.st .nav:focus-visible,.st .ib:focus-visible,.st .in:focus-visible{outline:3px solid #14B8A6;outline-offset:2px}
+.st .bp{background:#0F766E;border-color:#0F766E;color:#FFF}.st .bp:hover{background:#115E59;color:#FFF}
+.st .sm{min-height:32px;padding:0 10px;font-size:13px}
+.st .dg{color:#B91C1C}
+.st .cur{background:#0F766E;border-color:#0F766E;color:#FFF}
+.st .in{width:100%;min-height:40px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;color:#111827;font:400 14px Inter,system-ui,sans-serif}
+.st .lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.st .muted{color:#4B5563}
+.st table{width:100%;border-collapse:collapse}
+.st th{text-align:left;font-size:12px;font-weight:600;color:#4B5563;text-transform:uppercase;letter-spacing:.04em;padding:10px 14px;border-bottom:1px solid #E5E7EB;background:#F9FAFB;white-space:nowrap}
+.st td{padding:12px 14px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+.st .nav{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border-radius:8px;color:#CBD5E1;font:500 14px Inter,system-ui,sans-serif;text-decoration:none}
+.st .nav:hover{background:#1E293B;color:#FFF}
+.st .on{background:#134E4A;color:#FFF}
+.st .ib{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid #E5E7EB;background:#FFF;color:#111827}
+.st .cnt{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#B91C1C;color:#FFF;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.st .pg{display:flex;align-items:center;gap:8px}
+.st .pg .track{flex:1;height:8px;background:#F1F5F9;border-radius:999px;overflow:hidden}
+</style>
+</helmet>
+<div class="st" style="display: flex; flex-wrap: wrap">
+  <aside style="flex: 1 1 232px; background: #0F172A; padding: 20px 14px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M8 12l3 3 5-6"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700; color: #FFFFFF">SmartTask</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; flex-direction: column; gap: 4px">
+      <a class="nav" href="D02-Dashboard.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>Dashboard</a>
+      <a class="nav on" href="D04-Projects.dc.html" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>Projects</a>
+      <a class="nav" href="D06-Tasks.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg>Tasks</a>
+      <a class="nav" href="D09-Users.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5"></path><path d="M16 5a3 3 0 010 6M21 20c0-2-1.5-4-4-4.5"></path></svg>Users</a>
+    </nav>
+    <div style="margin-top: auto; border-top: 1px solid #1E293B; padding-top: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px">
+        <span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 999px; background: #134E4A; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">TH</span>
+        <div style="display: flex; flex-direction: column; min-width: 0"><span style="color: #FFFFFF; font-weight: 600">Tanvir Hasan</span><span style="color: #94A3B8; font-size: 12px">Admin</span></div>
+      </div>
+      <a class="nav" href="D01-Login.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"></path></svg>Log out</a>
+    </div>
+  </aside>
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 32px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB">
+      <div style="display: flex; flex-direction: column; gap: 2px"><span class="muted" style="font-size: 12px">All projects</span><h1 style="font-size: 24px">Projects</h1></div>
+      <a class="ib" href="D03-Notifications.dc.html" aria-label="Notifications, no unread"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10 20a2 2 0 004 0"></path></svg></a>
+    </header>
+    <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 20px; max-width: 1280px; width: 100%">
+      <form role="search" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
+        <div style="flex: 1 1 280px"><label class="lbl" for="pq">Search projects</label><input class="in" id="pq" type="search" value="portal" placeholder="Name or description"></div>
+        <div style="flex: 0 1 220px"><label class="lbl" for="powner">Owner</label><input class="in" id="powner" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="All owners (type to search)"></div>
+        <div style="flex: 0 1 200px"><label class="lbl" for="psort">Sort by</label>
+          <select class="in" id="psort"><option>Recently updated</option><option>Recently created</option><option>Oldest first</option><option>Name A–Z</option><option>Name Z–A</option></select></div>
+        <a class="btn bp" href="D08-Dialogs.dc.html" style="margin-left: auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New project</a>
+      </form>
+      <section class="card" aria-label="Projects" style="overflow: hidden">
+        <div style="overflow-x: auto">
+          <table>
+            <thead><tr><th scope="col">Project</th><th scope="col">Owner</th><th scope="col">Tasks done</th><th scope="col">Created</th><th scope="col">Updated</th><th scope="col" style="text-align: right">Actions</th></tr></thead>
+            <tbody>
+              <tr><td style="min-width: 220px"><a href="D05-ProjectDetail.dc.html" style="font-weight: 600">Customer Portal Revamp</a></td><td>Rafi Ahmed</td><td style="min-width: 170px"><div class="pg"><div class="track"><div style="width: 33%; height: 100%; background: #0F766E"></div></div><span style="font-size: 12px; white-space: nowrap">3 / 9</span></div></td><td class="muted" style="white-space: nowrap">Aug 4, 2026</td><td class="muted" style="white-space: nowrap">Nov 7, 2026</td><td style="text-align: right; white-space: nowrap"><a class="btn sm" href="D08-Dialogs.dc.html">Edit</a> <a class="btn sm dg" href="D08-Dialogs.dc.html">Delete</a></td></tr>
+              <tr><td><a href="D05-ProjectDetail.dc.html" style="font-weight: 600">Supplier Portal</a></td><td>Sadia Islam</td><td><div class="pg"><div class="track"><div style="width: 0%; height: 100%; background: #0F766E"></div></div><span style="font-size: 12px; white-space: nowrap">0 / 0</span></div></td><td class="muted" style="white-space: nowrap">Nov 10, 2026</td><td class="muted">—</td><td style="text-align: right; white-space: nowrap"><a class="btn sm" href="D08-Dialogs.dc.html">Edit</a> <a class="btn sm dg" href="D08-Dialogs.dc.html">Delete</a></td></tr>
+              <tr><td><a href="D05-ProjectDetail.dc.html" style="font-weight: 600">Partner Portal Single Sign-On</a></td><td>Rafi Ahmed</td><td><div class="pg"><div class="track"><div style="width: 75%; height: 100%; background: #0F766E"></div></div><span style="font-size: 12px; white-space: nowrap">6 / 8</span></div></td><td class="muted" style="white-space: nowrap">Jun 2, 2026</td><td class="muted" style="white-space: nowrap">Oct 30, 2026</td><td style="text-align: right; white-space: nowrap"><a class="btn sm" href="D08-Dialogs.dc.html">Edit</a> <a class="btn sm dg" href="D08-Dialogs.dc.html">Delete</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid #E5E7EB">
+          <span class="muted" style="font-size: 13px" aria-live="polite">Showing 1–3 of 3 projects matching “portal”</span>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+            <label class="muted" for="psize" style="font-size: 13px">Rows per page</label>
+            <select class="in" id="psize" style="width: auto; min-height: 32px; padding: 4px 8px"><option>10</option><option selected="selected">20</option><option>50</option><option>100</option></select>
+            <nav aria-label="Pagination" style="display: flex; gap: 6px">
+              <button class="btn sm" type="button" disabled="disabled" aria-label="Previous page">‹</button>
+              <button class="btn sm cur" type="button" aria-current="page" aria-label="Page 1">1</button>
+              <button class="btn sm" type="button" disabled="disabled" aria-label="Next page">›</button>
+            </nav>
+          </div>
+        </div>
+      </section>
+      <p class="muted" style="font-size: 12px">Row actions follow the role: Admin on every project, a Project Manager on their own projects, a Team Member sees no actions and no “New project”. Pages are computed from totalCount ÷ pageSize.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

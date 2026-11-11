@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st{min-height:100vh;background:#F6F7F9;color:#111827;font:14px/1.45 Inter,system-ui,sans-serif}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.st p{margin:0}
+.st .card{background:#FFF;border:1px solid #E5E7EB;border-radius:12px}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none}
+.st .btn:focus-visible,.st .in:focus-visible{outline:3px solid #14B8A6;outline-offset:2px}
+.st .bp{background:#0F766E;border-color:#0F766E;color:#FFF}.st .bp:hover{background:#115E59;color:#FFF}
+.st .in{width:100%;min-height:44px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;color:#111827;font:400 14px Inter,system-ui,sans-serif}
+.st .lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.st .muted{color:#4B5563}
+.st .alert{padding:10px 12px;border-radius:8px;font-size:13px}
+.st .a-err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+</style>
+</helmet>
+<div class="st" style="display: flex; flex-wrap: wrap">
+  <div style="flex: 1 1 420px; background: #0F172A; color: #E2E8F0; padding: 56px 48px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="M8 12l3 3 5-6"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF">SmartTask</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px; max-width: 460px">
+      <h1 style="font-size: 40px; line-height: 1.1; color: #FFFFFF">Plan projects. Ship tasks. Keep everyone in step.</h1>
+      <p style="font-size: 16px; line-height: 1.6; color: #CBD5E1">A secure task manager for teams, with role-based access, a live dashboard and instant notifications when work is assigned to you.</p>
+      <ul style="list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+        <li style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"></path></svg>Secure sign-in that keeps you signed in on reload</li>
+        <li style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5"></path><path d="M17 11l2 2 3-4"></path></svg>Admin, Project Manager and Team Member roles</li>
+        <li style="display: flex; gap: 10px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10 20a2 2 0 004 0"></path></svg>Live dashboard and assignment notifications</li>
+      </ul>
+    </div>
+    <p style="font-size: 13px; color: #94A3B8">ASP.NET Core 10 · Angular · SQL Server</p>
+  </div>
+  <main style="flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: 48px 16px">
+    <form class="card" style="width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 18px" aria-labelledby="signin-h">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 id="signin-h" style="font-size: 26px">Sign in</h2>
+        <p class="muted">Welcome back. Use your work email.</p>
+      </div>
+      <div class="alert a-err" role="alert">Email or password is incorrect.</div>
+      <div>
+        <label class="lbl" for="email">Email</label>
+        <input class="in" id="email" type="email" autocomplete="username" value="nusrat@example.com">
+      </div>
+      <div>
+        <label class="lbl" for="pw">Password</label>
+        <div style="display: flex; gap: 8px">
+          <input class="in" id="pw" type="password" autocomplete="current-password" value="password1">
+          <button class="btn" type="button" aria-label="Show password" aria-pressed="false" style="min-height: 44px; padding: 0 12px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+      </div>
+      <a class="btn bp" href="D02-Dashboard.dc.html" style="width: 100%; min-height: 44px">Sign in</a>
+      <p class="muted" style="text-align: center">New here? <a href="M01-Mobile.dc.html" style="font-weight: 600">Create an account</a></p>
+      <p style="font-size: 12px; color: #4B5563; text-align: center">Same message for an unknown email and a wrong password (auth.invalid_credentials). Too many attempts: “Too many requests, try again in a minute.” (429)</p>
+    </form>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
