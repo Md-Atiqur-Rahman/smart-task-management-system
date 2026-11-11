@@ -1,6 +1,8 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.Email;
 using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Email;
 using Datavanced.SmartTaskManagement.Infrastructure.LiveEvents;
 using Datavanced.SmartTaskManagement.Infrastructure.Redis;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
@@ -52,6 +54,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     /// <summary>The in-memory rate limit counter used unless <see cref="WithRedis"/> is called.</summary>
     public InMemoryFixedWindowCounter RateLimitCounter { get; } = new();
+
+    /// <summary>Records emails instead of sending them (the outbox worker does not run in tests).</summary>
+    public FakeEmailSender Emails { get; } = new();
 
     /// <summary>Replaces the host's TimeProvider (for example a fixed clock).</summary>
     public ApiFactory WithTimeProvider(TimeProvider timeProvider)
@@ -108,6 +113,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<ILogEventSink>(LogSink);
+
+            // No SMTP and no background email delivery: tests call EmailOutboxProcessor directly when needed.
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
+            var emailWorker = services.FirstOrDefault(d => d.ImplementationType == typeof(EmailOutboxWorker));
+            if (emailWorker is not null)
+            {
+                services.Remove(emailWorker);
+            }
             if (!_useRealRedis)
             {
                 services.RemoveAll<ITokenVersionStore>();

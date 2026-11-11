@@ -46,7 +46,7 @@ public sealed class AdminSeedOptionsValidator : IValidateOptions<AdminSeedOption
     {
         try
         {
-            Email.Create(value);
+            Domain.Users.Email.Create(value);
             return true;
         }
         catch (ArgumentException)

@@ -1,4 +1,5 @@
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.LiveEvents;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Redis;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
@@ -20,6 +21,7 @@ public static class HostApplicationBuilderExtensions
         builder.ConfigureRedis();
         builder.ConfigureLiveEvents();
         builder.ConfigureSecurity();
+        builder.ConfigureEmail();
 
         // After ConfigureDatabase: hosted services start in registration order (development migration first).
         builder.ConfigureSeeding();

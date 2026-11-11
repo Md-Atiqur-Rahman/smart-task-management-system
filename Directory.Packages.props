@@ -47,6 +47,8 @@
     <PackageVersion Include="StackExchange.Redis" Version="3.4.31" />
     <!-- Verified 2026-11-09: 8.19.2 listed on nuget.org (MIT); same version JwtBearer/SqlClient already resolve, no advisory (NuGetAudit clean). -->
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
+    <!-- Verified 2026-11-11: MailKit 5.0.0 latest stable on nuget.org (dotnet package search exact-match), MIT, net8.0+; ADR 0017. -->
+    <PackageVersion Include="MailKit" Version="5.0.0" />
   </ItemGroup>
 
   <!-- Api. Verified 2026-11-08 (latest stable, no advisories). -->
