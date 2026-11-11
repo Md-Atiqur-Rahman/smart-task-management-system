@@ -4,6 +4,7 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
 using Datavanced.SmartTaskManagement.Infrastructure.LiveEvents;
 using Datavanced.SmartTaskManagement.Infrastructure.Mail;
+using Datavanced.SmartTaskManagement.Infrastructure.Notifications;
 using Datavanced.SmartTaskManagement.Infrastructure.Redis;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
@@ -121,6 +122,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             if (emailWorker is not null)
             {
                 services.Remove(emailWorker);
+            }
+            var cleanupWorker = services.FirstOrDefault(d => d.ImplementationType == typeof(NotificationCleanupWorker));
+            if (cleanupWorker is not null)
+            {
+                services.Remove(cleanupWorker);
             }
             if (!_useRealRedis)
             {
