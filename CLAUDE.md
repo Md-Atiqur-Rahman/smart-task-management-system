@@ -38,7 +38,7 @@ If two sources conflict, ask the developer; do not choose silently.
 | `SmartTaskManagement-Frontend/` | Angular app; rules in `SmartTaskManagement-Frontend/CLAUDE.md`; run its commands from that folder |
 | `docs/` | Project-wide docs: `assignment.md`, `PRD.md`, `CONTEXT.md` |
 | `.claude/` | Rules (paths relative to the backend folder), agents, settings, format hook |
-| `.github/workflows/` | CI; `backend.yml` runs the backend verify script |
+| `.github/workflows/` | CI; `backend.yml` and `frontend.yml` run each part's verify script |
 
 Tooling (workflows, scripts, hooks) never writes the project name; it finds
 the backend as the `*-Backend` folder or the folder that holds the `*.slnx`.

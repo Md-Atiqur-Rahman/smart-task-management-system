@@ -50,8 +50,7 @@ obviously correct rather than feature-rich.
   `openapi.json`.
 - **E2E tests (Playwright)** [decided]: designed (section 13) but **not
   implemented now**; a deferred milestone.
-- **CI workflow `.github/workflows/frontend.yml`** [decided]: designed (section
-  13) but **not implemented now**; a deferred milestone.
+- **CI workflow `.github/workflows/frontend.yml`**: built on 2026-11-11 (section 13).
 - No i18n, no dark theme, no offline mode, no state library (NgRx etc.), no UI
   component library [builder's call: plain CSS keeps the dependency list short].
 - `GET /api/auth/me` is not used: login and refresh already return the user
@@ -458,7 +457,7 @@ Counters show the remaining length. Submit buttons are disabled while sending
   badge). Admin credentials from `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`
   (never committed, never printed); a fresh Team Member is registered with a
   unique email per run; test data stays (soft delete only).
-- **Deferred milestone: CI** `.github/workflows/frontend.yml`: triggers on
+- **CI** `.github/workflows/frontend.yml` (built 2026-11-11 at the developer's request): triggers on
   `paths: ['*-Frontend/**', '.github/workflows/frontend.yml']`; finds the
   frontend folder by the `*-Frontend` pattern like `backend.yml` (no project
   name); Node version from the frontend `.nvmrc`; `npm ci`; runs
