@@ -69,20 +69,24 @@ test.describe('projects, tasks and notifications (Admin)', () => {
     // Projects: create with the Project Manager as owner.
     await adminPage.getByRole('link', { name: 'Projects' }).click();
     await adminPage.getByRole('button', { name: 'New project' }).click();
-    await adminPage.getByLabel('Name').fill(projectName);
-    await adminPage.getByLabel('Description').fill('Created by the E2E suite.');
-    await pickPerson(adminPage, 'Owner (Project Manager)', manager.email);
-    await adminPage.getByRole('button', { name: 'Create project' }).click();
+    const projectDialog = adminPage.getByRole('dialog', { name: 'New project' });
+    await projectDialog.getByLabel('Name').fill(projectName);
+    await projectDialog.getByLabel('Description').fill('Created by the E2E suite.');
+    await pickPerson(projectDialog, 'Owner (Project Manager)', manager.email);
+    await projectDialog.getByRole('button', { name: 'Create project' }).click();
     await expect(adminPage).toHaveURL(/\/projects\/[^/]+$/);
     await expect(adminPage.getByRole('heading', { name: projectName })).toBeVisible();
 
     // Tasks: create and assign to the member.
     await adminPage.getByRole('button', { name: 'Add task' }).click();
-    await adminPage.getByLabel('Title').fill(taskTitle);
-    await pickPerson(adminPage, 'Assignee', member.email);
-    await adminPage.getByRole('button', { name: 'Create task' }).click();
+    const taskDialog = adminPage.getByRole('dialog', { name: 'New task' });
+    await taskDialog.getByLabel('Title').fill(taskTitle);
+    await pickPerson(taskDialog, 'Assignee', member.email);
+    await taskDialog.getByRole('button', { name: 'Create task' }).click();
     await expect(adminPage).toHaveURL(/\/tasks\/[^/]+$/);
-    await expect(adminPage.getByText(member.fullName)).toBeVisible();
+    await expect(
+      adminPage.getByRole('complementary', { name: 'Task properties' }).getByText(member.fullName),
+    ).toBeVisible();
 
     // The member's open page gets the notification live (SSE): badge and toast, no reload.
     await expect(memberPage.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible();

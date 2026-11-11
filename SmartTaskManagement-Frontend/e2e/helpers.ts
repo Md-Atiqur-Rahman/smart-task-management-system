@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 
 export interface TestUser {
   fullName: string;
@@ -40,13 +40,15 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
-/** Types into an ARIA combobox user picker and picks the first match. */
-export async function pickPerson(page: Page, label: string, search: string): Promise<void> {
-  const box = page.getByRole('combobox', { name: label });
+/**
+ * Types into an ARIA combobox user picker and picks the first match. Pass the
+ * dialog (or other region) that holds the picker: the page behind a dialog has
+ * its own controls with the same names (filters, native <select> options).
+ */
+export async function pickPerson(scope: Locator, label: string, search: string): Promise<void> {
+  const box = scope.getByRole('combobox', { name: label });
   await box.fill(search);
-  // Scope to this picker's own listbox (aria-label = label); the page behind a
-  // dialog has native <select> options too.
-  const firstOption = page.getByRole('listbox', { name: label }).getByRole('option').first();
+  const firstOption = scope.getByRole('listbox', { name: label }).getByRole('option').first();
   await expect(firstOption).toContainText(search);
   await box.press('Enter');
 }
