@@ -4,9 +4,9 @@ Updated 2026-11-11. This file describes the current truth, not the history. Anyt
 
 ## At a glance
 
-**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard (summary ও upcoming, দুটি endpoint) তৈরি হয়েছে; Notifications (stored list, live SSE push, email outbox) তৈরি হয়েছে; AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
+**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard (summary ও upcoming, দুটি endpoint) তৈরি হয়েছে; Notifications (stored list, live SSE push, email outbox) তৈরি হয়েছে; Angular frontend তৈরি হয়ে main-এ merge হয়েছে (PR #7); project README ও `PROMPTS.md` লেখা হয়েছে; AI endpoint `feat/ai-description` branch-এ চলছে। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`SmartTaskManagement-Backend/docs/auth-design.md`) and the Project, Task, Dashboard and Notifications modules are built (`SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md`, `SmartTaskManagement-Backend/docs/notifications-design.md`); AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`SmartTaskManagement-Backend/docs/auth-design.md`) and the Project, Task, Dashboard and Notifications modules are built (`SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md`, `SmartTaskManagement-Backend/docs/notifications-design.md`). The Angular frontend is built and merged (`SmartTaskManagement-Frontend/`, design `SmartTaskManagement-Frontend/docs/frontend-design.md`). The project `README.md` and `SmartTaskManagement-Backend/PROMPTS.md` are written. The AI endpoint is in progress on `feat/ai-description`. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -31,7 +31,7 @@ Evaluation: architecture, code quality, security, backend, frontend, design patt
 
 ## Current state
 
-The foundation, the Auth feature, the Project module, the Task module, the Dashboard and the Notifications module are finished and verified; the other Smart Task features are still to be built.
+The foundation, the Auth feature, the Project module, the Task module, the Dashboard, the Notifications module and the Angular frontend are finished and verified. The AI endpoint is in progress.
 
 ### Repositories (all private on GitHub)
 
@@ -52,6 +52,13 @@ A fourth private repository is an archive of the long template build history and
 - **Task: built.** `TaskItem` aggregate (`TaskItemStatus`, `TaskPriority`; priority Medium by default, date-only due date, no state machine) in the `Tasks` table. Endpoints: `POST` and `GET /api/projects/{projectId}/tasks`, `GET /api/tasks`, `GET`, `PUT` and `DELETE /api/tasks/{id}`, `PUT /api/tasks/{id}/status` (an Admin, the owning Project Manager, or the task's assignee) and `PUT /api/tasks/{id}/assignee` (Admin or owning Project Manager; null unassigns). Both lists filter by status, priority, `assigneeId`, `unassigned`, `dueFrom`/`dueTo` and sort rank-aware. The assignee (any role) sees the task and its project and may change its status. Project list and details carry task counts (an assignee-only caller counts only their own tasks). Design: `SmartTaskManagement-Backend/docs/task-design.md`.
 - **Dashboard: built.** `DashboardController`: `GET /api/dashboard/summary` (total projects and tasks, tasks by status and by priority, completed, pending and overdue counts; all four status and priority keys are always present) and `GET /api/dashboard/upcoming` (pending tasks due from today to today + `Dashboard:UpcomingDays`, at most `Dashboard:UpcomingLimit`). Both are `[Authorize]`; every role sees only the projects and tasks it may see (one visibility definition shared with the project and task lists). Design: `SmartTaskManagement-Backend/docs/dashboard-design.md`.
 - **Notifications: built.** `Notification` aggregate in the `Notifications` table, which is also the email outbox (ADR 0017). Five events (task assigned or unassigned, project owner assigned or removed; the actor is never notified). Endpoints: `GET /api/notifications`, `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all` and `GET /api/notifications/stream` (SSE; event types `notification`, `notifications-read`, `dashboard-changed`, `heartbeat`; ends at the access token's expiry; browsers must use `fetch` with the bearer header). Live events go through Redis pub/sub to every instance (ADR 0018; fail open when Redis is down). An `EmailOutboxWorker` sends emails with MailKit (Mailpit locally, `http://localhost:8025`) and a `NotificationCleanupWorker` deletes notifications after `Notifications:RetentionDays` (7). Design: `SmartTaskManagement-Backend/docs/notifications-design.md`.
+- **Frontend: built.** Angular 22 app in `SmartTaskManagement-Frontend/` (merged 2026-11-11, PR #7):
+  - Screens: login and register, dashboard (live over SSE), projects, tasks, task detail, users and roles (Admin), notification bell with live toasts.
+  - Security: access token in memory only; single-flight refresh on 401; HTTPS dev server.
+  - Checks: `scripts/verify.sh` (lint, Prettier, strict type-check, 76 Vitest unit tests, production build, `npm audit`); Playwright E2E (`npm run e2e`, local only); CI `.github/workflows/frontend.yml`.
+  - "Improve with AI" is shown disabled until the AI endpoint is merged.
+  - Design: `SmartTaskManagement-Frontend/docs/frontend-design.md`; rules: `SmartTaskManagement-Frontend/CLAUDE.md`.
+- **Submission documents: written.** The root `README.md` (overview, setup, stack, API overview, folder structure, deliverables) and `SmartTaskManagement-Backend/PROMPTS.md`; the PROMPTS.md smoke-test outputs are pending until the AI endpoint is merged. API collection: `SmartTaskManagement-Backend/docs/openapi.json`.
 - **Lesson from the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
@@ -61,9 +68,12 @@ A fourth private repository is an archive of the long template build history and
 - Claude Code files: the root `CLAUDE.md` (project-wide) and `SmartTaskManagement-Backend/CLAUDE.md` (backend rules), `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
 - ADRs in `SmartTaskManagement-Backend/docs/adr/`, `SmartTaskManagement-Backend/docs/architecture.md`, `SmartTaskManagement-Backend/docs/coding-standards.md`.
 
-### Not started
+### In progress or open
 
-The AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
+- The AI endpoint (`feat/ai-description`); then the frontend's "Improve with AI" button and the real smoke-test outputs in `PROMPTS.md` section 4.2.
+- Frontend follow-ups: Change owner dialog, a project filter on `/tasks`, and seven minor review findings (listed in the PR #7 description).
+- `Email:AppBaseUrl` in the backend `appsettings.Development.json` is still `http://localhost:4200`; the HTTPS dev server needs `https://localhost:4200` (a small backend change, waiting for the developer's go-ahead).
+- The repository is private: it must be shared with the evaluator (public, or the evaluator added as a collaborator) before submission.
 
 ## Locked decisions and why
 
@@ -129,9 +139,9 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 3. ~~Task module~~ built
 4. ~~Dashboard~~ built (the developer decided on 2026-11-11 to keep the Sample slice for now)
 5. ~~Notifications module (live push, stored notification list, email on assignment)~~ built
-6. AI endpoint (next)
-7. Angular frontend (after the backend is stable)
-8. README, `PROMPTS.md`, API collection export
+6. AI endpoint (in progress on `feat/ai-description`)
+7. ~~Angular frontend~~ built (PR #7)
+8. ~~README, `PROMPTS.md`, API collection export~~ written (`PROMPTS.md` smoke-test outputs pending; the API collection is `SmartTaskManagement-Backend/docs/openapi.json`)
 
 ### Auth design
 
@@ -148,19 +158,19 @@ Built (decided, implemented and tested): separate aggregates, task status, proje
 - Dashboard numbers use database-level grouping and are scoped by role (Admin all, Project Manager own projects plus tasks assigned to them (same rule as the lists), Team Member their assigned tasks and those tasks' projects).
 - AI endpoint: behind an `IAiProvider` strategy; usable by Admin and Project Manager; input length limit, timeout, clear failure response, and prompt-injection caution. Prompt design is documented in `PROMPTS.md`.
 
-### Frontend (proposed)
+### Frontend (built)
 
-Angular 18 or later, standalone components, lazy-loaded feature routes, auth and role guards, interceptors (attach token, refresh on 401, global error handling), reactive forms, responsive layout. Location: the `SmartTaskManagement-Frontend/` folder in the same repository (PRD section 11, ADR 0019).
+Angular 22, standalone components, zoneless with signals and OnPush, lazy-loaded feature routes, auth and role guards, interceptors (bearer token, single-flight refresh on 401, ProblemDetails mapping), typed reactive forms, responsive layout. Location: `SmartTaskManagement-Frontend/` (PRD section 11, ADR 0019). Design and decisions: `SmartTaskManagement-Frontend/docs/frontend-design.md`.
 
 ## Open questions and UNVERIFIED items
 
 | Question | Proposed default |
 | --- | --- |
 | Is the Angular app in the same repository? | Decided: yes, in `SmartTaskManagement-Frontend/` (PRD section 11, ADR 0019), after the backend is stable |
-| Where does Angular keep the refresh token (memory, localStorage, httpOnly cookie)? | Decide in the frontend phase; localStorage is exposed to XSS, a cookie needs CORS and CSRF handling |
+| Where does Angular keep the refresh token (memory, localStorage, httpOnly cookie)? | Decided and built (PRD 5): access token in memory only, refresh token only in the HttpOnly cookie |
 | Are the proposed domain rules and permissions correct? | Confirm one by one in the PRD interview |
 | Which GitHub Models model and endpoint will the AI feature use? | Unknown; verify from official documentation |
-| Must the repository be public or shared with the evaluator? | Check the assignment instructions; keep it private until then |
+| Must the repository be public or shared with the evaluator? | The assignment asks for a "GitHub repository link shared with the submission": share it (public, or the evaluator as collaborator) before submitting |
 
 UNVERIFIED:
 
@@ -179,6 +189,7 @@ The repository has two parts plus a thin root (ADR 0019). Tooling never writes t
 
 ```text
 .github/workflows/backend.yml   backend CI (runs for every change except frontend-only ones)
+.github/workflows/frontend.yml  frontend CI (runs only for frontend changes)
 .claude/                        rules, agents, settings and the format hook (shared by both parts)
 README.md  CLAUDE.md            short root versions: overview and project-wide rules
 docs/                           project-wide docs: assignment.md, PRD.md, CONTEXT.md (this file)
@@ -190,8 +201,13 @@ SmartTaskManagement-Backend/
   scripts/       verify.sh, verify.ps1, check-packages, generate-openapi, new-project
   Dockerfile  docker-compose.yml  .env.example  (.env, git-ignored, lives here)
   README.md  CLAUDE.md   backend README and rules; each src project has its own CLAUDE.md
+  PROMPTS.md     AI prompt design
 SmartTaskManagement-Frontend/
-  README.md      placeholder until the Angular step
+  src/app/core  src/app/shared  src/app/features   Angular app
+  e2e/           Playwright end-to-end tests (local only)
+  docs/          frontend design, approved screens, plan
+  scripts/       verify.sh (lint, format, type-check, tests, build, audit)
+  README.md  CLAUDE.md   frontend README and rules
 ```
 
 Paths such as `src/...`, `tests/...` and `scripts/...` elsewhere in this file are relative to `SmartTaskManagement-Backend/`.
