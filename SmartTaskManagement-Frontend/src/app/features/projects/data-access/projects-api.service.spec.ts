@@ -59,6 +59,19 @@ describe('ProjectsApi', () => {
     expect(id).toBe('p-9');
   });
 
+  it('changeOwner_PutsTheNewOwnerId', () => {
+    let done = false;
+    TestBed.inject(ProjectsApi)
+      .changeOwner('p-1', 'pm-2')
+      .subscribe(() => (done = true));
+
+    const req = backend.expectOne(`${API}/api/projects/p-1/owner`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ ownerId: 'pm-2' });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    expect(done).toBe(true);
+  });
+
   it('UsersApi_projectManagers_FiltersByRole', () => {
     TestBed.inject(UsersApi).projectManagers('sad').subscribe();
 

@@ -79,7 +79,7 @@ A fourth private repository is an archive of the long template build history and
 
 ### In progress or open
 
-- Frontend follow-ups: Change owner dialog, a project filter on `/tasks`, and seven minor review findings (listed in the PR #7 description).
+- Frontend follow-ups: seven minor review findings (listed in the PR #7 description). The Change owner dialog (Admin, project page) and the project filter on `/tasks` are built (2026-11-12).
 - The repository is public (made public by the developer on 2026-11-11), so the evaluator can open the link.
 
 ## Locked decisions and why

@@ -12,7 +12,7 @@ import { TASK_PRIORITIES, TASK_STATUSES } from '../../../core/models/api.models'
 import { priorityLabel, statusLabel } from '../../../shared/labels';
 import { UserPickerComponent } from '../../../shared/user-picker.component';
 import { UsersApi } from '../../users/data-access/users-api.service';
-import { TASK_SORTS, TaskFilterState } from '../task-query';
+import { TASK_SORTS, TaskFilterState, TaskProjectOption } from '../task-query';
 
 /** Search, filters and sort for task lists (server-side; prototype D05, D06). */
 @Component({
@@ -31,6 +31,22 @@ import { TASK_SORTS, TaskFilterState } from '../task-query';
           (input)="search$.next(text($event))"
         />
       </div>
+      @if (projects(); as options) {
+        @if (options.length > 0) {
+          <div class="field">
+            <label class="label" [for]="id('project')">Project</label>
+            <select class="input" [id]="id('project')" (change)="emit({ project: text($event) })">
+              <option value="" [selected]="value().project === ''">All projects</option>
+              @for (p of options; track p.id) {
+                <option [value]="p.id" [selected]="p.id === value().project">{{ p.name }}</option>
+              }
+              @if (projectNotListed()) {
+                <option [value]="value().project" selected>Chosen project</option>
+              }
+            </select>
+          </div>
+        }
+      }
       <div class="field">
         <label class="label" [for]="id('status')">Status</label>
         <select class="input" [id]="id('status')" (change)="emit({ status: text($event) })">
@@ -133,6 +149,8 @@ export class TaskFiltersComponent {
   readonly value = input.required<TaskFilterState>();
   /** Admin and Project Manager only (a Team Member may not call /api/users/assignable). */
   readonly canPickAssignee = input(false);
+  /** Projects to filter by; the project select is hidden when empty (for example on a project page). */
+  readonly projects = input<readonly TaskProjectOption[]>([]);
   readonly changed = output<Partial<TaskFilterState>>();
   readonly clear = output<void>();
 
@@ -152,6 +170,12 @@ export class TaskFiltersComponent {
 
   protected id(name: string): string {
     return `${this.prefix}-${name}`;
+  }
+
+  /** A project id from the URL that is not in the loaded list (more projects than one page). */
+  protected projectNotListed(): boolean {
+    const project = this.value().project;
+    return project !== '' && !this.projects().some((p) => p.id === project);
   }
 
   protected personChosen(): boolean {

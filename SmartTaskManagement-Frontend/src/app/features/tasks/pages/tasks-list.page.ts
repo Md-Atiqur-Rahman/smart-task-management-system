@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { PagedResult } from '../../../core/models/api.models';
 import { readListQuery, toQueryParams } from '../../../shared/list-query';
@@ -9,9 +9,18 @@ import { LoadState, loadState } from '../../../shared/load-state';
 import { PagerComponent } from '../../../shared/pager.component';
 import { TaskFiltersComponent } from '../components/task-filters.component';
 import { TaskTableComponent } from '../components/task-table.component';
+import { ProjectsApi } from '../../projects/data-access/projects-api.service';
 import { TasksApi } from '../data-access/tasks-api.service';
 import { TaskListItemDto } from '../models/task.models';
-import { TASK_FILTER_DEFAULTS, TaskFilterState, toTaskListQuery } from '../task-query';
+import {
+  TASK_FILTER_DEFAULTS,
+  TaskFilterState,
+  TaskProjectOption,
+  toTaskListQuery,
+} from '../task-query';
+
+/** The API's largest page (Paging:MaxPageSize); the project filter lists at most this many, by name. */
+const PROJECT_OPTIONS_LIMIT = 100;
 
 /**
  * Tasks across all visible projects (prototype D06). The list DTO has no project
@@ -31,6 +40,7 @@ import { TASK_FILTER_DEFAULTS, TaskFilterState, toTaskListQuery } from '../task-
         <app-task-filters
           [value]="query()"
           [canPickAssignee]="canPickAssignee()"
+          [projects]="projects()"
           (changed)="update($event)"
           (clear)="clear()"
         />
@@ -69,6 +79,7 @@ import { TASK_FILTER_DEFAULTS, TaskFilterState, toTaskListQuery } from '../task-
 })
 export class TasksListPage {
   private readonly api = inject(TasksApi);
+  private readonly projectsApi = inject(ProjectsApi);
   private readonly store = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -85,6 +96,23 @@ export class TasksListPage {
         return 'Tasks assigned to you. You can change their status.';
     }
   });
+  /** Visible projects for the project filter; a failed load only hides the filter. */
+  protected readonly projects = toSignal(
+    this.projectsApi
+      .list({
+        sortBy: 'name',
+        sortDirection: 'Ascending',
+        page: 1,
+        pageSize: PROJECT_OPTIONS_LIMIT,
+      })
+      .pipe(
+        map((page): readonly TaskProjectOption[] =>
+          page.items.map((p) => ({ id: p.id, name: p.name })),
+        ),
+        catchError(() => of([] as readonly TaskProjectOption[])),
+      ),
+    { initialValue: [] as readonly TaskProjectOption[] },
+  );
   protected readonly query = toSignal(
     this.route.queryParamMap.pipe(map((params) => readListQuery(params, TASK_FILTER_DEFAULTS))),
     { initialValue: TASK_FILTER_DEFAULTS },
