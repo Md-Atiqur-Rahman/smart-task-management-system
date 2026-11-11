@@ -1,4 +1,6 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.ChangeProjectOwner;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.CreateProject;
 using Datavanced.SmartTaskManagement.Application.Features.Projects.Commands.DeleteProject;
@@ -22,6 +24,8 @@ public sealed class ProjectCommandHandlerTests
     private readonly ISecurityContext _security = Substitute.For<ISecurityContext>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 10, 12, 0, 0, TimeSpan.Zero));
+    private readonly IAssignmentNotifier _notifier = Substitute.For<IAssignmentNotifier>();
+    private readonly LiveEventBuffer _liveEvents = new(Substitute.For<ILiveEventPublisher>());
 
     public ProjectCommandHandlerTests()
     {
@@ -53,9 +57,14 @@ public sealed class ProjectCommandHandlerTests
         return project;
     }
 
-    private CreateProjectCommandHandler CreateHandler() => new(_security, _projects, _users, _unitOfWork);
+    private CreateProjectCommandHandler CreateHandler() =>
+        new(_security, _projects, _users, _unitOfWork, _notifier, _liveEvents);
 
-    private ChangeProjectOwnerCommandHandler OwnerHandler() => new(_security, _projects, _users, _unitOfWork);
+    private ChangeProjectOwnerCommandHandler OwnerHandler() =>
+        new(_security, _projects, _users, _unitOfWork, _notifier, _liveEvents);
+
+    private DeleteProjectCommandHandler DeleteHandler() =>
+        new(_security, _projects, _unitOfWork, _time, _notifier, _liveEvents);
 
     [Fact]
     public async Task Create_AsAdminWithoutOwner_ReturnsInvalidOwner()
@@ -191,7 +200,7 @@ public sealed class ProjectCommandHandlerTests
         SetCaller(Guid.NewGuid(), Role.ProjectManager);
         var project = NewProject(Guid.NewGuid());
 
-        var result = await new DeleteProjectCommandHandler(_security, _projects, _unitOfWork, _time)
+        var result = await DeleteHandler()
             .Handle(new DeleteProjectCommand(project.Id), CancellationToken.None);
 
         result.Error.ShouldBe(ProjectErrors.NotFound);
@@ -205,7 +214,7 @@ public sealed class ProjectCommandHandlerTests
         SetCaller(owner, Role.ProjectManager);
         var project = NewProject(owner);
 
-        var result = await new DeleteProjectCommandHandler(_security, _projects, _unitOfWork, _time)
+        var result = await DeleteHandler()
             .Handle(new DeleteProjectCommand(project.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
@@ -240,14 +249,17 @@ public sealed class ProjectCommandHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _notifier.DidNotReceiveWithAnyArgs().ProjectOwnerChangedAsync(default!, default, default, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ChangeOwner_ToOtherProjectManager_ChangesOwnerAndSaves()
     {
-        SetCaller(Guid.NewGuid(), Role.Admin);
+        var caller = Guid.NewGuid();
+        SetCaller(caller, Role.Admin);
         var pm = NewUser(Role.ProjectManager);
-        var project = NewProject(Guid.NewGuid());
+        var previousOwner = Guid.NewGuid();
+        var project = NewProject(previousOwner);
 
         var result = await OwnerHandler().Handle(
             new ChangeProjectOwnerCommand(project.Id, pm.Id), CancellationToken.None);
@@ -255,6 +267,7 @@ public sealed class ProjectCommandHandlerTests
         result.IsSuccess.ShouldBeTrue();
         project.OwnerId.ShouldBe(pm.Id);
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _notifier.Received(1).ProjectOwnerChangedAsync(project, previousOwner, caller, Arg.Any<CancellationToken>());
     }
 
     [Fact]

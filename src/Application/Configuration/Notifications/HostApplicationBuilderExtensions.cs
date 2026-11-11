@@ -8,7 +8,10 @@ namespace Datavanced.SmartTaskManagement.Application.Configuration.Notifications
 
 public static class HostApplicationBuilderExtensions
 {
-    /// <summary>Binds and validates <see cref="NotificationsOptions"/> and registers the per-request live event buffer.</summary>
+    /// <summary>
+    /// Binds and validates <see cref="NotificationsOptions"/> and registers the per-request live event
+    /// buffer and assignment notifier (one per request, shared by the handler and the notifier).
+    /// </summary>
     public static TBuilder ConfigureNotifications<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
@@ -17,6 +20,7 @@ public static class HostApplicationBuilderExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
         builder.Services.AddScoped<LiveEventBuffer>();
+        builder.Services.AddScoped<IAssignmentNotifier, AssignmentNotifier>();
         return builder;
     }
 }

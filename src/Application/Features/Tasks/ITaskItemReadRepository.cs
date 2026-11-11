@@ -23,4 +23,10 @@ public interface ITaskItemReadRepository
     /// or the assignee of a non-deleted task in it.
     /// </summary>
     Task<bool> IsProjectVisibleAsync(Guid projectId, Guid callerId, Role callerRole, CancellationToken ct);
+
+    /// <summary>
+    /// The distinct assignee ids of the project's non-deleted tasks. Not filtered by a caller: used
+    /// only to address dashboard live events (design section 6), never returned to a client.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetAssigneeIdsAsync(Guid projectId, CancellationToken ct);
 }

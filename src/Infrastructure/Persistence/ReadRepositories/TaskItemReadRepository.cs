@@ -129,5 +129,14 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
         return Visibility.VisibleProjects(context, callerId, callerRole).AnyAsync(p => p.Id == projectId, ct);
     }
 
+    // Explicit soft-delete check, like Visibility (independent of the query filter).
+    public async Task<IReadOnlyList<Guid>> GetAssigneeIdsAsync(Guid projectId, CancellationToken ct) =>
+        await context.Set<TaskItem>()
+            .AsNoTracking()
+            .Where(t => !t.IsDeleted && t.ProjectId == projectId && t.AssigneeId != null)
+            .Select(t => t.AssigneeId.GetValueOrDefault())
+            .Distinct()
+            .ToListAsync(ct);
+
     private IQueryable<User> Users() => context.Set<User>().IgnoreQueryFilters();
 }

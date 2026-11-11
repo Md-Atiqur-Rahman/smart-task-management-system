@@ -1,4 +1,6 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.AssignTask;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.ChangeTaskStatus;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.CreateTask;
@@ -25,11 +27,22 @@ public sealed class TaskCommandHandlerTests
     private readonly ISecurityContext _security = Substitute.For<ISecurityContext>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 11, 10, 12, 0, 0, TimeSpan.Zero));
+    private readonly IAssignmentNotifier _notifier = Substitute.For<IAssignmentNotifier>();
+    private readonly ILiveEventPublisher _publisher = Substitute.For<ILiveEventPublisher>();
+    private readonly LiveEventBuffer _liveEvents;
 
     public TaskCommandHandlerTests()
     {
         _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Result.Success());
+        _liveEvents = new LiveEventBuffer(_publisher);
+
+        // Stands in for the real notifier: buffers one event so a test can see whether it was flushed.
+        _notifier.WhenForAnyArgs(n => n.TaskAssigneeChangedAsync(default!, default, default, Arg.Any<CancellationToken>()))
+            .Do(_ => _liveEvents.Add(new LiveEvent(LiveEventTypes.DashboardChanged, [], true, null)));
     }
+
+    private Task AssertFlushedAsync(int times) =>
+        _publisher.Received(times).PublishAsync(Arg.Any<IReadOnlyList<LiveEvent>>(), CancellationToken.None);
 
     private void SetCaller(Guid id, Role role)
     {
@@ -69,15 +82,20 @@ public sealed class TaskCommandHandlerTests
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    private CreateTaskCommandHandler CreateHandler() => new(_security, _projects, _tasks, _users, _unitOfWork);
+    private CreateTaskCommandHandler CreateHandler() =>
+        new(_security, _projects, _tasks, _users, _unitOfWork, _notifier, _liveEvents);
 
-    private UpdateTaskCommandHandler UpdateHandler() => new(_security, _tasks, _projects, _unitOfWork);
+    private UpdateTaskCommandHandler UpdateHandler() =>
+        new(_security, _tasks, _projects, _unitOfWork, _notifier, _liveEvents);
 
-    private ChangeTaskStatusCommandHandler StatusHandler() => new(_security, _tasks, _projects, _unitOfWork);
+    private ChangeTaskStatusCommandHandler StatusHandler() =>
+        new(_security, _tasks, _projects, _unitOfWork, _notifier, _liveEvents);
 
-    private AssignTaskCommandHandler AssignHandler() => new(_security, _tasks, _projects, _users, _unitOfWork);
+    private AssignTaskCommandHandler AssignHandler() =>
+        new(_security, _tasks, _projects, _users, _unitOfWork, _notifier, _liveEvents);
 
-    private DeleteTaskCommandHandler DeleteHandler() => new(_security, _tasks, _projects, _unitOfWork, _time);
+    private DeleteTaskCommandHandler DeleteHandler() =>
+        new(_security, _tasks, _projects, _unitOfWork, _time, _notifier, _liveEvents);
 
     [Fact]
     public async Task Create_AsOwnerPm_AddsTaskWithMediumPriorityWhenNoneSent()
@@ -347,6 +365,39 @@ public sealed class TaskCommandHandlerTests
     }
 
     [Fact]
+    public async Task Assign_ToOther_PassesPreviousAssigneeToNotifierAndFlushesAfterSave()
+    {
+        var pm = Guid.NewGuid();
+        SetCaller(pm, Role.ProjectManager);
+        var previous = Guid.NewGuid();
+        var member = NewUser(Role.TeamMember);
+        var task = NewTask(NewProject(pm).Id, previous);
+
+        var result = await AssignHandler().Handle(new AssignTaskCommand(task.Id, member.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        await _notifier.Received(1).TaskAssigneeChangedAsync(task, previous, pm, Arg.Any<CancellationToken>());
+        await AssertFlushedAsync(1);
+    }
+
+    [Fact]
+    public async Task Assign_SaveFails_ReturnsErrorAndPublishesNothing()
+    {
+        var pm = Guid.NewGuid();
+        SetCaller(pm, Role.ProjectManager);
+        var member = NewUser(Role.TeamMember);
+        var task = NewTask(NewProject(pm).Id);
+        var conflict = Error.Conflict("concurrency.conflict", "Changed by someone else.");
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Result.Failure(conflict));
+
+        var result = await AssignHandler().Handle(new AssignTaskCommand(task.Id, member.Id), CancellationToken.None);
+
+        result.Error.ShouldBe(conflict);
+        await _notifier.Received(1).TaskAssigneeChangedAsync(task, null, pm, Arg.Any<CancellationToken>());
+        await AssertFlushedAsync(0);
+    }
+
+    [Fact]
     public async Task Assign_SameAssignee_SucceedsWithoutSave()
     {
         var pm = Guid.NewGuid();
@@ -359,6 +410,8 @@ public sealed class TaskCommandHandlerTests
         result.IsSuccess.ShouldBeTrue();
         task.AssigneeId.ShouldBe(member.Id);
         await AssertNothingSavedAsync();
+        await _notifier.DidNotReceiveWithAnyArgs().TaskAssigneeChangedAsync(default!, default, default, Arg.Any<CancellationToken>());
+        await AssertFlushedAsync(0);
     }
 
     [Fact]

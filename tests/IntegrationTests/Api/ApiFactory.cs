@@ -43,6 +43,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     private TimeProvider? _timeProvider;
 
+    private Action<IServiceCollection>? _testServices;
+
     public CapturingSink LogSink { get; } = new();
 
     /// <summary>The in-memory token version store used unless <see cref="WithRedis"/> is called.</summary>
@@ -55,6 +57,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     public ApiFactory WithTimeProvider(TimeProvider timeProvider)
     {
         _timeProvider = timeProvider;
+        return this;
+    }
+
+    /// <summary>Extra service changes applied after every other test override (for example another live event publisher).</summary>
+    public ApiFactory WithTestServices(Action<IServiceCollection> configure)
+    {
+        _testServices += configure;
         return this;
     }
 
@@ -126,6 +135,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             }
 
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
+            _testServices?.Invoke(services);
         });
     }
 }

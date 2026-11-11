@@ -26,14 +26,21 @@ public sealed class AuthApi : IDisposable
     private readonly SqlServerFixture _database;
 
     /// <param name="database">The SQL Server the host uses.</param>
-    /// <param name="redisConnectionString">The real Redis the host uses.</param>
+    /// <param name="redisConnectionString">
+    /// The real Redis the host uses; null keeps the in-memory token version store, rate limit counter
+    /// and in-process live event publisher of <see cref="ApiFactory"/>.
+    /// </param>
     /// <param name="configure">Extra settings applied before the host starts (for example a shorter grace period).</param>
-    public AuthApi(SqlServerFixture database, string redisConnectionString, Action<ApiFactory>? configure = null)
+    public AuthApi(SqlServerFixture database, string? redisConnectionString, Action<ApiFactory>? configure = null)
     {
         _database = database;
-        Factory = new ApiFactory()
-            .WithDatabase(database.Options)
-            .WithRedis(redisConnectionString)
+        Factory = new ApiFactory().WithDatabase(database.Options);
+        if (redisConnectionString is not null)
+        {
+            Factory.WithRedis(redisConnectionString);
+        }
+
+        Factory
             .WithSetting("Cors:AllowedOrigins:0", AllowedOrigin)
             // These tests cover the auth flows, not rate limiting (SharedRateLimitingTests):
             // the whole collection shares one client IP and one Redis counter.
