@@ -40,6 +40,30 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
+/** Admin page: gives a registered user the Project Manager role (with the confirmation step). */
+export async function promoteToProjectManager(adminPage: Page, user: TestUser): Promise<void> {
+  await adminPage.getByRole('link', { name: 'Users' }).click();
+  await adminPage.getByLabel('Search users').fill(user.email);
+  const roleSelect = adminPage.getByLabel(`Role of ${user.fullName}`);
+  await expect(roleSelect).toBeVisible();
+  await roleSelect.selectOption('ProjectManager');
+  await adminPage.getByRole('button', { name: 'Change role' }).click();
+  await expect(adminPage.getByText(`${user.fullName} is now Project Manager.`)).toBeVisible();
+}
+
+/** Admin page: creates a project owned by the given Project Manager and opens it. */
+export async function createProject(adminPage: Page, name: string, owner: TestUser): Promise<void> {
+  await adminPage.getByRole('link', { name: 'Projects' }).click();
+  await adminPage.getByRole('button', { name: 'New project' }).click();
+  const dialog = adminPage.getByRole('dialog', { name: 'New project' });
+  await dialog.getByLabel('Name').fill(name);
+  await dialog.getByLabel('Description').fill('Created by the E2E suite.');
+  await pickPerson(dialog, 'Owner (Project Manager)', owner.email);
+  await dialog.getByRole('button', { name: 'Create project' }).click();
+  await expect(adminPage).toHaveURL(/\/projects\/[^/]+$/);
+  await expect(adminPage.getByRole('heading', { name })).toBeVisible();
+}
+
 /**
  * Types into an ARIA combobox user picker and picks the first match. Pass the
  * dialog (or other region) that holds the picker: the page behind a dialog has
