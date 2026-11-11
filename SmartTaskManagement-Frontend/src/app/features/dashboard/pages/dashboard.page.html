@@ -1,0 +1,171 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="muted small">{{ scope() }}</p>
+      <h1>Dashboard</h1>
+    </div>
+    @if (live() === 'live') {
+      <span class="pill pill-live" role="status"
+        ><span class="dot" aria-hidden="true"></span>Live</span
+      >
+    } @else if (live() === 'reconnecting') {
+      <span class="pill pill-wait" role="status">
+        <span class="dot" aria-hidden="true"></span>Reconnecting…
+        <button type="button" class="btn btn-sm" (click)="retry()">Refresh</button>
+      </span>
+    }
+  </div>
+
+  @let s = summary();
+  @if (s.status === 'loading') {
+    <p class="muted" role="status">Loading numbers…</p>
+  } @else if (s.status === 'error') {
+    <div class="alert alert-error" role="alert">
+      {{ s.message }} <button type="button" class="btn btn-sm" (click)="retry()">Try again</button>
+    </div>
+  } @else {
+    @let d = s.data;
+    <section class="kpis" aria-label="Totals">
+      <div class="card kpi">
+        <span class="muted">Total projects</span><b>{{ d.totalProjects }}</b>
+      </div>
+      <div class="card kpi">
+        <span class="muted">Total tasks</span><b>{{ d.totalTasks }}</b>
+      </div>
+      <div class="card kpi">
+        <span class="muted">Completed</span><b class="teal">{{ d.completedTasks }}</b>
+      </div>
+      <div class="card kpi">
+        <span class="muted">Pending</span><b>{{ d.pendingTasks }}</b
+        ><span class="muted tiny">To Do + In Progress</span>
+      </div>
+      <a class="card kpi kpi-overdue" routerLink="/tasks">
+        <span>Overdue</span><b>{{ d.overdueTasks }}</b
+        ><span class="tiny">Pending, due before today</span>
+      </a>
+    </section>
+
+    <div class="charts">
+      <section class="card chart" aria-labelledby="by-status">
+        <h2 id="by-status">Tasks by status</h2>
+        @for (bar of statusBars(d); track bar.label) {
+          <div>
+            <div class="bar-head">
+              <span>{{ bar.label }}</span
+              ><strong>{{ bar.count }}</strong>
+            </div>
+            <div class="track" aria-hidden="true">
+              <div class="bar" [style.width.%]="bar.percent" [style.background]="bar.color"></div>
+            </div>
+          </div>
+        }
+      </section>
+      <section class="card chart" aria-labelledby="by-priority">
+        <h2 id="by-priority">Tasks by priority</h2>
+        @for (bar of priorityBars(d); track bar.label) {
+          <div>
+            <div class="bar-head">
+              <span>{{ bar.label }}</span
+              ><strong>{{ bar.count }}</strong>
+            </div>
+            <div class="track" aria-hidden="true">
+              <div class="bar" [style.width.%]="bar.percent" [style.background]="bar.color"></div>
+            </div>
+          </div>
+        }
+      </section>
+      <section class="card chart" aria-labelledby="cvp">
+        <h2 id="cvp">Completed vs pending</h2>
+        <div class="donut-row">
+          <div
+            class="donut"
+            role="img"
+            [attr.aria-label]="
+              donePercent(d) +
+              ' percent done: ' +
+              d.completedTasks +
+              ' completed, ' +
+              d.pendingTasks +
+              ' pending'
+            "
+            [style.background]="
+              'conic-gradient(#0f766e 0 ' +
+              donePercent(d) +
+              '%, #fdba74 ' +
+              donePercent(d) +
+              '% 100%)'
+            "
+          >
+            <div class="donut-hole">
+              <b>{{ donePercent(d) }}%</b><span class="muted tiny">done</span>
+            </div>
+          </div>
+          <div class="legend">
+            <span
+              ><i class="sw teal-bg" aria-hidden="true"></i>Completed
+              <strong>{{ d.completedTasks }}</strong></span
+            >
+            <span
+              ><i class="sw orange-bg" aria-hidden="true"></i>Pending
+              <strong>{{ d.pendingTasks }}</strong></span
+            >
+            <span class="muted tiny">Cancelled tasks are in neither.</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  <section class="card" aria-labelledby="upcoming-title">
+    <div class="up-head">
+      <h2 id="upcoming-title">Upcoming due tasks</h2>
+      <a class="btn btn-sm" routerLink="/tasks">View all tasks</a>
+    </div>
+    @let u = upcoming();
+    @if (u.status === 'loading') {
+      <p class="empty muted" role="status">Loading…</p>
+    } @else if (u.status === 'error') {
+      <div class="empty">
+        <p class="alert alert-error" role="alert">{{ u.message }}</p>
+      </div>
+    } @else if (u.data.length === 0) {
+      <p class="empty muted">Nothing due in the next days.</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Task</th>
+              <th scope="col">Project</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Status</th>
+              <th scope="col">Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (task of u.data; track task.id) {
+              <tr>
+                <td>
+                  <a class="strong" [routerLink]="['/tasks', task.id]">{{ task.title }}</a>
+                </td>
+                <td class="muted">{{ task.projectName }}</td>
+                <td>{{ task.assigneeName ?? 'Unassigned' }}</td>
+                <td><app-priority-badge [priority]="task.priority" /></td>
+                <td><app-status-badge [status]="task.status" /></td>
+                <td class="nowrap">
+                  {{ date(task.dueDate) }}
+                  @if (due(task); as label) {
+                    <div [class.overdue]="label === 'Today'" [class.muted]="label !== 'Today'">
+                      {{ label }}
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
