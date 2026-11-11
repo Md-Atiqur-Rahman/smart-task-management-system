@@ -2141,6 +2141,123 @@
         ]
       }
     },
+    "/api/dashboard/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/dashboard/upcoming": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UpcomingTaskDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UpcomingTaskDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UpcomingTaskDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/auth/register": {
       "post": {
         "tags": [
@@ -2667,6 +2784,74 @@
           }
         },
         "description": "The signed-in user as returned by the auth endpoints."
+      },
+      "DashboardSummaryDto": {
+        "required": [
+          "totalProjects",
+          "totalTasks",
+          "tasksByStatus",
+          "tasksByPriority",
+          "completedTasks",
+          "pendingTasks",
+          "overdueTasks"
+        ],
+        "type": "object",
+        "properties": {
+          "totalProjects": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Visible projects.",
+            "format": "int32"
+          },
+          "totalTasks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Visible tasks, all statuses.",
+            "format": "int32"
+          },
+          "tasksByStatus": {
+            "description": "All four statuses, zero when none.",
+            "$ref": "#/components/schemas/TaskStatusCountsDto"
+          },
+          "tasksByPriority": {
+            "description": "All four priorities, zero when none.",
+            "$ref": "#/components/schemas/TaskPriorityCountsDto"
+          },
+          "completedTasks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Tasks with status Completed.",
+            "format": "int32"
+          },
+          "pendingTasks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "ToDo plus InProgress; Cancelled is in neither group.",
+            "format": "int32"
+          },
+          "overdueTasks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Pending tasks with a due date before today.",
+            "format": "int32"
+          }
+        },
+        "description": "Dashboard numbers over the tasks and projects the caller may see."
       },
       "LoginRequest": {
         "required": [
@@ -3372,6 +3557,49 @@
           null
         ]
       },
+      "TaskPriorityCountsDto": {
+        "required": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "type": "object",
+        "properties": {
+          "low": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "medium": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "high": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "critical": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "TaskProjectDto": {
         "required": [
           "id",
@@ -3388,6 +3616,103 @@
           }
         },
         "description": "The project of a task as shown in its details."
+      },
+      "TaskStatusCountsDto": {
+        "required": [
+          "toDo",
+          "inProgress",
+          "completed",
+          "cancelled"
+        ],
+        "type": "object",
+        "properties": {
+          "toDo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "inProgress": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "completed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cancelled": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpcomingTaskDto": {
+        "required": [
+          "id",
+          "title",
+          "dueDate",
+          "status",
+          "priority",
+          "projectId",
+          "projectName",
+          "assigneeId",
+          "assigneeName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskItemStatus"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/TaskPriority"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "assigneeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assigneeName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "A pending task due soon, with enough data for a row that links to the task."
       },
       "UpdateProjectRequest": {
         "required": [
@@ -3550,6 +3875,9 @@
     },
     {
       "name": "Projects"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "Auth"
