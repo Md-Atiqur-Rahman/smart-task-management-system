@@ -1,0 +1,6 @@
+/dist
+/coverage
+/.angular
+/certs
+/docs
+package-lock.json
