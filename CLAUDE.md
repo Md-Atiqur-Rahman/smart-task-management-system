@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Backend work: read `SmartTaskManagement-Backend/CLAUDE.md` first (frontend work, later: `SmartTaskManagement-Frontend/CLAUDE.md`).
+Backend work: read `SmartTaskManagement-Backend/CLAUDE.md` first (frontend work: `SmartTaskManagement-Frontend/CLAUDE.md`).
 
 Smart Task Management System: a .NET 10 Clean Architecture API and an Angular
 frontend in one repository. This file holds the project-wide rules; each part
@@ -35,7 +35,7 @@ If two sources conflict, ask the developer; do not choose silently.
 | Path | Content |
 | --- | --- |
 | `SmartTaskManagement-Backend/` | .NET API; rules in `SmartTaskManagement-Backend/CLAUDE.md`; run its commands from that folder |
-| `SmartTaskManagement-Frontend/` | Angular app; its `CLAUDE.md` is added with the frontend |
+| `SmartTaskManagement-Frontend/` | Angular app; rules in `SmartTaskManagement-Frontend/CLAUDE.md`; run its commands from that folder |
 | `docs/` | Project-wide docs: `assignment.md`, `PRD.md`, `CONTEXT.md` |
 | `.claude/` | Rules (paths relative to the backend folder), agents, settings, format hook |
 | `.github/workflows/` | CI; `backend.yml` runs the backend verify script |
