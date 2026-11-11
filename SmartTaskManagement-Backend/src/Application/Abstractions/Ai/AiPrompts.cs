@@ -64,7 +64,7 @@ public static class AiPrompts
         </task_description>
 
         Answer:
-        {"headings": {"goal": "Lokkho", "steps": "Dhap", "doneWhen": "Kaj shesh hobe jokhon", "notes": "Notes"}, "goal": "Profile page e photo upload abar kaj korano.", "steps": ["Photo upload keno kaj korche na tar karon khuje ber kora.", "Karon ta thik kora.", "Upload fail korle user ke ekta error message dekhano.", "Profile page e photo upload test kora."], "doneWhen": ["Profile page e photo upload thik moto kaj kore.", "Upload fail korle user ekta error message dekhte pay."], "notes": []}
+        {"headings": {"goal": "Lokkho", "steps": "Dhap", "doneWhen": "Kaj shesh hobe jokhon", "notes": "Notes"}, "goal": "Profile page e photo upload thik kora.", "steps": ["Photo upload keno kaj korche na tar karon khuje ber kora.", "Upload fail hole kono error keno dekhay na, ta khuje ber kora.", "Karon ta thik kora.", "Profile page e photo upload test kora."], "doneWhen": ["Profile page e photo upload thik moto kaj kore."], "notes": ["Ekhon photo upload kaj korche na, kono error o dekhay na."]}
         """;
 
     /// <summary>
