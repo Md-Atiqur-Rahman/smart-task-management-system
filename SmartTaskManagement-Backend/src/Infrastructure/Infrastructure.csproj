@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <!-- Design-time only (migrations); not shipped to consumers. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
