@@ -31,7 +31,7 @@ Evaluation: architecture, code quality, security, backend, frontend, design patt
 
 ## Current state
 
-The foundation, the Auth feature, the Project module and the Task module are finished and verified; the other Smart Task features are still to be built.
+The foundation, the Auth feature, the Project module, the Task module and the Dashboard are finished and verified; the other Smart Task features are still to be built.
 
 ### Repositories (all private on GitHub)
 
@@ -116,7 +116,7 @@ The developer reads Bangla and prefers explanations in simple Bangla with Englis
 
 ## What to do next
 
-Auth, Project and Task are built. Everything below that is not about them is **proposed** until the developer confirms it in the PRD interview.
+Auth, Project, Task and Dashboard are built. Everything below that is not about them is **proposed** until the developer confirms it in the PRD interview.
 
 ### First task: the project PRD
 

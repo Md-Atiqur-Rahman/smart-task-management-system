@@ -1,7 +1,7 @@
 # Design: Dashboard
 
-- Status: Implemented (2026-11-11). Approved by the developer (2026-11-11). Written from defaults at the
-  developer's request; every decision not stated in the PRD is marked
+- Status: Implemented (2026-11-11). Approved by the developer (2026-11-11).
+  Written from defaults at the developer's request; every decision not stated in the PRD is marked
   **[builder's call]**.
 - Date: 2026-11-11
 - Requirements: `docs/PRD.md` section 9 (assignment list, role scope) and
