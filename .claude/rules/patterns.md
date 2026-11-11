@@ -1,5 +1,8 @@
 # Patterns: use when / do NOT use when
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 ## Options (+ ValidateOnStart)
 - Use when: any setting is read (connection, JWT, paging, CORS, rate limits).
   Bind in a composition-root extension, validate with data annotations or

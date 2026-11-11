@@ -1,5 +1,8 @@
 # Anti-patterns (forbidden)
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 Each item: what is forbidden, and what to do instead.
 
 - **Service Locator** (resolving services from `IServiceProvider` in business

@@ -4,8 +4,10 @@
   the open-questions list is empty.
 - Updated: 2026-11-11
 - Sources: `docs/assignment.md` (the brief), the PRD interview with the developer,
-  `docs/adr/` (decisions). Design and implementation details live in design
-  documents under `docs/`, which reference this PRD instead of repeating it.
+  `SmartTaskManagement-Backend/docs/adr/` (decisions). Design and
+  implementation details live in design documents under
+  `SmartTaskManagement-Backend/docs/` (and later the frontend's `docs/`), which
+  reference this PRD instead of repeating it.
 
 Labels:
 
@@ -133,7 +135,7 @@ one role.
   limit counter and (CONFIRMED 2026-11-11, ADR 0018) pub/sub fan-out of live
   events to the instance that holds a user's live connection (section 13).
 - Client: StackExchange.Redis 3.4.31 (verified). Image: `redis:8.10.3` (verified on
-  Docker Hub), pinned once in `.env.example`. Redis 8 license (RSALv2 / SSPLv1 /
+  Docker Hub), pinned once in the backend `.env.example`. Redis 8 license (RSALv2 / SSPLv1 /
   AGPLv3) accepted: used unmodified as a separate service.
 - **Redis unreachable during the version check: fail closed**, authenticated
   requests get **503**. Login, register, refresh and `/health` keep working.
@@ -241,7 +243,11 @@ one role.
 
 ## 11. Frontend
 
-- CONFIRMED: the Angular app lives in **this repository**, in the `FE/` folder.
+- CONFIRMED: the Angular app lives in **this repository**, in the
+  `SmartTaskManagement-Frontend/` folder; the backend lives in
+  `SmartTaskManagement-Backend/` (ADR 0019). Each folder has its own README,
+  docs, compose and env files; the project-wide docs (assignment, this PRD,
+  CONTEXT) stay in the root `docs/`.
 - PROPOSED: Angular 18 or later, built after the backend is stable: standalone components, lazy-loaded routes, auth and role guards,
 interceptors (attach token, refresh on 401, error handling), reactive forms,
 responsive layout.
@@ -251,12 +257,12 @@ responsive layout.
 HTTPS, CORS, input validation (FluentValidation), password hashing, basic rate
 limiting, secure configuration, async/await, Swagger, global exception handling,
 Serilog, health checks, consistent API responses. Documentation: `README.md`,
-`PROMPTS.md`, API collection (the committed `docs/openapi.json`), EF Core
+`PROMPTS.md`, API collection (the committed `SmartTaskManagement-Backend/docs/openapi.json`), EF Core
 migrations.
 
 ## 13. Notifications
 
-Design: `docs/notifications-design.md`.
+Design: `SmartTaskManagement-Backend/docs/notifications-design.md`.
 
 - CONFIRMED: when a task is assigned, the assignee gets a live pop-up (toast) and
   an email; the notification is stored and shown in a notification list (pop-up
@@ -309,3 +315,4 @@ Design: `docs/notifications-design.md`.
 | 2026-11-10 | Tasks: separate aggregate, no status transition rules (any status to any status; replaces the proposed transition table; open question 4 closed), fields, date-only due date with past dates allowed, soft delete, lists with search/filter/sort/paging, list and details contents, separate status and assignment operations, project task counts. Sections 2 and 3: whoever a task is assigned to sees it and its project and may change its status, whatever their role | Developer confirmed in the Task module interview; an Admin may assign anyone, and the assignee must be able to see the work; Azure Boards, Jira and Zoho allow any-to-any status changes by default, so final statuses would block normal reopening |
 | 2026-11-11 | Dashboard (section 9): scope like the lists (section 2 PM dashboard row corrected from "own projects"), two calls (summary and upcoming), completed/pending/overdue definitions, upcoming window of 7 days and 10 tasks, no caching; notifications moved to a separate later module | Developer confirmed in the Dashboard interview; one visibility rule keeps dashboard numbers equal to what the lists show |
 | 2026-11-11 | Notifications (section 13): five notification events (task assigned, task removed, project owner set by an Admin, owner changed for the new and the previous owner), live pop-up and real-time dashboard over SSE, stored list with 7-day retention, unread badge, email through a database outbox with MailKit and Mailpit; section 6 Redis exception extended to pub/sub fan-out | Developer confirmed in the Notifications interview; several instances need a shared channel, and an assignment must not fail because the mail server is down |
+| 2026-11-11 | Repository split into backend and frontend folders (ADR 0019); section 11: the frontend folder is `SmartTaskManagement-Frontend/` (replaces `FE/`), the backend is in `SmartTaskManagement-Backend/` | Developer decision: each part keeps its own docs, compose and env files |

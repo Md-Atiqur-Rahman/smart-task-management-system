@@ -1,5 +1,8 @@
 # DDD rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 - Building blocks in `src/Domain/Primitives`: `Entity<TId>` (equality by Id),
   `AggregateRoot<TId>`, `AuditableAggregateRoot<TId>` (CreatedAt, UpdatedAt,
   soft delete, `RowVersion`), `ValueObject` (equality by components), `Guard`.

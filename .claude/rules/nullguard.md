@@ -1,8 +1,11 @@
 # NullGuard rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 Decision and evidence: `docs/adr/0008-nullguard.md`.
 
-- Configuration lives ONLY in the root `FodyWeavers.xml`
+- Configuration lives ONLY in the backend-root `FodyWeavers.xml`
   (`Mode="NullableReferenceTypes"`) and `src/SharedAssemblyInfo.cs`
   (`ValidationFlags.Arguments | ValidationFlags.ReturnValues`). Never add a
   per-project `FodyWeavers.xml`; `Directory.Build.targets` feeds the root file

@@ -1,5 +1,8 @@
 # Architecture rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 Decision records: `docs/adr/`. Overview: `docs/architecture.md`.
 
 - Dependency rule: Domain -> nothing; Application -> Domain; Infrastructure ->

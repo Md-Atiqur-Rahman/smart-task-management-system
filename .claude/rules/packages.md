@@ -1,5 +1,8 @@
 # Package rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 - Verify every package and version BEFORE adding it:
   `dotnet package search <id> --exact-match` (latest stable, license, target
   frameworks). Never write a version from memory. If it does not support
@@ -18,4 +21,4 @@
   VS.Threading analyzers, commitlint, Renovate, Spectral, SonarQube.
 - Design-time packages (`Microsoft.EntityFrameworkCore.Design`,
   `Microsoft.Extensions.ApiDescription.Server`) use `PrivateAssets="all"`.
-- Local tools are pinned in `dotnet-tools.json` (repo root): `dotnet tool restore`.
+- Local tools are pinned in `dotnet-tools.json` (backend root): `dotnet tool restore`.

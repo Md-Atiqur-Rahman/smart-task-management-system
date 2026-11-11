@@ -1,0 +1,76 @@
+# Backend CI runs ONE check: <backend folder>/scripts/verify.sh. This file holds no
+# check logic of its own, no image, project or folder name, and pushes nothing to
+# any registry. The backend folder is found by the "*-Backend" suffix (ADR 0019).
+# Action versions from the official READMEs (checked 2026-11-08):
+#   https://github.com/actions/checkout         (README usage: actions/checkout@v7)
+#   https://github.com/actions/setup-dotnet     (README usage: actions/setup-dotnet@v6)
+#   https://github.com/actions/upload-artifact  (README usage: actions/upload-artifact@v7)
+# Runs for every change except frontend-only ones: verify also checks root files
+# (.claude, .github, root docs). paths-ignore skips the run only when ALL changed
+# files match; `*` does not match `/`, `**` matches any character including `/`
+# (GitHub docs, workflow syntax, "Filter pattern cheat sheet", checked 2026-11-11).
+# `paths` and `paths-ignore` cannot be combined for the same event.
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*-Frontend/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '*-Frontend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Makes the runner OS visible in the log, so a change of the
+      # ubuntu-latest image is easy to spot. Diagnostic only, no checks.
+      - name: Runner OS
+        run: cat /etc/os-release
+
+      # Exactly one top-level folder ending in -Backend; its name is derived,
+      # never written here.
+      - name: Locate the backend folder
+        id: backend
+        run: |
+          shopt -s nullglob
+          folders=(*-Backend/)
+          if [ "${#folders[@]}" -ne 1 ]; then
+            echo "expected exactly one *-Backend folder, found ${#folders[@]}" >&2
+            exit 1
+          fi
+          echo "dir=${folders[0]%/}" >> "$GITHUB_OUTPUT"
+
+      # SDK version comes from the backend global.json. No NuGet cache: it
+      # requires lock files, which this repository does not use.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: ${{ steps.backend.outputs.dir }}/global.json
+
+      - name: Verify
+        working-directory: ${{ steps.backend.outputs.dir }}
+        run: bash scripts/verify.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: ${{ steps.backend.outputs.dir }}/TestResults/
+          if-no-files-found: warn
+          retention-days: 14
