@@ -17,8 +17,10 @@ namespace Datavanced.SmartTaskManagement.Infrastructure.Mail;
 /// <summary>
 /// One cycle of the email outbox (design 8, ADR 0017): claim due notifications with one conditional
 /// update, send each claimed one, record the outcome. Two processors (instances) never send the same
-/// row: the claim update repeats the full condition, so a row already claimed by another processor no
-/// longer matches, and only rows carrying this cycle's claim token are loaded.
+/// row while its claim holds: the claim update repeats the full condition, so a row already claimed by
+/// another processor no longer matches, only rows carrying this cycle's claim token are loaded, and a
+/// send starts only when it can finish inside the claim. Delivery is at-least-once: a crash between
+/// the send and the save of "sent" sends the row again after the claim expires.
 /// </summary>
 public sealed partial class EmailOutboxProcessor(
     AppDbContext context,
@@ -29,7 +31,8 @@ public sealed partial class EmailOutboxProcessor(
 {
     /// <summary>
     /// Claims up to Email:BatchSize due notifications and sends them. Returns the number of claimed
-    /// notifications handled in this cycle (a row whose claim expired meanwhile is left for later).
+    /// notifications handled in this cycle (a row whose remaining claim is shorter than
+    /// Email:ClaimSeconds / 2, the send budget, is left for later).
     /// A failure of one row is recorded on that row; only cancellation and database errors propagate,
     /// and the claim then expires after Email:ClaimSeconds.
     /// </summary>
@@ -86,9 +89,10 @@ public sealed partial class EmailOutboxProcessor(
         var handled = 0;
         foreach (var notification in batch)
         {
-            // The claim expired while earlier rows were sending: another processor may own the row now.
-            // Leave it unchanged for a later cycle.
-            if (timeProvider.GetUtcNow() >= notification.EmailClaimedUntil)
+            // Too little of the claim is left for one whole send (the sender stops a send after
+            // SendBudget): starting it could outlive the claim, and another processor could then claim
+            // and send the same row. Leave it unchanged; it is claimed again once the claim expires.
+            if (notification.EmailClaimedUntil - timeProvider.GetUtcNow() < settings.SendBudget)
             {
                 continue;
             }

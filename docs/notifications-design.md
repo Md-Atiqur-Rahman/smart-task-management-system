@@ -244,7 +244,8 @@ Code folders: `Infrastructure/Mail` and `Infrastructure/Configuration/Mail`.
      (default 20) pending notifications whose `EmailNextAttemptAt <= now` and
      whose claim is empty or expired, by one conditional database update that
      sets `EmailClaimedUntil = now + Email:ClaimSeconds` (default 120). Only rows
-     this update changed are sent, so two instances never send the same email.
+     this update changed are sent, so two instances never send the same email
+     while its claim holds.
      The update and its race are covered by an integration test with two
      concurrent claimers **[builder's call]**.
   2. For each claimed row: load the recipient's current email and name, render
@@ -254,8 +255,18 @@ Code folders: `Infrastructure/Mail` and `Infrastructure/Configuration/Mail`.
      `2^attempts` minutes; after `Email:MaxAttempts` (default 5) `Failed` and an
      error log. Any unexpected per-row exception also counts as a failed
      attempt, so one bad row never blocks the others. A missing recipient counts
-     as a failed attempt. A row whose claim expired mid-batch is skipped until
-     the next cycle.
+     as a failed attempt. A row whose remaining claim is shorter than the send
+     budget (`ClaimSeconds / 2`) is skipped, unchanged, until its claim expires
+     and it is claimed again.
+  4. One send never outlives its claim: the sender cancels a send after the
+     send budget (an expected failure, retried), and MailKit's
+     `SmtpClient.Timeout` (milliseconds per socket read or write, verified in the
+     MailKit 5.0.0 XML docs) is a quarter of the budget, one quarter for each of
+     connect, authenticate, send and disconnect. Default: budget 60 s, 15 s per
+     socket operation.
+- Delivery is **at-least-once**: an email is sent twice only if the instance
+  crashes (or loses the database) between the send and saving "sent"; the claim
+  then expires and another cycle sends it again (ADR 0017).
 - Email content: subject `"{Email:FromName}: {message}"` (no project name in
   configuration), plain-text
   body with the message and, when there is a link, `Email:AppBaseUrl` +

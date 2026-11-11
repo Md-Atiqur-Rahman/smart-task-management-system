@@ -32,8 +32,14 @@ The API runs as several instances (PRD 7).
 
 ## Consequences
 
-- An email can be sent twice only if a worker sends it and crashes before saving
-  "sent" (at-least-once). Accepted: a duplicate assignment email is harmless.
+- Delivery is at-least-once. While a claim holds, no other instance sends the
+  row: a send starts only when at least half of `Email:ClaimSeconds` (the send
+  budget) remains on the claim, and the sender cancels a send that runs longer
+  than the budget (MailKit `SmtpClient.Timeout` is a quarter of the budget per
+  socket read or write). An email is sent twice only if a worker sends it and
+  crashes (or loses the database) between the send and saving "sent"; the claim
+  then expires and the row is sent again. Accepted: a duplicate assignment email
+  is harmless.
 - Emails are delayed by up to the poll interval (default 10 seconds).
 - Rows are deleted after the 7-day retention, pending emails included.
 - One new package (MailKit) and one new development container (Mailpit).

@@ -248,6 +248,46 @@ public sealed class EmailOutboxTests(SqlServerFixture fixture)
     }
 
     [Fact]
+    public async Task Process_RemainingClaimShorterThanSendBudget_RowWaitsUntilClaimExpires()
+    {
+        var database = await fixture.CreateIsolatedDatabaseAsync(_ct);
+        var recipient = await AddUserAsync(database, "Joy Member");
+        await AddNotificationAsync(
+            database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Slow", Start.AddMinutes(-1));
+        var waiting = await AddNotificationAsync(database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Waiting");
+
+        // The claim (120 s) has not expired after the first send, but only 59 s remain: less than the
+        // send budget (ClaimSeconds / 2 = 60 s), so a second send could outlive the claim.
+        _sender.Failure = m =>
+        {
+            if (m.Subject.Contains("Slow", StringComparison.Ordinal))
+            {
+                _time.Advance(TimeSpan.FromSeconds(61));
+            }
+
+            return null;
+        };
+
+        (await ProcessAsync(database)).ShouldBe(1);
+
+        _sender.Sent.ShouldHaveSingleItem().Subject.ShouldContain("Slow");
+        var stored = await LoadAsync(database, waiting.Id);
+        stored.EmailStatus.ShouldBe(EmailDeliveryStatus.Pending);
+        stored.EmailAttempts.ShouldBe(0);
+        stored.EmailClaimedUntil.ShouldBe(Start.AddSeconds(120));
+
+        // Still claimed: no processor may take it yet.
+        (await ProcessAsync(database)).ShouldBe(0);
+        _sender.Sent.Count.ShouldBe(1);
+
+        // The claim expired: the row is claimed again and sent once.
+        _time.Advance(TimeSpan.FromSeconds(60));
+        (await ProcessAsync(database)).ShouldBe(1);
+        _sender.Sent.Count.ShouldBe(2);
+        (await LoadAsync(database, waiting.Id)).EmailStatus.ShouldBe(EmailDeliveryStatus.Sent);
+    }
+
+    [Fact]
     public async Task Process_LinkUsesTemplate()
     {
         var database = await fixture.CreateIsolatedDatabaseAsync(_ct);

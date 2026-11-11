@@ -144,7 +144,7 @@ public sealed class LiveEventFanOutTests(RedisFixture redis) : IAsyncLifetime
         if (subscribe)
         {
             var subscriber = new RedisLiveEventSubscriber(
-                connection, registry, options, NullLogger<RedisLiveEventSubscriber>.Instance);
+                connection, registry, options, TimeProvider.System, NullLogger<RedisLiveEventSubscriber>.Instance);
             _subscribers.Add(subscriber);
             await subscriber.StartAsync(_ct);
             await subscriber.Subscribed;

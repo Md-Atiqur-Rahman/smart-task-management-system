@@ -75,12 +75,15 @@ internal sealed class NotificationStream(
 
         while (true)
         {
-            while (connection.Events.TryRead(out var liveEvent))
+            // Stop draining at the expiry or the heartbeat, so a flood of events can never postpone the
+            // end of the stream or the token check below.
+            var now = timeProvider.GetUtcNow();
+            while (now < expiresAt && now < nextHeartbeat && connection.Events.TryRead(out var liveEvent))
             {
                 yield return ToItem(liveEvent);
+                now = timeProvider.GetUtcNow();
             }
 
-            var now = timeProvider.GetUtcNow();
             if (now >= expiresAt)
             {
                 yield break;

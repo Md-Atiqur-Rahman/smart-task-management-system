@@ -58,6 +58,13 @@ public sealed class EmailOptions
     [Range(30, 900)]
     public int ClaimSeconds { get; init; } = 120;
 
+    /// <summary>
+    /// The longest one send may take: half of <see cref="ClaimSeconds"/>. The sender cancels a send after
+    /// this time, and the outbox starts a send only while at least this much of the claim remains, so a
+    /// send always ends before its claim expires (design 8, ADR 0017). Derived, not bound.
+    /// </summary>
+    public TimeSpan SendBudget => TimeSpan.FromSeconds(ClaimSeconds / 2.0);
+
     [Range(1, 20)]
     public int MaxAttempts { get; init; } = 5;
 }
