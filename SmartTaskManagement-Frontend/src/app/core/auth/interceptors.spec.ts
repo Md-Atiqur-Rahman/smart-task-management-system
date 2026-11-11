@@ -96,6 +96,23 @@ describe('HTTP interceptors', () => {
     expect(results).toEqual([{ n: 1 }, { n: 2 }, { n: 3 }]);
   });
 
+  it('refreshInterceptor_Late401AfterAnotherRefresh_ReplaysWithTheNewTokenWithoutRefreshing', () => {
+    let result: unknown;
+    http.get(`${API}/api/slow`).subscribe((r) => (result = r));
+    const slow = backend.expectOne(`${API}/api/slow`);
+    expect(slow.request.headers.get('Authorization')).toBe('Bearer old-token');
+
+    // Another call's refresh finished while this request was still on its way.
+    store.setSession(authResponse('new-token'));
+    slow.flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    backend.expectNone(`${API}/api/auth/refresh`);
+    const replay = backend.expectOne(`${API}/api/slow`);
+    expect(replay.request.headers.get('Authorization')).toBe('Bearer new-token');
+    replay.flush({ ok: true });
+    expect(result).toEqual({ ok: true });
+  });
+
   it('refreshInterceptor_DoesNotRefresh_ForAuthEndpoints', async () => {
     const login = firstValueFrom(TestBed.inject(AuthApi).login({ email: 'a@b.c', password: 'x' }));
 

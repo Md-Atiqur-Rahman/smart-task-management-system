@@ -69,6 +69,31 @@ describe('SessionService', () => {
     expect(session.sessionEnded()).toBe(false);
   });
 
+  it('restore_ApiDoesNotAnswer_GivesUpAfter10Seconds', async () => {
+    const restored = session.restore();
+    const request = backend.expectOne(REFRESH);
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(await restored).toBe(false);
+    expect(request.cancelled).toBe(true);
+    expect(store.isSignedIn()).toBe(false);
+  });
+
+  it('logout_DuringARefresh_StaysSignedOut', async () => {
+    store.setSession(authResponse('old'));
+    const result = firstValueFrom(session.refresh());
+    const refresh = backend.expectOne(REFRESH);
+
+    const loggedOut = session.logout();
+    backend.expectOne(`${API}/api/auth/logout`).flush(null);
+    await loggedOut;
+    refresh.flush(authResponse('new'));
+
+    expect(await result).toBe(false);
+    expect(store.isSignedIn()).toBe(false);
+  });
+
   it('refresh_Superseded_RetriesOnce_ThenSucceeds', async () => {
     store.setSession(authResponse('old'));
     const result = firstValueFrom(session.refresh());

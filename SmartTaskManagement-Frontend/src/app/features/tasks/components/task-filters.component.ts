@@ -83,6 +83,7 @@ import { TASK_SORTS, TaskFilterState, TaskProjectOption } from '../task-query';
           <app-user-picker
             label="Choose a person"
             [search]="searchPeople"
+            [selected]="personChosen() ? value().assignee : null"
             (picked)="emit({ assignee: $event.id })"
           />
         </div>
