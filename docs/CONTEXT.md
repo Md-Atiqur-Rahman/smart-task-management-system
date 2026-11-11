@@ -139,13 +139,13 @@ Built as designed in `docs/auth-design.md`; the implementation amendments are in
 
 ### Domain rules
 
-Built (decided, implemented and tested): the first four bullets (separate aggregates, task status, project soft delete, permissions; details in `docs/project-design.md` and `docs/task-design.md`). The dashboard is also built (`docs/dashboard-design.md`). Still **proposed** (not built): the AI endpoint.
+Built (decided, implemented and tested): separate aggregates, task status, project soft delete, permissions and the dashboard numbers (details in `docs/project-design.md`, `docs/task-design.md` and `docs/dashboard-design.md`). Still **proposed** (not built): the AI endpoint.
 
 - Project and Task are separate aggregates; a Task references its project only by `ProjectId`.
 - Task status: any status to any status (reopen allowed); there is no state machine because there are no transition rules (developer decision 2026-11-10, evidence in `docs/task-design.md` section 9).
 - Deleting a project is a soft delete and hides its tasks.
 - Permissions: Admin sees and manages everything; a Project Manager manages their own projects and tasks and can assign; a Team Member sees only tasks assigned to them (and their projects) and may change only the status of those tasks.
-- Dashboard numbers use database-level grouping and are scoped by role (Admin all, Project Manager own projects, Team Member own tasks).
+- Dashboard numbers use database-level grouping and are scoped by role (Admin all, Project Manager own projects plus tasks assigned to them (same rule as the lists), Team Member their assigned tasks and those tasks' projects).
 - AI endpoint: behind an `IAiProvider` strategy; usable by Admin and Project Manager; input length limit, timeout, clear failure response, and prompt-injection caution. Prompt design is documented in `PROMPTS.md`.
 
 ### Frontend (proposed)
