@@ -1,5 +1,8 @@
 # Testing rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 - Framework: xunit.v3 on Microsoft.Testing.Platform (`global.json`
   `"test": {"runner": "Microsoft.Testing.Platform"}`), NSubstitute, Shouldly,
   NetArchTest.Rules, Testcontainers (SQL Server). No FluentAssertions, no Moq.

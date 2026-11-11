@@ -5,6 +5,9 @@
 ## Checklist
 
 - [ ] Commit messages use `feat:`, `fix:` or `docs:`
+
+Backend changes (paths relative to the `*-Backend/` folder):
+
 - [ ] `bash scripts/verify.sh` passes locally (or `powershell -File scripts/verify.ps1` on Windows)
 - [ ] New behaviour has tests (unit, integration, or architecture)
 - [ ] Controllers or DTOs changed: `docs/openapi.json` regenerated (`bash scripts/generate-openapi.sh`) and committed

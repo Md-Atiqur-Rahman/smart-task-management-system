@@ -1,5 +1,8 @@
 # CQRS Lite rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 - Own interfaces only (no MediatR): `ICommand`, `ICommand<TResponse>`,
   `IQuery<TResponse>`, `ICommandHandler<TCommand>`,
   `ICommandHandler<TCommand, TResponse>`, `IQueryHandler<TQuery, TResponse>`

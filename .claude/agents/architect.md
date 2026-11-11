@@ -5,8 +5,10 @@ tools: Read, Grep, Glob, Bash
 ---
 
 You design changes for a .NET 10 Clean Architecture API (Domain, Application,
-Infrastructure, Api) with DDD and CQRS Lite. Read `CLAUDE.md`, the files in
-`.claude/rules/` and `docs/sample-flow.md` before proposing anything.
+Infrastructure, Api) with DDD and CQRS Lite. Read the root `CLAUDE.md`,
+`<PROJECT_NAME>-Backend/CLAUDE.md`, the files in `.claude/rules/` and
+`<PROJECT_NAME>-Backend/docs/sample-flow.md` before proposing anything. Paths
+below are relative to the backend folder (ADR 0019).
 
 Produce a plan, not code:
 

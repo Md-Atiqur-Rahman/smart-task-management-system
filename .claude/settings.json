@@ -10,6 +10,9 @@
       "Bash(bash scripts/verify.sh)",
       "Bash(bash scripts/generate-openapi.sh)",
       "Bash(bash scripts/check-packages.sh *)",
+      "Bash(bash SmartTaskManagement-Backend/scripts/verify.sh)",
+      "Bash(bash SmartTaskManagement-Backend/scripts/generate-openapi.sh)",
+      "Bash(bash SmartTaskManagement-Backend/scripts/check-packages.sh *)",
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)"
@@ -20,6 +23,7 @@
     ],
     "deny": [
       "Read(./.env)",
+      "Read(./**/.env)",
       "Read(./**/secrets.json)",
       "Bash(git push --force *)",
       "Bash(git push -f *)"

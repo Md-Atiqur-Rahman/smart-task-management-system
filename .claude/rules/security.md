@@ -1,5 +1,8 @@
 # Security rules
 
+Paths in this file are relative to the backend folder `<PROJECT_NAME>-Backend/`
+(ADR 0019).
+
 - Identity only from the validated JWT; `SecurityContextMiddleware` is the only
   caller of `ISecurityContextSetter.SetPrincipal` (ADR 0007). Inbound claim
   mapping is off; claim names only from `SecurityClaimTypes`.
