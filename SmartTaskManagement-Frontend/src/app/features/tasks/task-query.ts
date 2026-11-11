@@ -9,6 +9,8 @@ import { TaskListQuery, TaskSortField } from './models/task.models';
 /** Task list state as the UI holds it (URL query or component state). */
 export const TASK_FILTER_DEFAULTS = {
   search: '',
+  /** '' = every visible project, or a project id. */
+  project: '',
   status: '',
   priority: '',
   /** '' = anyone, 'me', 'unassigned', or a user id. */
@@ -21,6 +23,12 @@ export const TASK_FILTER_DEFAULTS = {
 };
 
 export type TaskFilterState = typeof TASK_FILTER_DEFAULTS;
+
+/** A project the user can filter by (from GET /api/projects). */
+export interface TaskProjectOption {
+  id: string;
+  name: string;
+}
 
 export const TASK_SORTS: readonly { value: string; label: string }[] = [
   { value: 'dueDate:Ascending', label: 'Due date, soonest' },
@@ -38,6 +46,7 @@ export function toTaskListQuery(state: TaskFilterState, me: string): TaskListQue
   const assignee = state.assignee;
   return {
     search: state.search,
+    projectId: state.project,
     status: state.status as TaskItemStatus | '',
     priority: state.priority as TaskPriority | '',
     assigneeId: assignee === 'me' ? me : assignee === 'unassigned' ? '' : assignee,
