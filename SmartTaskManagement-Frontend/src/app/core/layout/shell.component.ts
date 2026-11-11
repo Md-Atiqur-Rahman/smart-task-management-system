@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   signal,
@@ -11,6 +12,10 @@ import { roleLabel } from '../../shared/labels';
 import { AuthStore } from '../auth/auth.store';
 import { SessionService } from '../auth/session.service';
 import { Role } from '../models/api.models';
+import { NotificationBellComponent } from '../notifications/notification-bell.component';
+import { NotificationStore } from '../notifications/notification.store';
+import { ToastHostComponent } from '../notifications/toast-host.component';
+import { LiveEventsService } from '../realtime/live-events.service';
 
 interface NavItem {
   path: string;
@@ -28,7 +33,13 @@ const NAV: readonly NavItem[] = [
 /** Signed-in layout: sidebar (a drawer below 768 px), top bar and the routed page. */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    NotificationBellComponent,
+    ToastHostComponent,
+  ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +49,8 @@ export class ShellComponent {
   private readonly store = inject(AuthStore);
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
+  private readonly live = inject(LiveEventsService);
+  private readonly notifications = inject(NotificationStore);
 
   protected readonly user = this.store.user;
   protected readonly roleText = computed(() => {
@@ -61,6 +74,13 @@ export class ShellComponent {
   private loggingOut = false;
 
   constructor() {
+    // Live events and the bell run while the signed-in shell is shown (PRD 13).
+    this.notifications.loadCount();
+    this.live.start();
+    inject(DestroyRef).onDestroy(() => {
+      this.live.stop();
+      this.notifications.reset();
+    });
     // A session that ends while the shell is open (refresh failed, role changed) goes to sign-in.
     effect(() => {
       if (!this.store.isSignedIn() && !this.loggingOut) {
@@ -79,6 +99,7 @@ export class ShellComponent {
 
   protected async logout(): Promise<void> {
     this.loggingOut = true;
+    this.live.stop();
     await this.session.logout();
     await this.router.navigate(['/login']);
   }
