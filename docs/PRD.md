@@ -236,7 +236,7 @@ one role.
 - CONFIRMED (assignment): one endpoint that fixes grammar, improves clarity, makes
   the text professional, expands short text and makes it actionable.
 - CONFIRMED: usable by Admin and PM only.
-- PROPOSED: behind an `IAiProvider` strategy; input length limit, timeout, clear
+- CONFIRMED (design approved 2026-11-11, `SmartTaskManagement-Backend/docs/ai-description-design.md`, ADR 0020): behind an `IAiTextImprover` strategy; input length limit, timeout, clear
   failure response, prompt-injection caution; prompt design documented in
   `PROMPTS.md`.
 - CONFIRMED (2026-11-11): provider is the **Google Gemini API, free tier**, with an
