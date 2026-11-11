@@ -9,6 +9,7 @@ import {
   shareReplay,
   switchMap,
   throwError,
+  timeout,
   timer,
 } from 'rxjs';
 import { toApiProblem } from '../http/api-problem';
@@ -29,6 +30,8 @@ const MIN_REFRESH_DELAY_MS = 30_000;
 /** After a network or server error the cookie may still be valid: try again later. */
 const TRANSIENT_RETRY_MS = 15_000;
 const MAX_TIMER_MS = 2_147_483_647;
+/** App start waits for the session restore; a hanging API must not leave a blank screen. */
+const RESTORE_TIMEOUT_MS = 10_000;
 
 /** Refresh answers that mean the refresh cookie is gone or invalid (end the session). */
 function isSessionOver(status: number): boolean {
@@ -46,6 +49,8 @@ export class SessionService {
 
   private inFlight: Observable<boolean> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Bumped by logout: a refresh that started earlier must not sign the user back in. */
+  private generation = 0;
 
   login(body: LoginRequest): Observable<CurrentUserDto> {
     return this.api.login(body).pipe(map((response) => this.start(response)));
@@ -57,7 +62,9 @@ export class SessionService {
 
   /** On app start: true when the refresh cookie still holds a session. */
   restore(): Promise<boolean> {
-    return firstValueFrom(this.attempt(false));
+    return firstValueFrom(
+      this.attempt(false).pipe(timeout({ first: RESTORE_TIMEOUT_MS, with: () => of(false) })),
+    );
   }
 
   /** One refresh shared by every caller while it runs; false means the session is over. */
@@ -71,6 +78,7 @@ export class SessionService {
 
   /** Revokes this device's refresh token; the local session is cleared even if the call fails. */
   async logout(): Promise<void> {
+    this.generation++;
     try {
       await firstValueFrom(this.api.logout());
     } catch {
@@ -81,6 +89,7 @@ export class SessionService {
   }
 
   private attempt(markEnded: boolean): Observable<boolean> {
+    const generation = this.generation;
     return this.api.refresh().pipe(
       catchError((error: unknown) =>
         toApiProblem(error).errorCode === REFRESH_SUPERSEDED
@@ -88,10 +97,16 @@ export class SessionService {
           : throwError(() => error),
       ),
       map((response) => {
+        if (generation !== this.generation) {
+          return false; // The user logged out while this refresh was running.
+        }
         this.start(response);
         return true;
       }),
       catchError((error: unknown) => {
+        if (generation !== this.generation) {
+          return of(false);
+        }
         if (isSessionOver(toApiProblem(error).status) || !this.store.isSignedIn()) {
           this.end(markEnded);
         } else {
