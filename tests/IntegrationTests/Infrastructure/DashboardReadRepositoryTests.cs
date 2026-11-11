@@ -179,27 +179,44 @@ public sealed class DashboardReadRepositoryTests(SqlServerFixture fixture)
         var pm = await SaveUserAsync(Role.ProjectManager);
         var member = await SaveUserAsync(Role.TeamMember);
         var project = await SaveProjectAsync(pm.Id);
-        var tomorrow = _today.AddDays(1);
-        var sameDayLow = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: tomorrow, priority: TaskPriority.Low);
-        var sameDayCritical = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: tomorrow, priority: TaskPriority.Critical);
-        var sameDayHigh = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: tomorrow, priority: TaskPriority.High);
-        var earliest = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: _today, priority: TaskPriority.Low);
-        for (var i = 0; i < 6; i++)
+        var expected = new List<Guid>();
+
+        async Task AddAsync(int dayOffset, TaskPriority priority, bool expectedInResult = true)
         {
-            await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: _today.AddDays(2 + i));
+            var task = await SaveTaskAsync(
+                project.Id, assigneeId: member.Id, dueDate: _today.AddDays(dayOffset), priority: priority);
+            if (expectedInResult)
+            {
+                expected.Add(task.Id);
+            }
         }
 
-        // Two more qualifying tasks beyond the limit: the latest dates, cut off.
+        // Created out of order on purpose. Every returned task has a distinct (date, priority) pair,
+        // so the expected order is fully determined and never depends on Id ordering.
+        await AddAsync(1, TaskPriority.Low);
+        await AddAsync(1, TaskPriority.Critical);
+        await AddAsync(1, TaskPriority.High);
+        await AddAsync(0, TaskPriority.Low);
+        await AddAsync(2, TaskPriority.Medium);
+        await AddAsync(3, TaskPriority.Medium);
+        await AddAsync(4, TaskPriority.Medium);
+        await AddAsync(5, TaskPriority.Medium);
+        await AddAsync(6, TaskPriority.Medium);
+        await AddAsync(6, TaskPriority.High);
+
+        // 10 tasks are before day 7; these two qualify too (12 in all) but are the latest: cut off.
         var cutOff1 = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: _today.AddDays(Days));
         var cutOff2 = await SaveTaskAsync(project.Id, assigneeId: member.Id, dueDate: _today.AddDays(Days));
 
         var upcoming = await UpcomingAsync(member.Id, Role.TeamMember);
 
         upcoming.Count.ShouldBe(Limit);
-        upcoming.Take(4).Select(u => u.Id).ShouldBe(
-            [earliest.Id, sameDayCritical.Id, sameDayHigh.Id, sameDayLow.Id]);
-        upcoming.Select(u => u.DueDate).ShouldBe(upcoming.Select(u => u.DueDate).Order());
-        upcoming.Select(u => u.Id).Count(id => id == cutOff1.Id || id == cutOff2.Id).ShouldBe(1);
+        upcoming.Select(u => u.Id).ShouldNotContain(cutOff1.Id);
+        upcoming.Select(u => u.Id).ShouldNotContain(cutOff2.Id);
+        // Order: day 0; day 1 Critical, High, Low; days 2 to 5; day 6 High then Medium.
+        var byKey = expected.ToArray();
+        upcoming.Select(u => u.Id).ShouldBe(
+            [byKey[3], byKey[1], byKey[2], byKey[0], byKey[4], byKey[5], byKey[6], byKey[7], byKey[9], byKey[8]]);
     }
 
     [Fact]
