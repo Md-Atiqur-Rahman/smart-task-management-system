@@ -44,6 +44,9 @@ export async function signIn(page: Page, email: string, password: string): Promi
 export async function pickPerson(page: Page, label: string, search: string): Promise<void> {
   const box = page.getByRole('combobox', { name: label });
   await box.fill(search);
-  await expect(page.getByRole('option').first()).toBeVisible();
+  // Scope to this picker's own listbox (aria-label = label); the page behind a
+  // dialog has native <select> options too.
+  const firstOption = page.getByRole('listbox', { name: label }).getByRole('option').first();
+  await expect(firstOption).toContainText(search);
   await box.press('Enter');
 }
