@@ -205,7 +205,7 @@ nothing; the client shows the result and the user decides. Design:
 | Invalid request (blank, too long) | 400 | `validation.failed` |
 | Gemini refused the text (safety) | 400 | `ai.rejected` |
 | No API key configured | 503 | `ai.not_configured` |
-| Gemini unreachable, timeout, rate limit, unusable answer | 503 | `ai.unavailable` |
+| Gemini unreachable, timeout, rate limit, unusable answer (a Gemini 503 is retried once first) | 503 | `ai.unavailable` |
 
 Settings (section `Ai`, validated at startup):
 

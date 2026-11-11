@@ -7,7 +7,8 @@
   the two UNVERIFIED items below are confirmed.
 - Implementation notes: the prompt asks for under 3500 characters (developer
   decision, headroom under the server's 4000 check, rule 6); an invalid request
-  returns errorCode `validation.failed` (the project's existing code).
+  returns errorCode `validation.failed` (the project's existing code); one retry
+  after a Gemini 503 (2026-11-12, section 5).
 - Requirements: root `../docs/assignment.md` ("AI Feature", "PROMPTS.md") and
   `../docs/PRD.md` section 10. Builds on the Task module (`task-design.md`).
 - Decision record: ADR 0020 (AI provider).
@@ -152,8 +153,11 @@ ProjectManagerOrAdmin)]` (PRD 10: Admin and PM only; the policy exists).
   or empty text → `ai.unavailable`.
 - HTTP failures (timeout, 408, 429, 5xx, network, unparsable JSON) →
   `ai.unavailable`; 400/401/403/404 → `ai.unavailable` plus an error log (a
-  configuration problem: bad key, model id or project) **[builder's call]**. No
-  automatic retry: the PM can press "Improve" again **[builder's call]**. The exact Gemini error body shape is UNVERIFIED, so the
+  configuration problem: bad key, model id or project) **[builder's call]**. One
+  immediate retry after a Gemini 503 only, inside the same `Ai:TimeoutSeconds`
+  budget; nothing else is retried, and after that the PM can press "Improve"
+  again (developer decision 2026-11-12, replacing "no automatic retry": the
+  smoke tests showed random, short Gemini 503s while the service was overloaded). The exact Gemini error body shape is UNVERIFIED, so the
   code decides by HTTP status only.
 - Logging: status, finish reason, input length and duration; never the
   description, the answer or the key.

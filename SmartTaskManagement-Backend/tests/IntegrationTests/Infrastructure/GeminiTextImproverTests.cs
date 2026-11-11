@@ -171,6 +171,43 @@ public sealed class GeminiTextImproverTests : IDisposable
         _logger.Entries.ShouldNotContain(e => e.Level == LogLevel.Error);
     }
 
+    [Fact]
+    public async Task Improve_Gemini503ThenSuccess_RetriesOnceAndSucceeds()
+    {
+        using var handler = Sequence(HttpStatusCode.ServiceUnavailable, HttpStatusCode.OK);
+
+        var result = await Improver(handler).ImproveDescriptionAsync(null, Description, CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        handler.Requests.Count.ShouldBe(2);
+        handler.Requests.ShouldAllBe(r => r.Headers["x-goog-api-key"] == ApiKey && r.Body!.Contains("systemInstruction"));
+    }
+
+    [Fact]
+    public async Task Improve_Gemini503Twice_IsUnavailableAfterTwoAttempts()
+    {
+        using var handler = Sequence(HttpStatusCode.ServiceUnavailable, HttpStatusCode.ServiceUnavailable, HttpStatusCode.OK);
+
+        var result = await Improver(handler).ImproveDescriptionAsync(null, Description, CancellationToken.None);
+
+        result.Error.ShouldBe(AiErrors.Unavailable);
+        handler.Requests.Count.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData(429)]
+    [InlineData(500)]
+    [InlineData(401)]
+    public async Task Improve_OtherFailureStatus_IsNotRetried(int status)
+    {
+        using var handler = Sequence((HttpStatusCode)status, HttpStatusCode.OK);
+
+        var result = await Improver(handler).ImproveDescriptionAsync(null, Description, CancellationToken.None);
+
+        result.Error.ShouldBe(AiErrors.Unavailable);
+        handler.Requests.Count.ShouldBe(1);
+    }
+
     [Theory]
     [InlineData(400)]
     [InlineData(401)]
@@ -274,6 +311,21 @@ public sealed class GeminiTextImproverTests : IDisposable
         };
         _clients.Add(client);
         return new GeminiTextImprover(client, Options.Create(options), _time, _logger);
+    }
+
+    /// <summary>Answers the n-th request with the n-th status (OK carries a valid answer); the last status repeats.</summary>
+    private static FakeHttpMessageHandler Sequence(params HttpStatusCode[] statuses)
+    {
+        var calls = 0;
+        return new FakeHttpMessageHandler((_, _) =>
+        {
+            var status = statuses[Math.Min(calls++, statuses.Length - 1)];
+            var body = status == HttpStatusCode.OK ? Success(ValidAnswer) : "{}";
+            return Task.FromResult(new HttpResponseMessage(status)
+            {
+                Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json"),
+            });
+        });
     }
 
     private static string Success(string text, string finishReason = "STOP") => new JsonObject

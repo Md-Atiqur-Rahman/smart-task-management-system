@@ -1,12 +1,20 @@
 # Project context: Smart Task Management System
 
-Updated 2026-11-11. This file describes the current truth, not the history. Anything marked **proposed** has not been confirmed by the developer.
+Updated 2026-11-12. This file describes the current truth, not the history. Anything marked **proposed** has not been confirmed by the developer.
 
 ## At a glance
 
-**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard (summary ও upcoming, দুটি endpoint) তৈরি হয়েছে; Notifications (stored list, live SSE push, email outbox) তৈরি হয়েছে; Angular frontend তৈরি হয়ে main-এ merge হয়েছে (PR #7); project README ও `PROMPTS.md` লেখা হয়েছে; AI endpoint `feat/ai-description` branch-এ চলছে। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
+This is a hiring assignment: build a Smart Task Management System with a .NET 10 (Clean Architecture) backend and an Angular frontend. It is judged on architecture, code quality, security and documentation; these matter more than the number of features. A reusable Clean Architecture template and a Claude Code skill that creates a project from it were built and verified first (CI green), and this repository was created from that template.
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`SmartTaskManagement-Backend/docs/auth-design.md`) and the Project, Task, Dashboard and Notifications modules are built (`SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md`, `SmartTaskManagement-Backend/docs/notifications-design.md`). The Angular frontend is built and merged (`SmartTaskManagement-Frontend/`, design `SmartTaskManagement-Frontend/docs/frontend-design.md`). The project `README.md` and `SmartTaskManagement-Backend/PROMPTS.md` are written. The AI endpoint is in progress on `feat/ai-description`. The project PRD is `docs/PRD.md` (draft, not yet approved).
+What is built:
+
+- Authentication, built in-house (no Keycloak): register, login, refresh, logout, roles, Redis (`SmartTaskManagement-Backend/docs/auth-design.md`).
+- The Project, Task, Dashboard and Notifications modules (`SmartTaskManagement-Backend/docs/project-design.md`, `task-design.md`, `dashboard-design.md`, `notifications-design.md`).
+- The Angular frontend, merged in PR #7 (`SmartTaskManagement-Frontend/`, design `SmartTaskManagement-Frontend/docs/frontend-design.md`).
+- The AI description improvement with Google Gemini: the backend endpoint (PR #9) and the frontend "Improve with AI" button (PR #10) (`SmartTaskManagement-Backend/docs/ai-description-design.md`, ADR 0020).
+- The project `README.md` and `SmartTaskManagement-Backend/PROMPTS.md`, with the real smoke-test outputs (PR #11).
+
+The project PRD is `docs/PRD.md` (draft, not yet approved). The developer reads Bangla: explain decisions to them in simple Bangla with English technical terms (see "Working with the developer").
 
 ## Assignment requirements
 
@@ -31,9 +39,9 @@ Evaluation: architecture, code quality, security, backend, frontend, design patt
 
 ## Current state
 
-The foundation, the Auth feature, the Project module, the Task module, the Dashboard, the Notifications module and the Angular frontend are finished and verified. The AI endpoint is in progress.
+The foundation, the Auth feature, the Project module, the Task module, the Dashboard, the Notifications module, the Angular frontend and the AI description improvement are finished and verified.
 
-### Repositories (all private on GitHub)
+### Repositories (on GitHub; this repository is public, the others private)
 
 | Repository | Purpose | State |
 | --- | --- | --- |
@@ -56,13 +64,14 @@ A fourth private repository is an archive of the long template build history and
   - Screens: login and register, dashboard (live over SSE), projects, tasks, task detail, users and roles (Admin), notification bell with live toasts.
   - Security: access token in memory only; single-flight refresh on 401; HTTPS dev server.
   - Checks: `scripts/verify.sh` (lint, Prettier, strict type-check, 76 Vitest unit tests, production build, `npm audit`); Playwright E2E (`npm run e2e`, local only); CI `.github/workflows/frontend.yml`.
-  - "Improve with AI" is shown disabled until the AI endpoint is merged.
+  - "Improve with AI" in the task form calls the AI endpoint and shows the suggestion before the user applies it (PR #10).
   - Design: `SmartTaskManagement-Frontend/docs/frontend-design.md`; rules: `SmartTaskManagement-Frontend/CLAUDE.md`.
+- **AI description improvement: built.** `POST /api/tasks/description/improve` (Admin, Project Manager) behind the `IAiTextImprover` strategy; one implementation, `GeminiTextImprover`, calls the Google Gemini API free tier (`gemini-3.5-flash-lite`, ADR 0020). It saves nothing. Limits and errors: description at most 4000 characters, 25-second timeout, one immediate retry after a Gemini 503, `ai.not_configured` and `ai.unavailable` (503), `ai.rejected` (400). The API key is optional and lives only in user-secrets or environment variables. Design: `SmartTaskManagement-Backend/docs/ai-description-design.md`; prompts: `SmartTaskManagement-Backend/PROMPTS.md`.
 - **Submission documents: written.** The root `README.md` (overview, setup, stack, API overview, folder structure, deliverables) and `SmartTaskManagement-Backend/PROMPTS.md`; its section 4.2 holds the real smoke-test outputs (2026-11-12). API collection: `SmartTaskManagement-Backend/docs/openapi.json`.
 - **Lesson from the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
-- 683 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
+- 784 backend tests that pass (2026-11-12), including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
 - `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `SmartTaskManagement-Backend/docs/openapi.json`, and `docker build`. Both pass locally, also when started from the repository root after the split (ADR 0019); `verify.ps1` was fixed on 2026-11-11 (the PowerShell OpenAPI generator lacked the Redis setting) and passes with Windows PowerShell 5.1. CI runs `verify.sh` on Ubuntu.
 - Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
 - Claude Code files: the root `CLAUDE.md` (project-wide) and `SmartTaskManagement-Backend/CLAUDE.md` (backend rules), `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
@@ -70,10 +79,9 @@ A fourth private repository is an archive of the long template build history and
 
 ### In progress or open
 
-- The AI endpoint (`feat/ai-description`); then the frontend's "Improve with AI" button and the real smoke-test outputs in `PROMPTS.md` section 4.2.
 - Frontend follow-ups: Change owner dialog, a project filter on `/tasks`, and seven minor review findings (listed in the PR #7 description).
 - `Email:AppBaseUrl` in the backend `appsettings.Development.json` is still `http://localhost:4200`; the HTTPS dev server needs `https://localhost:4200` (a small backend change, waiting for the developer's go-ahead).
-- The repository is private: it must be shared with the evaluator (public, or the evaluator added as a collaborator) before submission.
+- The repository is public (made public by the developer on 2026-11-11), so the evaluator can open the link.
 
 ## Locked decisions and why
 
@@ -139,7 +147,7 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 3. ~~Task module~~ built
 4. ~~Dashboard~~ built (the developer decided on 2026-11-11 to keep the Sample slice for now)
 5. ~~Notifications module (live push, stored notification list, email on assignment)~~ built
-6. AI endpoint (in progress on `feat/ai-description`)
+6. ~~AI endpoint~~ built (PR #9; "Improve with AI" button PR #10)
 7. ~~Angular frontend~~ built (PR #7)
 8. ~~README, `PROMPTS.md`, API collection export~~ written (`PROMPTS.md` with real smoke-test outputs; the API collection is `SmartTaskManagement-Backend/docs/openapi.json`)
 
@@ -149,14 +157,14 @@ Built as designed in `SmartTaskManagement-Backend/docs/auth-design.md`; the impl
 
 ### Domain rules
 
-Built (decided, implemented and tested): separate aggregates, task status, project soft delete, permissions and the dashboard numbers (details in `SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md` and `SmartTaskManagement-Backend/docs/notifications-design.md`). Still **proposed** (not built): the AI endpoint.
+Built (decided, implemented and tested): separate aggregates, task status, project soft delete, permissions and the dashboard numbers (details in `SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md` and `SmartTaskManagement-Backend/docs/notifications-design.md`) and the AI endpoint (`SmartTaskManagement-Backend/docs/ai-description-design.md`).
 
 - Project and Task are separate aggregates; a Task references its project only by `ProjectId`.
 - Task status: any status to any status (reopen allowed); there is no state machine because there are no transition rules (developer decision 2026-11-10, evidence in `SmartTaskManagement-Backend/docs/task-design.md` section 9).
 - Deleting a project is a soft delete and hides its tasks.
 - Permissions: Admin sees and manages everything; a Project Manager manages their own projects and tasks and can assign; a Team Member sees only tasks assigned to them (and their projects) and may change only the status of those tasks.
 - Dashboard numbers use database-level grouping and are scoped by role (Admin all, Project Manager own projects plus tasks assigned to them (same rule as the lists), Team Member their assigned tasks and those tasks' projects).
-- AI endpoint: behind an `IAiProvider` strategy; usable by Admin and Project Manager; input length limit, timeout, clear failure response, and prompt-injection caution. Prompt design is documented in `PROMPTS.md`.
+- AI endpoint: behind the `IAiTextImprover` strategy; usable by Admin and Project Manager; input length limit, timeout, clear failure response, and prompt-injection caution. Prompt design is documented in `SmartTaskManagement-Backend/PROMPTS.md`.
 
 ### Frontend (built)
 
@@ -169,14 +177,14 @@ Angular 22, standalone components, zoneless with signals and OnPush, lazy-loaded
 | Is the Angular app in the same repository? | Decided: yes, in `SmartTaskManagement-Frontend/` (PRD section 11, ADR 0019), after the backend is stable |
 | Where does Angular keep the refresh token (memory, localStorage, httpOnly cookie)? | Decided and built (PRD 5): access token in memory only, refresh token only in the HttpOnly cookie |
 | Are the proposed domain rules and permissions correct? | Confirm one by one in the PRD interview |
-| Which GitHub Models model and endpoint will the AI feature use? | Unknown; verify from official documentation |
+| Which AI provider and model does the AI feature use? | Decided: Google Gemini API free tier, `gemini-3.5-flash-lite` (ADR 0020; GitHub Models was retired on July 30, 2026) |
 | Must the repository be public or shared with the evaluator? | The assignment asks for a "GitHub repository link shared with the submission": share it (public, or the evaluator as collaborator) before submitting |
 
 UNVERIFIED:
 
 - The `.ps1` scripts under PowerShell 7 (tested only with Windows PowerShell 5.1), and Linux or macOS support for the scripts.
 - Whether `dotnet package list` reports an unreachable vulnerability feed as a problem; restore-time NuGet audit is the second guard.
-- The GitHub Models API shape, authentication and rate limits for the AI feature.
+- The Gemini free-tier rate limits: Google shows them in AI Studio, not as published numbers; a limit hit returns `ai.unavailable`.
 - Whether an evaluator accepts in-house Auth as expected; the developer may ask the assignment contact if unsure.
 
 Template follow-ups (not blocking): GitHub Actions are pinned by major version, not by commit SHA; `ubuntu-latest` moves to new Ubuntu releases and may change behaviour; behind a reverse proxy, list its address in `ForwardedHeaders:KnownProxies` before production, otherwise rate limiting sees the proxy address.

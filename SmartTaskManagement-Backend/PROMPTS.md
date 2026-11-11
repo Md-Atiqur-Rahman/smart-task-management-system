@@ -298,7 +298,11 @@ never changed or lost when something goes wrong.
 - **Language rule:** checked by the prompt (rule 4) and by the smoke test (inputs
   1-3), not by code. Detecting the language reliably in code would need another
   dependency.
-- **No automatic retry:** the user can press "Improve" again.
+- **One retry after a Gemini 503:** Gemini answers 503 when its servers are
+  overloaded; this is random and short (seen in the smoke tests). The server
+  sends the request once more at once, inside the same 25-second budget. Nothing
+  else is retried (429 means the quota is used up); after that the user can
+  press "Improve" again.
 - **Tests:** unit tests cover the validator, the handler's error mapping and the
   prompt (markers present, rules present). The Gemini response parsing and
   rendering, and the HTTP client against a fake handler, are tested in the

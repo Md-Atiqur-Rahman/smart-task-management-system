@@ -15,7 +15,8 @@ namespace Datavanced.SmartTaskManagement.Infrastructure.Ai;
 /// <summary>
 /// Improves a task description with the Google Gemini generateContent REST endpoint (design 5, ADR 0020).
 /// The key travels only in the x-goog-api-key header. Every failure is a Result error: no key ->
-/// ai.not_configured; blocked prompt or answer -> ai.rejected; anything else -> ai.unavailable. No retry.
+/// ai.not_configured; blocked prompt or answer -> ai.rejected; anything else -> ai.unavailable. Only a Gemini 503
+/// is retried, once.
 /// Logs carry status, finish reason, input length and duration, never the text, the answer or the key.
 /// </summary>
 public sealed partial class GeminiTextImprover(
@@ -26,6 +27,9 @@ public sealed partial class GeminiTextImprover(
 {
     public const string ApiKeyHeader = "x-goog-api-key";
     public const string ThinkingLevel = "MINIMAL";
+
+    /// <summary>One retry, only after a Gemini 503 (design 5, amended 2026-11-12).</summary>
+    public const int MaxAttempts = 2;
 
     private const string UserRole = "user";
     private const string JsonMimeType = "application/json";
@@ -59,23 +63,19 @@ public sealed partial class GeminiTextImprover(
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
         var started = timeProvider.GetTimestamp();
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, RequestPath(settings.Gemini.Model))
-        {
-            Content = JsonContent.Create(BuildRequest(title, description, settings), options: JsonOptions),
-        };
-        request.Headers.Add(ApiKeyHeader, settings.Gemini.ApiKey);
+        var body = BuildRequest(title, description, settings);
 
         try
         {
-            using var response = await httpClient.SendAsync(request, linked.Token);
+            using var response = await SendWithRetryAsync(body, settings, description.Length, linked.Token);
             if (!response.IsSuccessStatusCode)
             {
                 LogFailedStatus(response.StatusCode, description.Length, Elapsed(started));
                 return Result.Failure<string>(AiErrors.Unavailable);
             }
 
-            var body = await response.Content.ReadAsStringAsync(linked.Token);
-            return Interpret(body, description.Length, Elapsed(started));
+            var answer = await response.Content.ReadAsStringAsync(linked.Token);
+            return Interpret(answer, description.Length, Elapsed(started));
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -87,6 +87,36 @@ public sealed partial class GeminiTextImprover(
             // Only the type and the socket error, never the message: the call carries the key in a header.
             LogNetworkError(ex.GetType().Name, ex.HttpRequestError, description.Length, Elapsed(started));
             return Result.Failure<string>(AiErrors.Unavailable);
+        }
+    }
+
+    /// <summary>
+    /// Sends the request; when Gemini answers 503 (its servers are overloaded, which is random and short-lived)
+    /// it sends it once more at once, inside the same Ai:TimeoutSeconds budget. No other status is retried:
+    /// 429 means the quota is used up, and 4xx/5xx other than 503 would fail again.
+    /// </summary>
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        GeminiRequest body,
+        AiOptions settings,
+        int inputLength,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, RequestPath(settings.Gemini.Model))
+            {
+                Content = JsonContent.Create(body, options: JsonOptions),
+            };
+            request.Headers.Add(ApiKeyHeader, settings.Gemini.ApiKey);
+
+            var response = await httpClient.SendAsync(request, cancellationToken);
+            if (response.StatusCode != HttpStatusCode.ServiceUnavailable || attempt == MaxAttempts)
+            {
+                return response;
+            }
+
+            response.Dispose();
+            LogRetrying((int)HttpStatusCode.ServiceUnavailable, inputLength);
         }
     }
 
@@ -187,6 +217,11 @@ public sealed partial class GeminiTextImprover(
         Level = LogLevel.Warning,
         Message = "Gemini returned status {StatusCode}: input length {InputLength}, {ElapsedMs} ms")]
     private partial void LogUnavailableStatus(int statusCode, int inputLength, long elapsedMs);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Gemini returned status {StatusCode}; retrying once: input length {InputLength}")]
+    private partial void LogRetrying(int statusCode, int inputLength);
 
     [LoggerMessage(
         Level = LogLevel.Warning,
