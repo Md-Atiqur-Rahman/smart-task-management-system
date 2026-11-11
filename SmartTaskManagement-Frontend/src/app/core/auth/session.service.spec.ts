@@ -105,6 +105,46 @@ describe('SessionService', () => {
     expect(await b).toBe(true);
   });
 
+  it('refresh_NetworkOrServerError_KeepsTheSession (final review, Important 3)', async () => {
+    store.setSession(authResponse('old'));
+    const result = firstValueFrom(session.refresh());
+
+    backend.expectOne(REFRESH).flush(null, { status: 503, statusText: 'Unavailable' });
+
+    expect(await result).toBe(false);
+    expect(store.accessToken()).toBe('old');
+    expect(session.sessionEnded()).toBe(false);
+  });
+
+  it('refresh_ExpiredOrInvalidCookie_EndsTheSession', async () => {
+    store.setSession(authResponse('old'));
+    const result = firstValueFrom(session.refresh());
+
+    backend
+      .expectOne(REFRESH)
+      .flush({ status: 401, errorCode: 'auth.invalid_refresh_token' }, unauthorized);
+
+    expect(await result).toBe(false);
+    expect(store.isSignedIn()).toBe(false);
+    expect(session.sessionEnded()).toBe(true);
+  });
+
+  it('proactiveRefresh_ClockSkew_WaitsAtLeast30Seconds (final review, Important 2)', async () => {
+    const restored = session.restore();
+    // expiresAt already "past" for a client whose clock is far ahead of the server's.
+    backend.expectOne(REFRESH).flush({
+      ...authResponse('t1'),
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+    });
+    await restored;
+
+    await vi.advanceTimersByTimeAsync(29_000);
+    backend.expectNone(REFRESH);
+
+    await vi.advanceTimersByTimeAsync(2_000);
+    backend.expectOne(REFRESH).flush(authResponse('t2'));
+  });
+
   it('logout_ClearsSession_EvenWhenCallFails', async () => {
     store.setSession(authResponse('t'));
     const done = session.logout();

@@ -21,7 +21,19 @@ const REFRESH_SUPERSEDED = 'auth.refresh_superseded';
 const SUPERSEDED_RETRY_DELAY_MS = 500;
 /** Refresh this long before the access token expires, so calls rarely hit 401. */
 const PROACTIVE_REFRESH_MS = 60_000;
+/**
+ * Lower bound for the proactive timer: expiresAt is server time, so a client
+ * clock far ahead of the server would otherwise refresh in a tight loop.
+ */
+const MIN_REFRESH_DELAY_MS = 30_000;
+/** After a network or server error the cookie may still be valid: try again later. */
+const TRANSIENT_RETRY_MS = 15_000;
 const MAX_TIMER_MS = 2_147_483_647;
+
+/** Refresh answers that mean the refresh cookie is gone or invalid (end the session). */
+function isSessionOver(status: number): boolean {
+  return status === 400 || status === 401 || status === 403;
+}
 
 /** Session lifecycle: sign in, restore on reload, single-flight refresh, sign out. */
 @Injectable({ providedIn: 'root' })
@@ -79,8 +91,13 @@ export class SessionService {
         this.start(response);
         return true;
       }),
-      catchError(() => {
-        this.end(markEnded);
+      catchError((error: unknown) => {
+        if (isSessionOver(toApiProblem(error).status) || !this.store.isSignedIn()) {
+          this.end(markEnded);
+        } else {
+          // Offline, 429 or 5xx: keep the session and try again later.
+          this.schedule(TRANSIENT_RETRY_MS);
+        }
         return of(false);
       }),
     );
@@ -101,13 +118,15 @@ export class SessionService {
   }
 
   private scheduleRefresh(expiresAt: string): void {
-    clearTimeout(this.refreshTimer);
     const delay = Date.parse(expiresAt) - Date.now() - PROACTIVE_REFRESH_MS;
-    if (Number.isFinite(delay)) {
-      this.refreshTimer = setTimeout(
-        () => this.refresh().subscribe(),
-        Math.min(Math.max(delay, 0), MAX_TIMER_MS),
-      );
-    }
+    this.schedule(Number.isFinite(delay) ? delay : MIN_REFRESH_DELAY_MS);
+  }
+
+  private schedule(delay: number): void {
+    clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(
+      () => this.refresh().subscribe(),
+      Math.min(Math.max(delay, MIN_REFRESH_DELAY_MS), MAX_TIMER_MS),
+    );
   }
 }

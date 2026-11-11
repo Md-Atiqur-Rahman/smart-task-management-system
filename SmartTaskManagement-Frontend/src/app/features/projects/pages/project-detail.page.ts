@@ -6,7 +6,7 @@ import { BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { toApiProblem } from '../../../core/http/api-problem';
 import { messageFor } from '../../../core/http/error-messages';
-import { LoadState, loadState } from '../../../shared/load-state';
+import { LoadState, keepDataWhileLoading, loadState } from '../../../shared/load-state';
 import { ConfirmDialogComponent } from '../../../shared/modal.component';
 import { ProjectTasksComponent } from '../../tasks/components/project-tasks.component';
 import { ProjectFormDialogComponent } from '../components/project-form.dialog';
@@ -38,6 +38,7 @@ export class ProjectDetailPage {
   protected readonly state = toSignal(
     combineLatest([toObservable(this.id), this.reload$]).pipe(
       switchMap(([id]) => loadState(this.api.get(id))),
+      keepDataWhileLoading(),
     ),
     { initialValue: { status: 'loading' } as LoadState<ProjectDetailsDto> },
   );

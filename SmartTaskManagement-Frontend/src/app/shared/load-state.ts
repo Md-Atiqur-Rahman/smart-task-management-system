@@ -1,4 +1,4 @@
-import { Observable, catchError, map, of, startWith } from 'rxjs';
+import { Observable, OperatorFunction, catchError, map, of, scan, startWith } from 'rxjs';
 import { ApiProblem, toApiProblem } from '../core/http/api-problem';
 import { messageFor } from '../core/http/error-messages';
 
@@ -17,4 +17,16 @@ export function loadState<T>(source: Observable<T>): Observable<LoadState<T>> {
     }),
     startWith<LoadState<T>>({ status: 'loading' }),
   );
+}
+
+/**
+ * On a reload (manual or live), keep showing the last data instead of going
+ * back to "loading": pages do not blank and embedded components keep their state.
+ */
+export function keepDataWhileLoading<T>(): OperatorFunction<LoadState<T>, LoadState<T>> {
+  return scan(
+    (previous: LoadState<T> | null, next: LoadState<T>) =>
+      next.status === 'loading' && previous?.status === 'ready' ? previous : next,
+    null,
+  ) as OperatorFunction<LoadState<T>, LoadState<T>>;
 }

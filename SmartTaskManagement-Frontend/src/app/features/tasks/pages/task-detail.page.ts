@@ -8,7 +8,7 @@ import { toApiProblem } from '../../../core/http/api-problem';
 import { messageFor } from '../../../core/http/error-messages';
 import { PriorityBadgeComponent, StatusBadgeComponent } from '../../../shared/badges.component';
 import { dueLabel, formatDateOnly, utcToday } from '../../../shared/date-utils';
-import { LoadState, loadState } from '../../../shared/load-state';
+import { LoadState, keepDataWhileLoading, loadState } from '../../../shared/load-state';
 import { ConfirmDialogComponent } from '../../../shared/modal.component';
 import { ProjectsApi } from '../../projects/data-access/projects-api.service';
 import { AssignDialogComponent } from '../components/assign.dialog';
@@ -63,6 +63,7 @@ export class TaskDetailPage {
           ),
         ),
       ),
+      keepDataWhileLoading(),
     ),
     { initialValue: { status: 'loading' } as LoadState<TaskView> },
   );

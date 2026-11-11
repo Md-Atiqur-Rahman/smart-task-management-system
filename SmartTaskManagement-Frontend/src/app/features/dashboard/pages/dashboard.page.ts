@@ -6,7 +6,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { DashboardRefresh } from '../../../core/realtime/dashboard-refresh';
 import { PriorityBadgeComponent, StatusBadgeComponent } from '../../../shared/badges.component';
 import { dueLabel, formatDateOnly, utcToday } from '../../../shared/date-utils';
-import { LoadState, loadState } from '../../../shared/load-state';
+import { LoadState, keepDataWhileLoading, loadState } from '../../../shared/load-state';
 import {
   DashboardApi,
   DashboardSummaryDto,
@@ -35,11 +35,17 @@ export class DashboardPage {
   private readonly reload$ = new BehaviorSubject<void>(undefined);
 
   protected readonly summary = toSignal(
-    this.refresh.changes(this.reload$).pipe(switchMap(() => loadState(this.api.summary()))),
+    this.refresh.changes(this.reload$).pipe(
+      switchMap(() => loadState(this.api.summary())),
+      keepDataWhileLoading(),
+    ),
     { initialValue: { status: 'loading' } as LoadState<DashboardSummaryDto> },
   );
   protected readonly upcoming = toSignal(
-    this.refresh.changes(this.reload$).pipe(switchMap(() => loadState(this.api.upcoming()))),
+    this.refresh.changes(this.reload$).pipe(
+      switchMap(() => loadState(this.api.upcoming())),
+      keepDataWhileLoading(),
+    ),
     { initialValue: { status: 'loading' } as LoadState<UpcomingTaskDto[]> },
   );
   protected readonly live = this.refresh.status;
