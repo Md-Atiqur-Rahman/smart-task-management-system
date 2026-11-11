@@ -32,8 +32,8 @@ public sealed class ProjectReadRepository(AppDbContext context) : IProjectReadRe
     public Task<ProjectDetailsDto?> GetByIdAsync(Guid id, Guid callerId, Role callerRole, CancellationToken ct)
     {
         var owners = Owners();
-        var counted = CountedTasks(callerId, callerRole);
-        return Visible(callerId, callerRole)
+        var counted = Visibility.CountedTasks(context, callerId, callerRole);
+        return Visibility.VisibleProjects(context, callerId, callerRole)
             .AsNoTracking()
             .Where(p => p.Id == id)
             .Select(p => new ProjectDetailsDto(
@@ -57,14 +57,14 @@ public sealed class ProjectReadRepository(AppDbContext context) : IProjectReadRe
     public Task<PagedResult<ProjectListItemDto>> ListAsync(
         ListProjectsQuery query, Guid callerId, Role callerRole, CancellationToken ct)
     {
-        var projects = Visible(callerId, callerRole);
+        var projects = Visibility.VisibleProjects(context, callerId, callerRole);
         if (query.OwnerId is { } ownerId)
         {
             projects = projects.Where(p => p.OwnerId == ownerId);
         }
 
         var owners = Owners();
-        var counted = CountedTasks(callerId, callerRole);
+        var counted = Visibility.CountedTasks(context, callerId, callerRole);
         return projects
             .ApplySearch(query.Search, p => p.Name, p => p.Description)
             .ApplySort(query.SortBy, query.SortDirection, SortMap, ProjectSortFields.CreatedAt, p => p.Id)
@@ -82,43 +82,6 @@ public sealed class ProjectReadRepository(AppDbContext context) : IProjectReadRe
                 query.PageSize,
                 ct);
     }
-
-    // Admin: all; Project Manager: own projects plus projects with a task assigned to them;
-    // any other role: projects with a task assigned to them. Only non-deleted tasks count.
-    // Same rule as TaskItemReadRepository.IsProjectVisibleAsync; keep both identical.
-    // The soft-delete checks are explicit on purpose: IgnoreQueryFilters() on the owner lookup
-    // switches off the global query filters for the WHOLE query, the Projects and Tasks filters included.
-    private IQueryable<Project> Visible(Guid callerId, Role callerRole)
-    {
-        var projects = Projects();
-        var tasks = Tasks();
-        return callerRole switch
-        {
-            Role.Admin => projects,
-            Role.ProjectManager => projects.Where(p =>
-                p.OwnerId == callerId || tasks.Any(t => t.ProjectId == p.Id && t.AssigneeId == callerId)),
-            _ => projects.Where(p => tasks.Any(t => t.ProjectId == p.Id && t.AssigneeId == callerId)),
-        };
-    }
-
-    // The tasks a caller's counts include: Admin: every task; Project Manager: every task of an
-    // own project plus own assignments; any other role: own assignments. Non-deleted tasks only.
-    private IQueryable<TaskItem> CountedTasks(Guid callerId, Role callerRole)
-    {
-        var tasks = Tasks();
-        var projects = Projects();
-        return callerRole switch
-        {
-            Role.Admin => tasks,
-            Role.ProjectManager => tasks.Where(t =>
-                t.AssigneeId == callerId || projects.Any(p => p.Id == t.ProjectId && p.OwnerId == callerId)),
-            _ => tasks.Where(t => t.AssigneeId == callerId),
-        };
-    }
-
-    private IQueryable<Project> Projects() => context.Set<Project>().Where(p => !p.IsDeleted);
-
-    private IQueryable<TaskItem> Tasks() => context.Set<TaskItem>().Where(t => !t.IsDeleted);
 
     private IQueryable<User> Owners() => context.Set<User>().IgnoreQueryFilters();
 }

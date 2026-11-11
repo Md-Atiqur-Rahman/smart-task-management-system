@@ -1,3 +1,4 @@
+using Datavanced.SmartTaskManagement.Application.Features.Dashboard;
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Application.Features.Samples;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks;
@@ -50,6 +51,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IUserReadRepository, UserReadRepository>();
         builder.Services.AddScoped<IProjectReadRepository, ProjectReadRepository>();
         builder.Services.AddScoped<ITaskItemReadRepository, TaskItemReadRepository>();
+        builder.Services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
 
         if (builder.Environment.IsDevelopment())
         {
