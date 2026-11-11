@@ -58,7 +58,7 @@ A fourth private repository is an archive of the long template build history and
   - Checks: `scripts/verify.sh` (lint, Prettier, strict type-check, 76 Vitest unit tests, production build, `npm audit`); Playwright E2E (`npm run e2e`, local only); CI `.github/workflows/frontend.yml`.
   - "Improve with AI" is shown disabled until the AI endpoint is merged.
   - Design: `SmartTaskManagement-Frontend/docs/frontend-design.md`; rules: `SmartTaskManagement-Frontend/CLAUDE.md`.
-- **Submission documents: written.** The root `README.md` (overview, setup, stack, API overview, folder structure, deliverables) and `SmartTaskManagement-Backend/PROMPTS.md`; the PROMPTS.md smoke-test outputs are pending until the AI endpoint is merged. API collection: `SmartTaskManagement-Backend/docs/openapi.json`.
+- **Submission documents: written.** The root `README.md` (overview, setup, stack, API overview, folder structure, deliverables) and `SmartTaskManagement-Backend/PROMPTS.md`; its section 4.2 holds the real smoke-test outputs (2026-11-12). API collection: `SmartTaskManagement-Backend/docs/openapi.json`.
 - **Lesson from the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
@@ -141,7 +141,7 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 5. ~~Notifications module (live push, stored notification list, email on assignment)~~ built
 6. AI endpoint (in progress on `feat/ai-description`)
 7. ~~Angular frontend~~ built (PR #7)
-8. ~~README, `PROMPTS.md`, API collection export~~ written (`PROMPTS.md` smoke-test outputs pending; the API collection is `SmartTaskManagement-Backend/docs/openapi.json`)
+8. ~~README, `PROMPTS.md`, API collection export~~ written (`PROMPTS.md` with real smoke-test outputs; the API collection is `SmartTaskManagement-Backend/docs/openapi.json`)
 
 ### Auth design
 
