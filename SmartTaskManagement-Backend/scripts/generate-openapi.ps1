@@ -5,6 +5,7 @@
 # They come from the SAFE dev-only placeholders in .env.example, passed as
 # environment variables for this process only. No secret is stored in the repo.
 # Environment = Production: no dev-only migration, no database connection.
+# Keep the variables identical to scripts/generate-openapi.sh.
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
@@ -22,6 +23,8 @@ $values = @{
     'Database__Name'         = Get-EnvExampleValue 'DB_NAME'
     'Database__Password'     = Get-EnvExampleValue 'DB_PASSWORD'
     'Jwt__SigningKey'        = Get-EnvExampleValue 'JWT_SIGNING_KEY'
+    # Redis needs ssl=true outside Development/Testing; the generator never connects.
+    'Redis__ConnectionString' = "localhost:$(Get-EnvExampleValue 'REDIS_PORT'),password=$(Get-EnvExampleValue 'REDIS_PASSWORD'),ssl=true"
 }
 try {
     foreach ($name in $values.Keys) {
