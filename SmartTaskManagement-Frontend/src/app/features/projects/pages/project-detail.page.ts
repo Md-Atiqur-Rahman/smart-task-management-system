@@ -9,6 +9,7 @@ import { messageFor } from '../../../core/http/error-messages';
 import { LoadState, keepDataWhileLoading, loadState } from '../../../shared/load-state';
 import { ConfirmDialogComponent } from '../../../shared/modal.component';
 import { ProjectTasksComponent } from '../../tasks';
+import { ChangeOwnerDialogComponent } from '../components/change-owner.dialog';
 import { ProjectFormDialogComponent } from '../components/project-form.dialog';
 import { ProjectsApi } from '../data-access/projects-api.service';
 import { ProjectDetailsDto } from '../models/project.models';
@@ -21,6 +22,7 @@ import { ProjectDetailsDto } from '../models/project.models';
     RouterLink,
     ConfirmDialogComponent,
     ProjectFormDialogComponent,
+    ChangeOwnerDialogComponent,
     ProjectTasksComponent,
   ],
   templateUrl: './project-detail.page.html',
@@ -46,6 +48,7 @@ export class ProjectDetailPage {
   protected readonly isAdmin = computed(() => this.store.role() === 'Admin');
   protected readonly editing = signal(false);
   protected readonly deleting = signal(false);
+  protected readonly changingOwner = signal(false);
   protected readonly busy = signal(false);
   protected readonly actionError = signal<string | null>(null);
 
@@ -55,6 +58,11 @@ export class ProjectDetailPage {
 
   protected onSaved(): void {
     this.editing.set(false);
+    this.reload$.next();
+  }
+
+  protected onOwnerChanged(): void {
+    this.changingOwner.set(false);
     this.reload$.next();
   }
 

@@ -41,6 +41,11 @@ export interface UpdateProjectRequest {
   description: string | null;
 }
 
+/** Body of PUT /api/projects/{id}/owner (ChangeProjectOwnerRequest): the new owner, a Project Manager. */
+export interface ChangeProjectOwnerRequest {
+  ownerId: string;
+}
+
 export type ProjectSortField = 'name' | 'createdAt' | 'updatedAt';
 
 export interface ProjectListQuery {

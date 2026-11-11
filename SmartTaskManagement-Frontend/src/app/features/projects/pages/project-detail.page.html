@@ -23,6 +23,11 @@
         @if (canManage(project)) {
           <div class="actions">
             <button type="button" class="btn" (click)="editing.set(true)">Edit</button>
+            @if (isAdmin()) {
+              <button type="button" class="btn" (click)="changingOwner.set(true)">
+                Change owner
+              </button>
+            }
             <button type="button" class="btn btn-danger-text" (click)="deleting.set(true)">
               Delete
             </button>
@@ -79,6 +84,13 @@
         [project]="project"
         (saved)="onSaved()"
         (closed)="editing.set(false)"
+      />
+    }
+    @if (changingOwner()) {
+      <app-change-owner-dialog
+        [project]="project"
+        (saved)="onOwnerChanged()"
+        (closed)="changingOwner.set(false)"
       />
     }
     @if (deleting()) {
