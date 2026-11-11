@@ -2,7 +2,7 @@
 
 - Status: **Draft**, not yet approved. Final only when the developer approves it and
   the open-questions list is empty.
-- Updated: 2026-11-10
+- Updated: 2026-11-11
 - Sources: `docs/assignment.md` (the brief), the PRD interview with the developer,
   `docs/adr/` (decisions). Design and implementation details live in design
   documents under `docs/`, which reference this PRD instead of repeating it.
@@ -41,7 +41,7 @@ one role.
 | Use the AI description endpoint | Yes | Yes | No |
 | List users (search, paging) and change a user's role | Yes | No | No |
 | Create a user directly | No (users only self-register) | No | No |
-| Dashboard | Whole system | Own projects | Own assigned tasks |
+| Dashboard | Whole system | Own projects, and tasks assigned to them (same rule as the lists, section 3) | Own assigned tasks |
 
 ## 3. Visibility rules (CONFIRMED)
 
@@ -215,9 +215,18 @@ one role.
 
 - CONFIRMED (assignment): total projects, total tasks, tasks by status, tasks by
   priority, completed versus pending, upcoming due tasks.
-- CONFIRMED: scoped by role (section 2).
-- PROPOSED: numbers computed with database-level grouping; "upcoming" window in
-  Options.
+- CONFIRMED: scoped by role (section 2), exactly like the task and project lists
+  (section 3); deleted tasks and tasks of deleted projects are never counted.
+- CONFIRMED: two calls, one for all the numbers and one for the upcoming list,
+  so the cards load first and the numbers always add up; numbers are computed in
+  the database (grouping and counts), never cached.
+- CONFIRMED: completed = Completed; pending = To Do + In Progress; Cancelled is in
+  neither. An overdue count (pending tasks due before today) is shown too.
+- CONFIRMED: upcoming = pending tasks due from today to today + 7 days, at most
+  10, earliest first, then by priority (Critical first); both numbers are
+  settings. "Today" is the server's UTC date.
+- CONFIRMED: live updates, stored notifications and email on assignment come in a
+  separate Notifications module after the dashboard, not in it.
 
 ## 10. AI description improvement
 
@@ -266,3 +275,4 @@ migrations.
 | 2026-11-10 | Reuse detection revokes only the presented token's family (one login's chain) instead of all of the user's tokens (ADR 0016) | Developer decision: after a role change the user's devices signed each other out in a loop, and anyone holding an old revoked token could sign the user out everywhere |
 | 2026-11-10 | Projects: fields, ownership (Admin chooses a PM owner; only an Admin can change the owner later, replacing "ownership does not change"), soft delete (open question 5 closed), list search/filter/sort/server-side paging, list and details contents, no demotion of a PM who owns projects | Developer confirmed in the Project module interview; a project must be handed to another PM when its PM leaves |
 | 2026-11-10 | Tasks: separate aggregate, no status transition rules (any status to any status; replaces the proposed transition table; open question 4 closed), fields, date-only due date with past dates allowed, soft delete, lists with search/filter/sort/paging, list and details contents, separate status and assignment operations, project task counts. Sections 2 and 3: whoever a task is assigned to sees it and its project and may change its status, whatever their role | Developer confirmed in the Task module interview; an Admin may assign anyone, and the assignee must be able to see the work; Azure Boards, Jira and Zoho allow any-to-any status changes by default, so final statuses would block normal reopening |
+| 2026-11-11 | Dashboard (section 9): scope like the lists (section 2 PM dashboard row corrected from "own projects"), two calls (summary and upcoming), completed/pending/overdue definitions, upcoming window of 7 days and 10 tasks, no caching; notifications moved to a separate later module | Developer confirmed in the Dashboard interview; one visibility rule keeps dashboard numbers equal to what the lists show |
