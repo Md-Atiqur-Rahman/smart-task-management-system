@@ -1,0 +1,162 @@
+<div class="page">
+  <div class="page-head">
+    <h1>Projects</h1>
+    @if (canCreate()) {
+      <button type="button" class="btn btn-primary" (click)="creating.set(true)">
+        New project
+      </button>
+    }
+  </div>
+
+  <form role="search" class="toolbar" (submit)="$event.preventDefault()">
+    <div class="field grow">
+      <label class="label" for="project-search">Search projects</label>
+      <input
+        class="input"
+        id="project-search"
+        type="search"
+        placeholder="Name or description"
+        [value]="query().search"
+        (input)="onSearch($event)"
+      />
+    </div>
+    @if (isAdmin()) {
+      <div class="field fixed">
+        <app-user-picker
+          label="Owner"
+          placeholder="All owners (type to search)"
+          [search]="searchManagers"
+          (picked)="update({ ownerId: $event.id })"
+        />
+        @if (query().ownerId) {
+          <button type="button" class="btn btn-sm btn-ghost" (click)="update({ ownerId: '' })">
+            Clear owner filter
+          </button>
+        }
+      </div>
+    }
+    <div class="field fixed">
+      <label class="label" for="project-sort">Sort by</label>
+      <select class="input" id="project-sort" (change)="onSort($event)">
+        @for (sort of sorts; track sort.value) {
+          <option [value]="sort.value" [selected]="sort.value === query().sort">
+            {{ sort.label }}
+          </option>
+        }
+      </select>
+    </div>
+  </form>
+
+  @if (actionError(); as message) {
+    <div class="alert alert-error" role="alert">{{ message }}</div>
+  }
+
+  <section class="card" aria-label="Projects">
+    @let s = state();
+    @if (s.status === 'loading') {
+      <p class="empty muted" role="status">Loading projects…</p>
+    } @else if (s.status === 'error') {
+      <div class="empty">
+        <p class="alert alert-error" role="alert">{{ s.message }}</p>
+      </div>
+    } @else {
+      @if (s.data.items.length === 0) {
+        <p class="empty muted">
+          {{
+            query().search || query().ownerId
+              ? 'No projects match your search.'
+              : 'No projects yet.'
+          }}
+        </p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Tasks done</th>
+                <th scope="col">Created</th>
+                <th scope="col">Updated</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (project of s.data.items; track project.id) {
+                <tr>
+                  <td>
+                    <a class="strong" [routerLink]="['/projects', project.id]">{{
+                      project.name
+                    }}</a>
+                  </td>
+                  <td>{{ project.ownerName }}</td>
+                  <td>
+                    <div class="progress">
+                      <div class="track" aria-hidden="true">
+                        <div class="fill" [style.width.%]="progress(project)"></div>
+                      </div>
+                      <span>{{ project.completedTaskCount }} / {{ project.taskCount }}</span>
+                    </div>
+                  </td>
+                  <td class="muted nowrap">{{ project.createdAt | date: 'mediumDate' }}</td>
+                  <td class="muted nowrap">
+                    {{ (project.updatedAt | date: 'mediumDate') ?? '—' }}
+                  </td>
+                  <td>
+                    @if (canManage(project)) {
+                      <div class="actions">
+                        <button type="button" class="btn btn-sm" (click)="openEdit(project)">
+                          Edit<span class="sr-only"> {{ project.name }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-danger-text"
+                          (click)="deleting.set(project)"
+                        >
+                          Delete<span class="sr-only"> {{ project.name }}</span>
+                        </button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <app-pager
+        noun="projects"
+        [page]="s.data.page"
+        [pageSize]="s.data.pageSize"
+        [totalCount]="s.data.totalCount"
+        (pageChange)="update({ page: $event })"
+        (pageSizeChange)="update({ pageSize: $event })"
+      />
+    }
+  </section>
+</div>
+
+@if (creating()) {
+  <app-project-form-dialog
+    [chooseOwner]="isAdmin()"
+    (saved)="onSaved($event)"
+    (closed)="creating.set(false)"
+  />
+}
+@if (editing(); as project) {
+  <app-project-form-dialog
+    [project]="project"
+    (saved)="onSaved($event)"
+    (closed)="editing.set(null)"
+  />
+}
+@if (deleting(); as project) {
+  <app-confirm-dialog
+    [heading]="'Delete “' + project.name + '”?'"
+    message="The project and its tasks disappear for everyone. There is no restore in the app."
+    confirmText="Delete project"
+    [busy]="busy()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleting.set(null)"
+  />
+}

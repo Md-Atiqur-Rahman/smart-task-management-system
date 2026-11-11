@@ -1,0 +1,149 @@
+@let s = state();
+<div class="page">
+  <nav aria-label="Breadcrumb" class="crumbs">
+    <a routerLink="/tasks">Tasks</a>
+    @if (s.status === 'ready') {
+      <span aria-hidden="true"> / </span>
+      <a [routerLink]="['/projects', s.data.task.project.id]">{{ s.data.task.project.name }}</a>
+    }
+  </nav>
+
+  @if (s.status === 'loading') {
+    <p class="muted" role="status">Loading task…</p>
+  } @else if (s.status === 'error') {
+    <div class="card empty">
+      <h1>{{ s.problem.status === 404 ? 'Not found' : 'Something went wrong' }}</h1>
+      <p class="muted">{{ s.message }}</p>
+      <a class="btn" routerLink="/tasks">Back to tasks</a>
+    </div>
+  } @else {
+    @let view = s.data;
+    @let task = view.task;
+    <div class="page-head">
+      <h1>{{ task.title }}</h1>
+      @if (canManage(view)) {
+        <div class="actions">
+          <button type="button" class="btn" (click)="editing.set(true)">Edit</button>
+          <button type="button" class="btn btn-danger-text" (click)="deleting.set(true)">
+            Delete
+          </button>
+        </div>
+      }
+    </div>
+    @if (message(); as text) {
+      <div class="alert alert-info" role="status">{{ text }}</div>
+    }
+    @if (actionError(); as text) {
+      <div class="alert alert-error" role="alert">{{ text }}</div>
+    }
+
+    <div class="task-layout">
+      <section class="card details" aria-labelledby="task-description-title">
+        <h2 id="task-description-title" class="section-title">Description</h2>
+        @if (task.description) {
+          <p class="description">{{ task.description }}</p>
+        } @else {
+          <p class="muted">No description.</p>
+        }
+      </section>
+
+      <aside class="card details props" aria-label="Task properties">
+        <div class="field">
+          <span class="label">Status</span>
+          @if (canStatus(view)) {
+            <app-status-select
+              [taskId]="task.id"
+              [taskTitle]="task.title"
+              [status]="task.status"
+              (changed)="done('Status changed.')"
+            />
+          } @else {
+            <app-status-badge [status]="task.status" />
+          }
+        </div>
+        <dl class="prop-list">
+          <div>
+            <dt class="label">Assignee</dt>
+            <dd>
+              @if (task.assignee; as person) {
+                <strong>{{ person.fullName }}</strong
+                ><br /><span class="muted small">{{ person.email }}</span>
+              } @else {
+                <span class="muted">Unassigned</span>
+              }
+              @if (canManage(view)) {
+                <span class="actions start">
+                  <button type="button" class="btn btn-sm" (click)="assigning.set(true)">
+                    {{ task.assignee ? 'Change' : 'Assign' }}
+                  </button>
+                  @if (task.assignee) {
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      [disabled]="busy()"
+                      (click)="unassign(task)"
+                    >
+                      Unassign
+                    </button>
+                  }
+                </span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="label">Priority</dt>
+            <dd><app-priority-badge [priority]="task.priority" /></dd>
+          </div>
+          <div>
+            <dt class="label">Due date</dt>
+            <dd>
+              {{ date(task.dueDate) }}
+              @if (due(task); as label) {
+                <span [class.overdue]="label !== 'Tomorrow'"> · {{ label }}</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt class="label">Project</dt>
+            <dd>
+              <a [routerLink]="['/projects', task.project.id]">{{ task.project.name }}</a>
+            </dd>
+          </div>
+          <div>
+            <dt class="label">Created</dt>
+            <dd>{{ task.createdAt | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt class="label">Updated</dt>
+            <dd>{{ (task.updatedAt | date: 'medium') ?? '—' }}</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+
+    @if (editing()) {
+      <app-task-form-dialog
+        [task]="task"
+        (saved)="done('Task saved.')"
+        (closed)="editing.set(false)"
+      />
+    }
+    @if (assigning()) {
+      <app-assign-dialog
+        [task]="task"
+        (saved)="done('Assignee changed.')"
+        (closed)="assigning.set(false)"
+      />
+    }
+    @if (deleting()) {
+      <app-confirm-dialog
+        [heading]="'Delete “' + task.title + '”?'"
+        message="The task disappears from every list, count and the dashboard, for everyone. There is no restore in the app."
+        confirmText="Delete task"
+        [busy]="busy()"
+        (confirmed)="confirmDelete(task)"
+        (cancelled)="deleting.set(false)"
+      />
+    }
+  }
+</div>

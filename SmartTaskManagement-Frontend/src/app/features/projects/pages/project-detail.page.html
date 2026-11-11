@@ -1,0 +1,95 @@
+@let s = state();
+<div class="page">
+  <nav aria-label="Breadcrumb" class="crumbs">
+    <a routerLink="/projects">Projects</a>
+    @if (s.status === 'ready') {
+      <span aria-hidden="true"> / </span><span aria-current="page">{{ s.data.name }}</span>
+    }
+  </nav>
+
+  @if (s.status === 'loading') {
+    <p class="muted" role="status">Loading project…</p>
+  } @else if (s.status === 'error') {
+    <div class="card empty">
+      <h1>{{ s.problem.status === 404 ? 'Not found' : 'Something went wrong' }}</h1>
+      <p class="muted">{{ s.message }}</p>
+      <a class="btn" routerLink="/projects">Back to projects</a>
+    </div>
+  } @else {
+    @let project = s.data;
+    <section class="card details" aria-labelledby="project-title">
+      <div class="page-head">
+        <h1 id="project-title">{{ project.name }}</h1>
+        @if (canManage(project)) {
+          <div class="actions">
+            <button type="button" class="btn" (click)="editing.set(true)">Edit</button>
+            <button type="button" class="btn btn-danger-text" (click)="deleting.set(true)">
+              Delete
+            </button>
+          </div>
+        }
+      </div>
+      @if (actionError(); as message) {
+        <div class="alert alert-error" role="alert">{{ message }}</div>
+      }
+      @if (project.description) {
+        <p class="muted description">{{ project.description }}</p>
+      }
+      <dl class="meta">
+        <div>
+          <dt class="muted">Owner</dt>
+          <dd>
+            <strong>{{ project.owner.fullName }}</strong> · {{ project.owner.email }}
+          </dd>
+        </div>
+        <div>
+          <dt class="muted">Created</dt>
+          <dd>{{ project.createdAt | date: 'mediumDate' }}</dd>
+        </div>
+        <div>
+          <dt class="muted">Updated</dt>
+          <dd>{{ (project.updatedAt | date: 'mediumDate') ?? '—' }}</dd>
+        </div>
+      </dl>
+      <div class="tiles">
+        <div class="tile">
+          <span class="muted">To Do</span><b>{{ project.taskCounts.toDo }}</b>
+        </div>
+        <div class="tile">
+          <span class="muted">In Progress</span><b>{{ project.taskCounts.inProgress }}</b>
+        </div>
+        <div class="tile">
+          <span class="muted">Completed</span><b>{{ project.taskCounts.completed }}</b>
+        </div>
+        <div class="tile">
+          <span class="muted">Cancelled</span><b>{{ project.taskCounts.cancelled }}</b>
+        </div>
+      </div>
+    </section>
+
+    <app-project-tasks
+      [projectId]="project.id"
+      [projectOwnerId]="project.owner.id"
+      [canAdd]="canManage(project)"
+      (changed)="reload()"
+    />
+
+    @if (editing()) {
+      <app-project-form-dialog
+        [project]="project"
+        (saved)="onSaved()"
+        (closed)="editing.set(false)"
+      />
+    }
+    @if (deleting()) {
+      <app-confirm-dialog
+        [heading]="'Delete “' + project.name + '”?'"
+        message="The project and its tasks disappear for everyone. There is no restore in the app."
+        confirmText="Delete project"
+        [busy]="busy()"
+        (confirmed)="confirmDelete(project)"
+        (cancelled)="deleting.set(false)"
+      />
+    }
+  }
+</div>
