@@ -5,6 +5,8 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = defineConfig([
+  // The design prototype (docs/design) is reference HTML, not app code.
+  { ignores: ['docs/**', 'dist/**', '.angular/**'] },
   {
     files: ['**/*.ts'],
     extends: [
