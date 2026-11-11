@@ -1,5 +1,7 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
+using Datavanced.SmartTaskManagement.Infrastructure.LiveEvents;
 using Datavanced.SmartTaskManagement.Infrastructure.Redis;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
@@ -103,6 +105,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
                 services.AddSingleton<ITokenVersionStore>(TokenVersions);
                 services.RemoveAll<IFixedWindowCounter>();
                 services.AddSingleton<IFixedWindowCounter>(RateLimitCounter);
+
+                // No Redis: deliver live events in process and do not subscribe to a Redis channel.
+                services.RemoveAll<ILiveEventPublisher>();
+                services.AddSingleton<InProcessLiveEventPublisher>(provider =>
+                    new InProcessLiveEventPublisher(provider.GetRequiredService<LiveConnectionRegistry>()));
+                services.AddSingleton<ILiveEventPublisher>(provider =>
+                    provider.GetRequiredService<InProcessLiveEventPublisher>());
+                var subscriber = services.FirstOrDefault(d => d.ImplementationType == typeof(RedisLiveEventSubscriber));
+                if (subscriber is not null)
+                {
+                    services.Remove(subscriber);
+                }
             }
 
             if (_timeProvider is not null)

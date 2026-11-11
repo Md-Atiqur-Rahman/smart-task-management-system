@@ -1,5 +1,6 @@
 using Datavanced.SmartTaskManagement.Application.Configuration.Dashboard;
 using Datavanced.SmartTaskManagement.Application.Configuration.Messaging;
+using Datavanced.SmartTaskManagement.Application.Configuration.Notifications;
 using Datavanced.SmartTaskManagement.Application.Configuration.Paging;
 using Datavanced.SmartTaskManagement.Application.Configuration.Security;
 using Datavanced.SmartTaskManagement.Application.Configuration.Validation;
@@ -18,6 +19,7 @@ public static class HostApplicationBuilderExtensions
         builder.ConfigureValidation();
         builder.ConfigurePaging();
         builder.ConfigureDashboard();
+        builder.ConfigureNotifications();
         builder.ConfigureSecurityContext();
         builder.ConfigureTokenVersionCheck();
         builder.ConfigureAuthSessions();
