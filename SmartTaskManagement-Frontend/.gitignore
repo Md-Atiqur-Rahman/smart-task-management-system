@@ -45,3 +45,8 @@ Thumbs.db
 
 # Exported HTTPS development certificate (never commit)
 /certs/
+
+# Playwright output
+/test-results/
+/playwright-report/
+/blob-report/

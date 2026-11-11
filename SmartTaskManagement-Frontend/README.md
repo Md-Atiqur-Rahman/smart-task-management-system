@@ -45,6 +45,30 @@ Why HTTPS in development: the refresh token is a `SameSite=Strict` cookie set by
 `bash scripts/verify.sh` runs lint, Prettier check, type-check, unit tests, a
 production build and `npm audit --audit-level=high`.
 
+## End-to-end tests (local only)
+
+Playwright drives the installed Microsoft Edge (`E2E_CHANNEL` selects another
+browser). The API must be running (step 1 above); Playwright starts the dev
+server itself if it is not running.
+
+```bash
+npm run e2e
+```
+
+The Admin scenario (promote a Project Manager, create a project and an assigned
+task, the assignee gets the live notification) needs the Admin sign-in in your
+shell only (never committed, never printed). It is skipped without them.
+PowerShell:
+
+```powershell
+$env:E2E_ADMIN_EMAIL = "<admin email>"
+$env:E2E_ADMIN_PASSWORD = "<admin password>"
+npm run e2e
+```
+
+Each run registers fresh `e2e.*@example.com` users and leaves its test data in
+the local database (soft delete only). CI does not run E2E.
+
 ## Structure
 
 ```text

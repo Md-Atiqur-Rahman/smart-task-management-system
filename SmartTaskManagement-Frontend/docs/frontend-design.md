@@ -48,8 +48,7 @@ obviously correct rather than feature-rich.
   new-task and edit-task dialogs. It is wired to the AI endpoint in the **last
   milestone**, which may start only after the AI endpoint exists in
   `openapi.json`.
-- **E2E tests (Playwright)** [decided]: designed (section 13) but **not
-  implemented now**; a deferred milestone.
+- **E2E tests (Playwright)**: built on 2026-11-11 at the developer's request (section 13).
 - **CI workflow `.github/workflows/frontend.yml`**: built on 2026-11-11 (section 13).
 - No i18n, no dark theme, no offline mode, no state library (NgRx etc.), no UI
   component library [builder's call: plain CSS keeps the dependency list short].
@@ -75,8 +74,8 @@ obviously correct rather than feature-rich.
 | 4 | Any status to any status (PRD 8); no final states. | Every status control offers all four statuses. |
 | 5 | No "Viewing as" switcher, no demo accounts. | The role comes only from the signed-in user. |
 | 6 | Dev server runs on **HTTPS** at `https://localhost:4200` with the ASP.NET Core dev certificate. | Section 11. |
-| 7 | E2E with Playwright, local only, Admin credentials from environment variables, a fresh TM registered per run. **Deferred.** | Section 13. |
-| 8 | Unit tests stay in scope (services, guards, interceptors, SSE client, key components); only E2E and CI are deferred. | Section 13. |
+| 7 | E2E with Playwright, local only, Admin credentials from environment variables, a fresh TM registered per run. Built 2026-11-11 (first deferred, then requested). | Section 13. |
+| 8 | Unit tests stay in scope (services, guards, interceptors, SSE client, key components); E2E and CI were first deferred, then built on request (2026-11-11). | Section 13. |
 
 ## 3. Technology (verified 2026-11-11 with `npm view`)
 
@@ -87,7 +86,7 @@ obviously correct rather than feature-rich.
 | TypeScript | **6.0.x** (Angular 22 requires `>=6.0 <6.1`; TypeScript 7 is not supported) | `@angular/compiler-cli@22.2.5` peerDependencies |
 | Unit tests | **Vitest**, the `ng new` default (`testRunner` default `"vitest"`) | `@schematics/angular@22.2.6` `ng-new/schema.json` |
 | Lint / format | angular-eslint 22.6.0 (needs eslint 9 or 10), eslint 10.14.0, prettier 3.9.10; all MIT | `npm view` |
-| E2E (deferred) | @playwright/test 1.65.0, Apache-2.0 | `npm view` |
+| E2E | @playwright/test 1.65.0, Apache-2.0 | `npm view` |
 
 Rules: re-check each exact version with `npm view <pkg> version` when installing
 (versions move); pin exact versions; commit `package-lock.json`; `npm audit`
@@ -452,7 +451,8 @@ Counters show the remaining length. Submit buttons are disabled while sending
   and `npm audit --audit-level=high`, and fail on the first error. Each
   milestone ends with this script green (and the backend verify when files
   outside the frontend folder change).
-- **Deferred milestone: E2E** (Playwright, local only): login; create a project;
+- **E2E** (Playwright 1.65.0, local only, built 2026-11-11; drives the installed
+  Edge, `channel: msedge`): login; create a project;
   create and assign a task; the assignee receives the notification (toast +
   badge). Admin credentials from `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`
   (never committed, never printed); a fresh Team Member is registered with a
