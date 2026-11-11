@@ -26,6 +26,15 @@ describe('SseParser (text/event-stream)', () => {
     ]);
   });
 
+  it('keeps a CRLF line ending that is split across two chunks as one line end', () => {
+    const parser = new SseParser();
+
+    expect(parser.push('event: notification\r')).toEqual([]);
+    expect(parser.push('\ndata: {"id":"n3"}\r\n\r\n')).toEqual([
+      { event: 'notification', data: '{"id":"n3"}' },
+    ]);
+  });
+
   it('joins multi-line data, ignores comments and ids, defaults the type to message', () => {
     const events = new SseParser().push(': keep-alive\nid: 7\ndata: a\ndata: b\n\n');
 

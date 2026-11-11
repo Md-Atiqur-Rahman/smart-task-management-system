@@ -19,6 +19,10 @@ export class SseParser {
     const events: SseEvent[] = [];
     let newline = this.buffer.search(/\r\n|\n|\r/);
     while (newline >= 0) {
+      // A CR at the very end may be the first half of a CRLF split across chunks: wait for more.
+      if (this.buffer[newline] === '\r' && newline === this.buffer.length - 1) {
+        break;
+      }
       const line = this.buffer.slice(0, newline);
       const length = this.buffer.startsWith('\r\n', newline) ? 2 : 1;
       this.buffer = this.buffer.slice(newline + length);
