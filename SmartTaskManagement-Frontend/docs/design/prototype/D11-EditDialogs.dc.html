@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit and assign dialogs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st{min-height:100vh;background:#475569;color:#111827;font:14px/1.45 Inter,system-ui,sans-serif}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.st p{margin:0}
+.st .dlg{background:#FFF;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 50px rgba(15,23,42,.35)}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none}
+.st .btn:focus-visible,.st .in:focus-visible{outline:3px solid #14B8A6;outline-offset:2px}
+.st .btn:disabled{cursor:not-allowed;background:#F3F4F6;color:#6B7280;border-color:#E5E7EB}
+.st .bp{background:#0F766E;border-color:#0F766E;color:#FFF}
+.st .bd{background:#B91C1C;border-color:#B91C1C;color:#FFF}
+.st .sm{min-height:32px;padding:0 10px;font-size:13px}
+.st .in{width:100%;min-height:40px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;color:#111827;font:400 14px Inter,system-ui,sans-serif}
+.st textarea.in{min-height:110px;resize:vertical;line-height:1.5}
+.st .lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.st .req{color:#B91C1C}
+.st .hint{font-size:12px;color:#4B5563;margin-top:4px}
+.st .muted{color:#4B5563}
+.st .row{display:flex;justify-content:space-between;gap:8px}
+.st .lb{list-style:none;margin:4px 0 0;padding:4px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;box-shadow:0 8px 20px rgba(15,23,42,.12)}
+.st .opt{display:flex;flex-direction:column;padding:8px 10px;border-radius:6px}
+.st .act{background:#F0FDFA;outline:2px solid #14B8A6}
+.st .tip{position:relative;display:inline-block}
+.st .tipbox{position:absolute;right:0;bottom:calc(100% + 6px);background:#0F172A;color:#FFF;font-size:12px;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.st .alert{padding:10px 12px;border-radius:8px;font-size:13px}
+.st .a-warn{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.st .who{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E5E7EB;border-radius:10px;background:#F9FAFB}
+</style>
+</helmet>
+<div class="st" style="padding: 40px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 32px; align-items: start">
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-ep">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="t-ep" style="font-size: 20px">Edit project</h2><span class="muted" style="font-size: 13px">PUT /api/projects/{id} · Admin or the owning Project Manager</span></div>
+    <div><label class="lbl" for="epn">Name <span class="req" aria-hidden="true">*</span></label><input class="in" id="epn" value="Customer Portal Revamp"><div class="row"><span></span><span class="hint">22 / 200</span></div></div>
+    <div><label class="lbl" for="epd">Description</label><textarea class="in" id="epd">Rebuild the self-service portal so customers can track orders, download invoices and raise support tickets.</textarea><div class="row"><span></span><span class="hint">108 / 2000</span></div></div>
+    <p class="muted" style="font-size: 12px">The owner is not edited here: Admins use “Change owner”.</p>
+    <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D05-ProjectDetail.dc.html">Cancel</a><button class="btn bp" type="submit">Save changes</button></div>
+  </div>
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-et">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="t-et" style="font-size: 20px">Edit task</h2><span class="muted" style="font-size: 13px">PUT /api/tasks/{id} · title, description, priority and due date only</span></div>
+    <div class="alert a-warn" role="alert">Someone else changed this task while you were editing. Reload to see the latest version.</div>
+    <div><label class="lbl" for="ett">Title <span class="req" aria-hidden="true">*</span></label><input class="in" id="ett" value="Invoice PDF download"><div class="row"><span></span><span class="hint">20 / 200</span></div></div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div><label class="lbl" for="etp">Priority</label><select class="in" id="etp"><option>Low</option><option>Medium</option><option selected="selected">High</option><option>Critical</option></select></div>
+      <div><label class="lbl" for="etd">Due date</label><div style="display: flex; gap: 6px"><input class="in" id="etd" type="date" value="2026-11-12"><button class="btn" type="button" aria-label="Clear due date" style="padding: 0 10px">×</button></div></div>
+    </div>
+    <div>
+      <div class="row" style="align-items: flex-end; margin-bottom: 6px">
+        <label class="lbl" for="etx" style="margin: 0">Description</label>
+        <span class="tip"><button class="btn sm" type="button" disabled="disabled" aria-describedby="ai-tip2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path></svg>Improve with AI</button><span class="tipbox" id="ai-tip2" role="tooltip">Coming soon</span></span>
+      </div>
+      <textarea class="in" id="etx">Let customers download any invoice as a PDF from the order details page.</textarea>
+      <div class="row"><span></span><span class="hint">73 / 4000</span></div>
+    </div>
+    <p class="muted" style="font-size: 12px">Status and assignee have their own controls on the task page (separate API operations, PRD 8).</p>
+    <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D07-TaskDetail.dc.html">Cancel</a><button class="btn bp" type="submit">Save changes</button></div>
+  </div>
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-as">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="t-as" style="font-size: 20px">Assign task</h2><span class="muted" style="font-size: 13px">PUT /api/tasks/{id}/assignee · Admin or the owning Project Manager</span></div>
+    <div><span class="lbl">Currently assigned to</span>
+      <div class="who"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 999px; background: #134E4A; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px">NJ</span><span style="flex: 1; display: flex; flex-direction: column"><strong>Nusrat Jahan</strong><span class="muted" style="font-size: 12px">nusrat@example.com</span></span><button class="btn sm" type="button">Unassign</button></div>
+    </div>
+    <div>
+      <label class="lbl" for="asq">Assign to someone else</label>
+      <input class="in" id="asq" role="combobox" aria-expanded="true" aria-controls="as-list" aria-autocomplete="list" aria-activedescendant="as-o1" value="ari" placeholder="Search by name or email">
+      <ul class="lb" id="as-list" role="listbox" aria-label="Assignable people">
+        <li class="opt act" id="as-o1" role="option" aria-selected="true"><strong>Arif Chowdhury</strong><span class="muted" style="font-size: 12px">arif@example.com</span></li>
+        <li class="opt" id="as-o2" role="option" aria-selected="false"><strong>Arifa Begum</strong><span class="muted" style="font-size: 12px">arifa@example.com</span></li>
+      </ul>
+      <div class="hint">Project Managers can assign Team Members and themselves; Admins can assign anyone.</div>
+    </div>
+    <p class="muted" style="font-size: 12px">The new assignee gets a notification and an email. The previous assignee is told the task was removed and loses access to it at once.</p>
+    <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D07-TaskDetail.dc.html">Cancel</a><button class="btn bp" type="submit">Assign to Arif Chowdhury</button></div>
+  </div>
+
+  <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="t-dt" aria-describedby="t-dt-d">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="t-dt" style="font-size: 20px">Delete “Invoice PDF download”?</h2><span class="muted" style="font-size: 13px">DELETE /api/tasks/{id}</span></div>
+    <p class="muted" id="t-dt-d" style="line-height: 1.6">The task disappears from every list, count and the dashboard, for everyone. There is no restore in the app.</p>
+    <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D07-TaskDetail.dc.html">Cancel</a><a class="btn bd" href="D06-Tasks.dc.html">Delete task</a></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dialogs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st{min-height:100vh;background:#475569;color:#111827;font:14px/1.45 Inter,system-ui,sans-serif}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.st p{margin:0}
+.st .dlg{background:#FFF;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 50px rgba(15,23,42,.35)}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none}
+.st .btn:focus-visible,.st .in:focus-visible,.st .opt:focus-visible{outline:3px solid #14B8A6;outline-offset:2px}
+.st .btn:disabled{cursor:not-allowed;background:#F3F4F6;color:#6B7280;border-color:#E5E7EB}
+.st .bp{background:#0F766E;border-color:#0F766E;color:#FFF}
+.st .bd{background:#B91C1C;border-color:#B91C1C;color:#FFF}
+.st .sm{min-height:32px;padding:0 10px;font-size:13px}
+.st .in{width:100%;min-height:40px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;color:#111827;font:400 14px Inter,system-ui,sans-serif}
+.st .bad{border-color:#B91C1C}
+.st textarea.in{min-height:120px;resize:vertical;line-height:1.5}
+.st .lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.st .req{color:#B91C1C}
+.st .hint{font-size:12px;color:#4B5563;margin-top:4px}
+.st .err{font-size:12px;color:#B91C1C;margin-top:4px}
+.st .muted{color:#4B5563}
+.st .row{display:flex;justify-content:space-between;gap:8px}
+.st .lb{list-style:none;margin:4px 0 0;padding:4px;border:1px solid #D1D5DB;border-radius:8px;background:#FFF;box-shadow:0 8px 20px rgba(15,23,42,.12)}
+.st .opt{display:flex;flex-direction:column;padding:8px 10px;border-radius:6px}
+.st .act{background:#F0FDFA;outline:2px solid #14B8A6}
+.st .tip{position:relative;display:inline-block}
+.st .tipbox{position:absolute;right:0;bottom:calc(100% + 6px);background:#0F172A;color:#FFF;font-size:12px;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.st .alert{padding:10px 12px;border-radius:8px;font-size:13px}
+.st .a-err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+</style>
+</helmet>
+<div class="st" style="padding: 40px 32px; display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; justify-content: center">
+
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-new" style="flex: 1 1 560px; max-width: 640px">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="t-new" style="font-size: 20px">New task</h2><span class="muted" style="font-size: 13px">In Customer Portal Revamp</span></div>
+    <div>
+      <label class="lbl" for="tt">Title <span class="req" aria-hidden="true">*</span></label>
+      <input class="in bad" id="tt" aria-invalid="true" aria-describedby="tt-e" value="">
+      <div class="row"><div class="err" id="tt-e">Title is required.</div><span class="hint">0 / 200</span></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div><label class="lbl" for="tp">Priority</label><select class="in" id="tp"><option>Low</option><option selected="selected">Medium</option><option>High</option><option>Critical</option></select></div>
+      <div><label class="lbl" for="td">Due date</label><input class="in" id="td" type="date" value="2026-11-20"><div class="hint">Optional. Date only.</div></div>
+    </div>
+    <div>
+      <label class="lbl" for="ta">Assignee</label>
+      <input class="in" id="ta" role="combobox" aria-expanded="true" aria-controls="ta-list" aria-autocomplete="list" aria-activedescendant="ta-o1" value="nus" placeholder="Search by name or email (optional)">
+      <ul class="lb" id="ta-list" role="listbox" aria-label="Assignable people">
+        <li class="opt act" id="ta-o1" role="option" aria-selected="true"><strong>Nusrat Jahan</strong><span class="muted" style="font-size: 12px">nusrat@example.com</span></li>
+        <li class="opt" id="ta-o2" role="option" aria-selected="false"><strong>Nusaiba Karim</strong><span class="muted" style="font-size: 12px">nusaiba@example.com</span></li>
+      </ul>
+      <div class="hint">You can assign Team Members and yourself. Leave empty to create it unassigned.</div>
+    </div>
+    <div>
+      <div class="row" style="align-items: flex-end; margin-bottom: 6px">
+        <label class="lbl" for="tdesc" style="margin: 0">Description</label>
+        <span class="tip">
+          <button class="btn sm" type="button" disabled="disabled" aria-describedby="ai-tip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path></svg>Improve with AI</button>
+          <span class="tipbox" id="ai-tip" role="tooltip">Coming soon</span>
+        </span>
+      </div>
+      <textarea class="in" id="tdesc">customers want invoice as pdf on order page</textarea>
+      <div class="row"><span class="hint">Admins and Project Managers only; the AI is added last.</span><span class="hint">44 / 4000</span></div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D05-ProjectDetail.dc.html">Cancel</a><button class="btn bp" type="submit">Create task</button></div>
+  </div>
+
+  <div style="flex: 1 1 420px; max-width: 520px; display: flex; flex-direction: column; gap: 32px">
+    <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-proj">
+      <h2 id="t-proj" style="font-size: 20px">New project</h2>
+      <div><label class="lbl" for="pn">Name <span class="req" aria-hidden="true">*</span></label><input class="in" id="pn" value="Supplier Portal"><div class="row"><span></span><span class="hint">15 / 200</span></div></div>
+      <div><label class="lbl" for="pd">Description</label><textarea class="in" id="pd" style="min-height: 80px">Self-service portal for suppliers to upload invoices.</textarea><div class="row"><span></span><span class="hint">53 / 2000</span></div></div>
+      <div><label class="lbl" for="po">Owner (Project Manager) <span class="req" aria-hidden="true">*</span></label><input class="in" id="po" role="combobox" aria-expanded="false" aria-autocomplete="list" value="Sadia Islam"><div class="hint">Shown to Admins only. A Project Manager who creates a project becomes its owner.</div></div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D04-Projects.dc.html">Cancel</a><button class="btn bp" type="submit">Create project</button></div>
+    </div>
+
+    <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="t-own">
+      <h2 id="t-own" style="font-size: 20px">Change owner</h2>
+      <p class="muted">Customer Portal Revamp is owned by <strong style="color: #111827">Rafi Ahmed</strong>.</p>
+      <div class="alert a-err" role="alert">The new owner must be a Project Manager.</div>
+      <div><label class="lbl" for="no">New owner <span class="req" aria-hidden="true">*</span></label><input class="in" id="no" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="Search Project Managers"><div class="hint">Rafi Ahmed loses access, except to tasks here that are assigned to Rafi. Both get a notification.</div></div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D05-ProjectDetail.dc.html">Cancel</a><button class="btn bp" type="submit">Change owner</button></div>
+    </div>
+
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="t-del" aria-describedby="t-del-d">
+      <h2 id="t-del" style="font-size: 20px">Delete “Customer Portal Revamp”?</h2>
+      <p class="muted" id="t-del-d" style="line-height: 1.6">The project and its 9 tasks disappear for everyone. There is no restore in the app.</p>
+      <div style="display: flex; justify-content: flex-end; gap: 8px"><a class="btn" href="D05-ProjectDetail.dc.html">Cancel</a><a class="btn bd" href="D04-Projects.dc.html">Delete project</a></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

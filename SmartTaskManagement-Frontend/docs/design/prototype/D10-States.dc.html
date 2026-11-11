@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>States</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F766E}a:hover{color:#115E59}
+.st{min-height:100vh;background:#F6F7F9;color:#111827;font:14px/1.45 Inter,system-ui,sans-serif}
+.st *{box-sizing:border-box}
+.st h1,.st h2,.st h3{font-family:'Space Grotesk',Inter,system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+.st p{margin:0}
+.st .card{background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.st .cap{font-size:12px;font-weight:600;color:#4B5563;text-transform:uppercase;letter-spacing:.04em}
+.st .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:8px;border:1px solid #D1D5DB;background:#FFF;color:#111827;font:500 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-decoration:none}
+.st .btn:focus-visible{outline:3px solid #14B8A6;outline-offset:2px}
+.st .bp{background:#0F766E;border-color:#0F766E;color:#FFF}
+.st .muted{color:#4B5563}
+.st .sk{background:#E5E7EB;border-radius:6px;height:14px}
+.st .alert{padding:12px 14px;border-radius:8px;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.st .a-err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+.st .a-warn{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.st .a-info{background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A}
+.st .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+</style>
+</helmet>
+<div class="st" style="padding: 32px">
+  <div style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
+    <h1 style="font-size: 24px">States every screen shares</h1>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px">
+
+      <section class="card" aria-label="Loading">
+        <span class="cap">Loading (list)</span>
+        <div role="status" aria-label="Loading tasks" style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sk" style="width: 60%"></div><div class="sk" style="width: 85%"></div><div class="sk" style="width: 72%"></div><div class="sk" style="width: 80%"></div>
+        </div>
+        <p class="muted" style="font-size: 12px">Skeleton rows keep the layout still; the filters stay usable.</p>
+      </section>
+
+      <section class="card" aria-label="Empty">
+        <span class="cap">Empty</span>
+        <div style="text-align: center; padding: 12px 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+          <h2 style="font-size: 18px">No projects yet</h2>
+          <p class="muted">Create the first project to start adding tasks.</p>
+          <a class="btn bp" href="D08-Dialogs.dc.html">New project</a>
+        </div>
+        <p class="muted" style="font-size: 12px">With filters: “No tasks match these filters.” plus Clear filters. A Team Member reads “Nothing is assigned to you yet.”</p>
+      </section>
+
+      <section class="card" aria-label="Live connection">
+        <span class="cap">Live connection (dashboard header)</span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <span class="pill" style="background: #F0FDFA; border: 1px solid #99F6E4; color: #115E59"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; background: #0F766E"></span>Live</span>
+          <span class="pill" style="background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; border: 2px solid #B45309"></span>Reconnecting…</span>
+        </div>
+        <p class="muted" style="font-size: 12px">The stream ends when the access token expires; the app reconnects with a fresh token and waits longer after each failure. While reconnecting, the numbers stay and a Refresh button appears.</p>
+      </section>
+
+      <section class="card" aria-label="Server errors">
+        <span class="cap">Errors (ProblemDetails errorCode)</span>
+        <div class="alert a-err" role="alert"><span>The service is temporarily unavailable. Please try again.</span><button class="btn" type="button" style="min-height: 32px">Try again</button></div>
+        <div class="alert a-warn" role="alert"><span>Someone else changed this task. Reload to see the latest version.</span><button class="btn" type="button" style="min-height: 32px">Reload</button></div>
+        <div class="alert a-info" role="status"><span>Too many requests. Wait a minute and try again.</span></div>
+        <p class="muted" style="font-size: 12px">503 (including auth.unavailable) · 409 concurrency.conflict · 429. A 400 validation.failed puts each message under its field. A 403 says “You don’t have permission to do that.” Unexpected 500s show a generic message and never server details.</p>
+      </section>
+
+      <section class="card" aria-label="Session ended">
+        <span class="cap">Session ended</span>
+        <div class="alert a-info" role="alert"><span>Your session has ended. Please sign in again.</span><a class="btn bp" href="D01-Login.dc.html" style="min-height: 32px">Sign in</a></div>
+        <p class="muted" style="font-size: 12px">Shown when the refresh token is gone or revoked (for example after a role change). After signing in, the app returns to the page you were on.</p>
+      </section>
+
+      <section class="card" aria-label="Not found page">
+        <span class="cap">404 page</span>
+        <div style="text-align: center; padding: 8px 0; display: flex; flex-direction: column; gap: 10px; align-items: center">
+          <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 44px; font-weight: 700; color: #0F766E">404</span>
+          <h2 style="font-size: 18px">Not found</h2>
+          <p class="muted" style="max-width: 320px">This page does not exist, was deleted, or you no longer have access to it.</p>
+          <a class="btn" href="D02-Dashboard.dc.html">Back to dashboard</a>
+        </div>
+        <p class="muted" style="font-size: 12px">The API answers 404 (never 403) for things you may not see, so the wording never says whether it exists.</p>
+      </section>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
