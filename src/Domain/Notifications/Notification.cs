@@ -160,7 +160,7 @@ public sealed class Notification : AggregateRoot<Guid>
 
     private static void GuardReferences(NotificationType type, Guid? taskId, Guid? projectId)
     {
-        if (type == NotificationType.None || !Enum.IsDefined(type))
+        if (!Enum.IsDefined(type))
         {
             throw new ArgumentException("Unknown notification type.", nameof(type));
         }

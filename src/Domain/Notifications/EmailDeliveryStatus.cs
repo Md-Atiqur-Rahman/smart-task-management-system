@@ -2,8 +2,7 @@ namespace Datavanced.SmartTaskManagement.Domain.Notifications;
 
 public enum EmailDeliveryStatus
 {
-    None = 0,
-    Pending = 1,
-    Sent = 2,
-    Failed = 3,
+    Pending = 0,
+    Sent = 1,
+    Failed = 2,
 }
