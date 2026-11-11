@@ -26,8 +26,10 @@ Angular frontend of the Smart Task Management System. Read first: the root
   that calls `HttpClient`), `models/` (types named like the `openapi.json`
   schemas).
 - Dependency direction: features -> shared -> core; core never imports a
-  feature; features never import each other's pages or components (only
-  data-access services when needed).
+  feature. A feature uses another feature only through that feature's public
+  API, its `index.ts` (enforced by `no-restricted-imports` in
+  `eslint.config.js`; pattern from Sheriff, https://github.com/sheriff-arch/sheriff).
+  Cross-feature data-access services are allowed.
 
 ## Rules
 

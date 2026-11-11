@@ -38,6 +38,27 @@ module.exports = defineConfig([
     },
   },
   {
+    // Feature boundaries: a feature uses another feature only through that
+    // feature's public API (its index.ts), never its internal pages or components.
+    // Pattern from Sheriff ("public APIs through index.ts files"):
+    // https://github.com/sheriff-arch/sheriff
+    files: ['src/app/features/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../../*/components/*', '../../*/pages/*'],
+              message:
+                'Import another feature through its public API (features/<name>/index.ts), not its internal files.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},

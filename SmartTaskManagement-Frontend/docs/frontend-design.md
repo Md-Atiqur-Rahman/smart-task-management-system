@@ -132,6 +132,14 @@ about 30 types. Enum values are the API strings (`ToDo`, `InProgress`,
 `ProjectManager`, ...; the API serializes enums as strings) and are mapped to
 display labels in one place.
 
+Feature boundaries [decided 2026-11-11, after the final review]: a feature uses
+another feature only through that feature's public API, its `index.ts` (today:
+`features/tasks/index.ts` exports `ProjectTasksComponent` for the project page);
+`no-restricted-imports` in `eslint.config.js` rejects imports of another
+feature's internal `components/` or `pages/`. Pattern from Sheriff
+(https://github.com/sheriff-arch/sheriff, "public APIs through `index.ts`
+files"); Nx enforces module boundaries with a lint rule too.
+
 Conventions: standalone components only, `ChangeDetectionStrategy.OnPush`
 everywhere, signals for local and store state, `inject()` for dependencies,
 typed reactive forms, no `any`. Components never call `HttpClient` directly.

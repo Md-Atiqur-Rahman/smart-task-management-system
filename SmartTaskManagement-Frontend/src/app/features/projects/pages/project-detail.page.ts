@@ -8,7 +8,7 @@ import { toApiProblem } from '../../../core/http/api-problem';
 import { messageFor } from '../../../core/http/error-messages';
 import { LoadState, keepDataWhileLoading, loadState } from '../../../shared/load-state';
 import { ConfirmDialogComponent } from '../../../shared/modal.component';
-import { ProjectTasksComponent } from '../../tasks/components/project-tasks.component';
+import { ProjectTasksComponent } from '../../tasks';
 import { ProjectFormDialogComponent } from '../components/project-form.dialog';
 import { ProjectsApi } from '../data-access/projects-api.service';
 import { ProjectDetailsDto } from '../models/project.models';
