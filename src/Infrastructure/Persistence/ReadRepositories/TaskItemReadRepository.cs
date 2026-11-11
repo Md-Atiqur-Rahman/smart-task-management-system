@@ -50,9 +50,9 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
 
     public Task<TaskDetailsDto?> GetByIdAsync(Guid id, Guid callerId, Role callerRole, CancellationToken ct)
     {
-        var projects = Projects();
+        var projects = Visibility.Projects(context);
         var users = Users();
-        return VisibleTasks(callerId, callerRole)
+        return Visibility.VisibleTasks(context, callerId, callerRole)
             .AsNoTracking()
             .Where(t => t.Id == id)
             .Select(t => new TaskDetailsDto(
@@ -78,7 +78,7 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
     public Task<PagedResult<TaskListItemDto>> ListAsync(
         TaskListQuery query, Guid? projectId, Guid callerId, Role callerRole, CancellationToken ct)
     {
-        var tasks = VisibleTasks(callerId, callerRole);
+        var tasks = Visibility.VisibleTasks(context, callerId, callerRole);
         if (projectId is { } project)
         {
             tasks = tasks.Where(t => t.ProjectId == project);
@@ -115,7 +115,7 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
             tasks = tasks.Where(t => t.DueDate != null && t.DueDate <= dueTo);
         }
 
-        var projects = Projects();
+        var projects = Visibility.Projects(context);
         var users = Users();
         return tasks
             .ApplySearch(query.Search, t => t.Title, t => t.Description)
@@ -140,39 +140,8 @@ public sealed class TaskItemReadRepository(AppDbContext context) : ITaskItemRead
 
     public Task<bool> IsProjectVisibleAsync(Guid projectId, Guid callerId, Role callerRole, CancellationToken ct)
     {
-        var project = Projects().Where(p => p.Id == projectId);
-        var tasks = Tasks();
-        var visible = callerRole switch
-        {
-            Role.Admin => project,
-            Role.ProjectManager => project.Where(p =>
-                p.OwnerId == callerId || tasks.Any(t => t.ProjectId == p.Id && t.AssigneeId == callerId)),
-            _ => project.Where(p => tasks.Any(t => t.ProjectId == p.Id && t.AssigneeId == callerId)),
-        };
-
-        return visible.AnyAsync(ct);
+        return Visibility.VisibleProjects(context, callerId, callerRole).AnyAsync(p => p.Id == projectId, ct);
     }
-
-    // Admin: every task; Project Manager: every task of an own project plus own assignments;
-    // any other role: own assignments. Always only non-deleted tasks of non-deleted projects.
-    // The soft-delete checks are explicit on purpose: IgnoreQueryFilters() on the assignee lookup
-    // switches off the global query filters for the WHOLE query, the Tasks and Projects filters included.
-    private IQueryable<TaskItem> VisibleTasks(Guid callerId, Role callerRole)
-    {
-        var tasks = Tasks();
-        var projects = Projects();
-        return callerRole switch
-        {
-            Role.Admin => tasks.Where(t => projects.Any(p => p.Id == t.ProjectId)),
-            Role.ProjectManager => tasks.Where(t =>
-                projects.Any(p => p.Id == t.ProjectId && (p.OwnerId == callerId || t.AssigneeId == callerId))),
-            _ => tasks.Where(t => t.AssigneeId == callerId && projects.Any(p => p.Id == t.ProjectId)),
-        };
-    }
-
-    private IQueryable<TaskItem> Tasks() => context.Set<TaskItem>().Where(t => !t.IsDeleted);
-
-    private IQueryable<Project> Projects() => context.Set<Project>().Where(p => !p.IsDeleted);
 
     private IQueryable<User> Users() => context.Set<User>().IgnoreQueryFilters();
 }
