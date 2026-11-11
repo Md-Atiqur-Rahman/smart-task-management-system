@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   afterNextRender,
+  inject,
   input,
   output,
   viewChild,
@@ -45,12 +47,26 @@ export class ModalComponent {
   protected readonly headingId = `modal-heading-${ModalComponent.nextId++}`;
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
+  /** The element that had focus before the modal opened (usually the button that opened it). */
+  private readonly opener = document.activeElement;
+
   constructor() {
     afterNextRender(() => this.dialog().nativeElement.showModal());
+    // A native close() returns focus by itself, but @if removes the modal without close().
+    inject(DestroyRef).onDestroy(() => this.returnFocus());
   }
 
   close(): void {
     this.dialog().nativeElement.close();
+  }
+
+  private returnFocus(): void {
+    const focused = document.activeElement;
+    const focusWasHere =
+      !focused || focused === document.body || this.dialog().nativeElement.contains(focused);
+    if (focusWasHere && this.opener instanceof HTMLElement && this.opener.isConnected) {
+      this.opener.focus();
+    }
   }
 }
 
