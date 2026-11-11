@@ -54,7 +54,7 @@ script (`scripts/verify.sh`), which is also the only CI step.
 ## Run locally
 
 1. `cp .env.example .env`
-2. `docker compose up -d db redis`
+2. `docker compose up -d db redis mailpit`
 3. Copy the secrets into user-secrets once (Git Bash, repo root; reads `.env`
    line by line because `ADMIN_SEED_FULL_NAME` contains a space, so the file
    cannot be `source`d):
@@ -138,6 +138,10 @@ the emails go to Mailpit:
   `MAIL_UI_PORT` from `.env.example` into it.
 - `appsettings.Development.json` points `dotnet run` at `localhost:1025` without
   TLS; the Docker Compose api container uses `Email__Host=mailpit`.
+- `MAIL_SMTP_PORT` in `.env` only changes the host port Docker Compose publishes.
+  If you change it, also set `Email__Port` to the same value for `dotnet run`
+  (`dotnet user-secrets set Email:Port <port> --project src/Api` or the
+  `Email__Port` environment variable); `appsettings.Development.json` keeps 1025.
 
 Settings (section `Email`, validated at startup): `Host`, `Port`, `UseTls`
 (STARTTLS), `UserName`, `Password`, `FromAddress`, `FromName`, `AppBaseUrl`,

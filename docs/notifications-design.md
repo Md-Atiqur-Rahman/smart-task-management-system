@@ -148,7 +148,6 @@ Events:
 | `notification` | the `NotificationDto` (section 7) | toast, add to list, badge + 1 |
 | `notifications-read` | none | re-fetch unread count (another tab read something) |
 | `dashboard-changed` | none | re-fetch `/api/dashboard/summary` and `/upcoming` |
-
 | `heartbeat` | empty | none (the client ignores it) |
 
 The keep-alive is the `heartbeat` event, because `SseItem` cannot write comment
