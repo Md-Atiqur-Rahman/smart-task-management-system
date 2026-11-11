@@ -57,11 +57,13 @@ export class ShellComponent {
     return NAV.filter((item) => !item.roles || (role !== null && item.roles.includes(role)));
   });
   protected readonly menuOpen = signal(false);
+  /** An intentional logout goes to plain /login, without a return URL. */
+  private loggingOut = false;
 
   constructor() {
     // A session that ends while the shell is open (refresh failed, role changed) goes to sign-in.
     effect(() => {
-      if (!this.store.isSignedIn()) {
+      if (!this.store.isSignedIn() && !this.loggingOut) {
         void this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
       }
     });
@@ -76,6 +78,7 @@ export class ShellComponent {
   }
 
   protected async logout(): Promise<void> {
+    this.loggingOut = true;
     await this.session.logout();
     await this.router.navigate(['/login']);
   }
