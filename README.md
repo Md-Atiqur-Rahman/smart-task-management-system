@@ -48,7 +48,7 @@ script (`scripts/verify.sh`), which is also the only CI step.
 ## Requirements
 
 - .NET SDK 10.0.401 (pinned in `global.json`)
-- Docker (SQL Server and Redis for local runs; SQL Server and Redis containers for
+- Docker (SQL Server, Redis and Mailpit for local runs; SQL Server and Redis containers for
   the integration tests)
 
 ## Run locally
@@ -110,7 +110,44 @@ All routes are under `/api`. Full request and response shapes: `docs/openapi.jso
 | Tasks | `PUT /tasks/{id}/assignee` | Admin, owning Project Manager (Admin may assign any user, a Project Manager only a Team Member or themselves; null unassigns) |
 | Dashboard | `GET /dashboard/summary` (counts: projects, tasks, by status, by priority, completed, pending, overdue) | Signed-in user (sees only what their role may see) |
 | Dashboard | `GET /dashboard/upcoming` (pending tasks due in the next days, earliest first) | Signed-in user (sees only what their role may see) |
+| Notifications | `GET /notifications` (newest first), `GET /notifications/unread-count`, `POST /notifications/{id}/read`, `POST /notifications/read-all` | Signed-in user (own notifications only) |
+| Notifications | `GET /notifications/stream` (live events over SSE) | Signed-in user |
 | Samples | `/samples` (copy-source feature) | Signed-in user |
+
+### Live events (SSE)
+
+`GET /api/notifications/stream` sends Server-Sent Events. It needs the
+`Authorization: Bearer` header, which the browser `EventSource` cannot send, so
+browsers must read it with `fetch` (the token is never put in the URL). Event
+types: `notification` (data: the notification), `notifications-read`,
+`dashboard-changed` and `heartbeat` (empty; the client ignores it). The stream
+ends when the access token expires (at most `Jwt:AccessTokenMinutes`); a role
+change or an unavailable token store ends it at the next heartbeat. The client
+reconnects with a fresh token. A **reverse proxy must not buffer
+`text/event-stream`** responses (for example `proxy_buffering off` in nginx),
+or events arrive late.
+
+### Email and Mailpit
+
+Every notification also queues an email, sent by a background worker. Locally
+the emails go to Mailpit:
+
+- Start it with `docker compose up -d mailpit` (the web UI is
+  `http://localhost:8025`, SMTP is on port 1025).
+- If you already have a `.env`, copy `MAILPIT_IMAGE`, `MAIL_SMTP_PORT` and
+  `MAIL_UI_PORT` from `.env.example` into it.
+- `appsettings.Development.json` points `dotnet run` at `localhost:1025` without
+  TLS; the Docker Compose api container uses `Email__Host=mailpit`.
+
+Settings (section `Email`, validated at startup): `Host`, `Port`, `UseTls`
+(STARTTLS), `UserName`, `Password`, `FromAddress`, `FromName`, `AppBaseUrl`,
+`TaskPathTemplate`, `ProjectPathTemplate` (must contain `{id}`), `PollSeconds`,
+`BatchSize`, `ClaimSeconds`, `MaxAttempts`. To use a real SMTP provider, set
+`Email__Host`, `Email__Port`, `Email__UseTls`, `Email__UserName` and
+`Email__Password` as environment variables (and `Email__FromAddress`,
+`Email__AppBaseUrl` for your sender and web app). The password lives only in
+user-secrets or environment variables. `UseTls=false` is allowed only in
+Development and Testing.
 
 ### Authentication and the first Admin
 
@@ -179,7 +216,7 @@ docker compose down
 - **The seeded Admin's password cannot be changed in v1** (see "Authentication and
   the first Admin").
 - **Logout is per device.** The logged-out device's access token stays valid for
-  at most 10 minutes (ADR 0013).
+  at most 10 minutes (ADR 0013); an open live stream also ends at that expiry.
 - **Redis is required.** When it is down, authenticated requests return 503
   (`auth.unavailable`); register and login still work (a failed token version
   publish is only logged); `/health` reports Redis unhealthy.

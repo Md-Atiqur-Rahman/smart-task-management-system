@@ -1,7 +1,9 @@
 # Design: Notifications
 
-- Status: Approved by the developer (2026-11-11), including every
-  **[builder's call]** (decisions not stated by the developer).
+- Status: Implemented (2026-11-11). Approved by the developer (2026-11-11),
+  including every **[builder's call]** (decisions not stated by the developer).
+  Where the build differed from the first draft, the text below describes what
+  was built.
 - Date: 2026-11-11
 - Requirements: `docs/PRD.md` section 13 (and sections 2, 3, 6, 7, 9). Builds on
   the Project module (`docs/project-design.md`), the Task module
@@ -38,7 +40,8 @@ user logged out or their role changed; the token in a URL.
 
 - **Notification:** one stored message for one recipient (section 4).
 - **Live event:** a message pushed over the user's open SSE connection
-  (section 6). Two types: `notification` and `dashboard-changed`.
+  (section 6). Event types: `notification`, `notifications-read`,
+  `dashboard-changed` and `heartbeat`.
 - **Actor:** the signed-in user whose command caused the event.
 
 ## 3. Events and recipients
@@ -74,20 +77,24 @@ Rules:
 | --- | --- |
 | `Id` | `Guid` (version 7, like the other aggregates) |
 | `RecipientId` | user id |
-| `Type` | `NotificationType` enum (section 3) |
+| `Type` | `NotificationType` enum (section 3); enums are stored 0-based |
 | `TaskId?`, `ProjectId?` | link target; null for the "removed" types' link, but the name is kept |
 | `Subject` | short text, for example the task title or project name, captured at creation (max length = the source field's max) |
 | `ActorName` | who did it, captured at creation |
 | `CreatedAt` | from `TimeProvider` |
 | `ReadAt?` | null = unread |
-| Email delivery state | `EmailStatus` (`Pending`, `Sent`, `Failed`), `EmailAttempts`, `EmailNextAttemptAt`, `EmailClaimedUntil?`, `EmailSentAt?`, `EmailLastError?` (truncated) |
+| Email delivery state | `EmailStatus` (`Pending`, `Sent`, `Failed`), `EmailAttempts`, `EmailNextAttemptAt`, `EmailClaimedUntil?`, `EmailSentAt?`, `EmailLastError?` (truncated); a shadow column `EmailClaimToken` (not on the aggregate) marks which claimer owns the row |
 
 - `MarkRead(DateTimeOffset at)`: sets `ReadAt` once; idempotent.
 - Email state changes go through methods used only by the outbox worker
-  (`ClaimEmail`, `EmailSent`, `EmailFailed(error, nextAttemptAt, maxAttempts)`).
+  (`EmailSent`, `EmailFailed(error, now, maxAttempts)`; `EmailFailed` computes
+  the backoff). There is no `ClaimEmail` method: the claim is a set-based
+  conditional update in Infrastructure (section 8).
 - No soft delete and no `RowVersion`: notifications are deleted for real after
   the retention period, and only the recipient (`ReadAt`) and the worker (email
   fields) write them, on different columns **[builder's call]**.
+- No foreign keys from `RecipientId`, `TaskId` or `ProjectId`: the table is
+  log-style (rows are deleted after 7 days) and users are only soft-deleted.
 - **One table is the outbox** (ADR 0017): the email state lives on the
   notification row, so the notification and its email are saved in the same
   `SaveChangesAsync` as the task or project change **[builder's call]**.
@@ -114,9 +121,10 @@ Application service explicitly before `SaveChangesAsync`:
   recipients (section 3), loads the actor's name, and adds the `Notification`
   rows through `INotificationRepository`. It also records the live events to
   publish after the commit (section 6) **[builder's call]**.
-- After a successful `SaveChangesAsync`, the handler calls
-  `ILiveEvents.PublishPendingAsync()` (Application interface, Infrastructure
-  implementation). A failed save publishes nothing.
+- Live events are collected in a scoped `LiveEventBuffer`. After a successful
+  `SaveChangesAsync`, `ILiveEventPublisher` flushes the buffer, with
+  `CancellationToken.None` so a cancelled request cannot drop events. A failed
+  save publishes nothing.
 - The other task and project commands (`UpdateTask`, `ChangeTaskStatus`,
   `DeleteTask`, `DeleteProject`) record only `dashboard-changed` live events.
 
@@ -141,8 +149,12 @@ Events:
 | `notifications-read` | none | re-fetch unread count (another tab read something) |
 | `dashboard-changed` | none | re-fetch `/api/dashboard/summary` and `/upcoming` |
 
-A comment line is written every `Notifications:HeartbeatSeconds` (default 25) so
-proxies keep the connection open **[builder's call]**.
+| `heartbeat` | empty | none (the client ignores it) |
+
+The keep-alive is the `heartbeat` event, because `SseItem` cannot write comment
+lines. It is sent when the stream opens and then every
+`Notifications:HeartbeatSeconds` (default 25), so proxies keep the connection
+open **[builder's call]**.
 
 ### Authentication of the stream
 
@@ -153,11 +165,14 @@ proxies keep the connection open **[builder's call]**.
 - The normal pipeline authenticates the request (JWT, token-version check,
   security context).
 - The server ends the stream **when the access token expires** (`exp` claim) and
-  re-checks the token version on every heartbeat; a revoked token (logout, role
-  change) ends the stream at the next heartbeat, and so does an unavailable token
-  store (fail closed, like the middleware). The client reconnects with a
-  fresh token. So no stream outlives the token it was opened with
-  **[builder's call]**.
+  re-checks the token version on every heartbeat. A role change (token version
+  bump) ends the stream at the next heartbeat, and so does an unavailable token
+  store (fail closed, like the middleware). Logout does **not** end the stream at
+  once: it only revokes the refresh token and does not change the token version
+  (PRD 5), so the stream ends at the access token's expiry (at most
+  `Jwt:AccessTokenMinutes`). The Angular client closes its own stream on logout.
+  The client reconnects with a fresh token. So no stream outlives the token it
+  was opened with **[builder's call]**.
 - Rate limiting counts the connect request like any request.
 
 ### Who gets `dashboard-changed`
@@ -179,7 +194,7 @@ update.
 
 - Each instance keeps an in-memory registry of its open streams: user id ->
   connections (one per tab), plus the user's role for "every Admin".
-- `ILiveEvents.PublishPendingAsync` publishes one message per event to one Redis
+- `ILiveEventPublisher` (after a successful save) publishes one message per event to one Redis
   channel (`RedisChannel.Literal`, prefix from configuration). Every instance
   subscribes once at startup and writes the event to its matching local
   connections. API verified in the installed StackExchange.Redis 3.4.31 XML docs
@@ -216,6 +231,8 @@ endpoints. Email state is never exposed.
 
 ## 8. Email: outbox worker (ADR 0017)
 
+Code folders: `Infrastructure/Mail` and `Infrastructure/Configuration/Mail`.
+
 - `IEmailSender` (Application): `SendAsync(EmailMessage, CancellationToken)`.
   Infrastructure implementation with **MailKit 5.0.0** (verified on NuGet
   2026-11-11: latest stable, MIT, supports net8.0 and later; depends on
@@ -235,8 +252,12 @@ endpoints. Email state is never exposed.
   3. Success: `EmailStatus = Sent`. Failure (specific SMTP, socket and
      authentication exceptions): `EmailAttempts + 1`, next attempt after
      `2^attempts` minutes; after `Email:MaxAttempts` (default 5) `Failed` and an
-     error log. Unexpected exceptions are logged and the row is released.
-- Email content: subject "Smart Task Management: {short message}", plain-text
+     error log. Any unexpected per-row exception also counts as a failed
+     attempt, so one bad row never blocks the others. A missing recipient counts
+     as a failed attempt. A row whose claim expired mid-batch is skipped until
+     the next cycle.
+- Email content: subject `"{Email:FromName}: {message}"` (no project name in
+  configuration), plain-text
   body with the message and, when there is a link, `Email:AppBaseUrl` +
   `Email:TaskPathTemplate` (default `/tasks/{id}`) or `Email:ProjectPathTemplate`
   (default `/projects/{id}`). The Angular app does not exist yet; the templates
