@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 /// <summary>
 /// Rejects SMTP without TLS outside Development and Testing (same rule as ADR 0011), link templates

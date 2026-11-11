@@ -1,6 +1,6 @@
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.LiveEvents;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Redis;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Seeding;

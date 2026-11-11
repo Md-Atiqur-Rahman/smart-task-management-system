@@ -1,11 +1,11 @@
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Mail;
 
 /// <summary>
 /// Runs on every instance: one <see cref="EmailOutboxProcessor"/> cycle (in its own scope and

@@ -2,8 +2,8 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Email;
 using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
-using Datavanced.SmartTaskManagement.Infrastructure.Email;
 using Datavanced.SmartTaskManagement.Infrastructure.LiveEvents;
+using Datavanced.SmartTaskManagement.Infrastructure.Mail;
 using Datavanced.SmartTaskManagement.Infrastructure.Redis;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 

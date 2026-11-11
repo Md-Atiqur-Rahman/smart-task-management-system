@@ -1,8 +1,8 @@
 using Datavanced.SmartTaskManagement.Domain.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Users;
 using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Database;
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
-using Datavanced.SmartTaskManagement.Infrastructure.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
+using Datavanced.SmartTaskManagement.Infrastructure.Mail;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 using Datavanced.SmartTaskManagement.IntegrationTests.Api.TestSupport;
 
@@ -155,9 +155,14 @@ public sealed class EmailOutboxTests(SqlServerFixture fixture)
         var recipient = await AddUserAsync(database, "Fay Member");
         var notification = await AddNotificationAsync(database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Crash");
 
-        // An unexpected failure is not counted as an attempt; the claim stays until it expires.
-        _sender.Failure = _ => new InvalidOperationException("unexpected");
-        await Should.ThrowAsync<InvalidOperationException>(() => ProcessAsync(database));
+        // Shutdown in the middle of the send: nothing is recorded, the claim stays until it expires.
+        using var shutdown = CancellationTokenSource.CreateLinkedTokenSource(_ct);
+        _sender.Failure = _ =>
+        {
+            shutdown.Cancel();
+            return new OperationCanceledException(shutdown.Token);
+        };
+        await Should.ThrowAsync<OperationCanceledException>(() => ProcessAsync(database, ct: shutdown.Token));
         var stored = await LoadAsync(database, notification.Id);
         stored.EmailStatus.ShouldBe(EmailDeliveryStatus.Pending);
         stored.EmailAttempts.ShouldBe(0);
@@ -172,6 +177,74 @@ public sealed class EmailOutboxTests(SqlServerFixture fixture)
         (await ProcessAsync(database)).ShouldBe(1);
         _sender.Sent.ShouldHaveSingleItem();
         (await LoadAsync(database, notification.Id)).EmailStatus.ShouldBe(EmailDeliveryStatus.Sent);
+    }
+
+    [Fact]
+    public async Task Process_UnexpectedFailure_IsCountedAndOtherRowsAreSent()
+    {
+        var database = await fixture.CreateIsolatedDatabaseAsync(_ct);
+        var recipient = await AddUserAsync(database, "Hal Member");
+        // The poison row is due first, so it is handled first in the batch.
+        var poison = await AddNotificationAsync(
+            database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Poison", Start.AddMinutes(-1));
+        await AddNotificationAsync(database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Healthy 1");
+        await AddNotificationAsync(database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Healthy 2");
+        _sender.Failure = m => m.Subject.Contains("Poison", StringComparison.Ordinal)
+            ? new InvalidOperationException("unexpected")
+            : null;
+        var options = Settings(maxAttempts: 2);
+
+        (await ProcessAsync(database, options)).ShouldBe(3);
+
+        _sender.Sent.Count.ShouldBe(2);
+        var stored = await LoadAsync(database, poison.Id);
+        stored.EmailStatus.ShouldBe(EmailDeliveryStatus.Pending);
+        stored.EmailAttempts.ShouldBe(1);
+        stored.EmailLastError.ShouldBe(nameof(InvalidOperationException));
+        stored.EmailClaimedUntil.ShouldBeNull();
+
+        _time.Advance(TimeSpan.FromMinutes(2));
+        (await ProcessAsync(database, options)).ShouldBe(1);
+        stored = await LoadAsync(database, poison.Id);
+        stored.EmailStatus.ShouldBe(EmailDeliveryStatus.Failed);
+        stored.EmailAttempts.ShouldBe(2);
+
+        _time.Advance(TimeSpan.FromDays(1));
+        (await ProcessAsync(database, options)).ShouldBe(0);
+        _sender.Attempts.ShouldBe(4);
+    }
+
+    [Fact]
+    public async Task Process_ClaimExpiresDuringBatch_RemainingRowWaitsForNextCycle()
+    {
+        var database = await fixture.CreateIsolatedDatabaseAsync(_ct);
+        var recipient = await AddUserAsync(database, "Ivy Member");
+        await AddNotificationAsync(
+            database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Slow", Start.AddMinutes(-1));
+        var waiting = await AddNotificationAsync(database, recipient.Id, NotificationType.TaskUnassigned, null, null, "Waiting");
+
+        // The first send takes longer than the claim.
+        _sender.Failure = m =>
+        {
+            if (m.Subject.Contains("Slow", StringComparison.Ordinal))
+            {
+                _time.Advance(TimeSpan.FromSeconds(121));
+            }
+
+            return null;
+        };
+
+        (await ProcessAsync(database)).ShouldBe(1);
+
+        _sender.Sent.ShouldHaveSingleItem().Subject.ShouldContain("Slow");
+        var stored = await LoadAsync(database, waiting.Id);
+        stored.EmailStatus.ShouldBe(EmailDeliveryStatus.Pending);
+        stored.EmailAttempts.ShouldBe(0);
+        stored.EmailClaimedUntil.ShouldBe(Start.AddSeconds(120));
+
+        (await ProcessAsync(database)).ShouldBe(1);
+        _sender.Sent.Count.ShouldBe(2);
+        (await LoadAsync(database, waiting.Id)).EmailStatus.ShouldBe(EmailDeliveryStatus.Sent);
     }
 
     [Fact]
@@ -213,10 +286,11 @@ public sealed class EmailOutboxTests(SqlServerFixture fixture)
         new(context, _sender, Options.Create(options), _time,
             NullLogger<EmailOutboxProcessor>.Instance);
 
-    private async Task<int> ProcessAsync(DatabaseOptions database, EmailOptions? options = null)
+    private async Task<int> ProcessAsync(
+        DatabaseOptions database, EmailOptions? options = null, CancellationToken? ct = null)
     {
         await using var context = fixture.CreateDbContext(database);
-        return await Processor(context, options ?? Settings()).ProcessBatchAsync(_ct);
+        return await Processor(context, options ?? Settings()).ProcessBatchAsync(ct ?? _ct);
     }
 
     private async Task<User> AddUserAsync(DatabaseOptions database, string fullName)
@@ -229,9 +303,15 @@ public sealed class EmailOutboxTests(SqlServerFixture fixture)
     }
 
     private async Task<Notification> AddNotificationAsync(
-        DatabaseOptions database, Guid recipientId, NotificationType type, Guid? taskId, Guid? projectId, string subject)
+        DatabaseOptions database,
+        Guid recipientId,
+        NotificationType type,
+        Guid? taskId,
+        Guid? projectId,
+        string subject,
+        DateTimeOffset? createdAt = null)
     {
-        var notification = Notification.Create(recipientId, type, taskId, projectId, subject, "Alice", Start);
+        var notification = Notification.Create(recipientId, type, taskId, projectId, subject, "Alice", createdAt ?? Start);
         await using var context = fixture.CreateDbContext(database);
         context.Add(notification);
         await context.SaveChangesAsync(_ct);

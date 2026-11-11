@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;

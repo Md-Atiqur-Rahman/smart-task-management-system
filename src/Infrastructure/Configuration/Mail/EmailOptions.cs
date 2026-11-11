@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 /// <summary>
 /// SMTP and email outbox settings, bound from the "Email" section (design 8, ADR 0017).

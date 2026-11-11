@@ -1,7 +1,7 @@
 using System.Net.Sockets;
 
 using Datavanced.SmartTaskManagement.Application.Abstractions.Email;
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 using MailKit;
 using MailKit.Net.Smtp;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 using MimeKit;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Mail;
 
 /// <summary>
 /// Sends one plain-text email over SMTP with MailKit 5.0: connect (STARTTLS when Email:UseTls),

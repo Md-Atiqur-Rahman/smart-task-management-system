@@ -4,7 +4,7 @@ using Datavanced.SmartTaskManagement.Application.Abstractions.Email;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Users;
-using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence;
 using Datavanced.SmartTaskManagement.Infrastructure.Persistence.Configurations;
 
@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Mail;
 
 /// <summary>
 /// One cycle of the email outbox (design 8, ADR 0017): claim due notifications with one conditional
@@ -29,8 +29,9 @@ public sealed partial class EmailOutboxProcessor(
 {
     /// <summary>
     /// Claims up to Email:BatchSize due notifications and sends them. Returns the number of claimed
-    /// notifications. An unexpected exception propagates; the claim then expires after
-    /// Email:ClaimSeconds and the row is picked up again.
+    /// notifications handled in this cycle (a row whose claim expired meanwhile is left for later).
+    /// A failure of one row is recorded on that row; only cancellation and database errors propagate,
+    /// and the claim then expires after Email:ClaimSeconds.
     /// </summary>
     public async Task<int> ProcessBatchAsync(CancellationToken ct)
     {
@@ -82,8 +83,17 @@ public sealed partial class EmailOutboxProcessor(
             .Select(u => new { u.Id, u.Email, u.FullName })
             .ToDictionaryAsync(u => u.Id, ct);
 
+        var handled = 0;
         foreach (var notification in batch)
         {
+            // The claim expired while earlier rows were sending: another processor may own the row now.
+            // Leave it unchanged for a later cycle.
+            if (timeProvider.GetUtcNow() >= notification.EmailClaimedUntil)
+            {
+                continue;
+            }
+
+            handled++;
             if (recipients.TryGetValue(notification.RecipientId, out var recipient))
             {
                 await SendAsync(notification, recipient.Email.Value, recipient.FullName, settings, ct);
@@ -91,36 +101,57 @@ public sealed partial class EmailOutboxProcessor(
             else
             {
                 RecordFailure(notification, "The recipient no longer exists.", settings, "RecipientNotFound");
+                await context.SaveChangesAsync(ct);
             }
-
-            // Saved per row: a later unexpected failure never loses the outcome of an earlier send.
-            await context.SaveChangesAsync(ct);
         }
 
-        return batch.Count;
+        return handled;
     }
 
+    /// <summary>
+    /// Sends one row and saves its outcome (per row: a later failure never loses an earlier outcome).
+    /// Every failure except cancellation counts as an attempt, so one bad row never blocks the others and
+    /// reaches Failed after MaxAttempts.
+    /// </summary>
     private async Task SendAsync(
         Notification notification, string toAddress, string toName, EmailOptions settings, CancellationToken ct)
     {
-        var text = NotificationMessages.Render(notification.Type, notification.Subject, notification.ActorName);
-        var link = BuildLink(notification, settings);
-        var body = link is null ? text : $"{text}\n\n{link}";
-        var message = new EmailMessage(toAddress, toName, $"{settings.FromName}: {text}", body);
-
         try
         {
-            await sender.SendAsync(message, ct);
+            var text = NotificationMessages.Render(notification.Type, notification.Subject, notification.ActorName);
+            var link = BuildLink(notification, settings);
+            var body = link is null ? text : $"{text}\n\n{link}";
+            await sender.SendAsync(new EmailMessage(toAddress, toName, $"{settings.FromName}: {text}", body), ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Shutdown: nothing is recorded; the claim expires and the row is picked up again.
+            throw;
         }
         catch (Exception ex) when (MailKitEmailSender.IsSendFailure(ex))
         {
             var error = string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : ex.Message;
             RecordFailure(notification, error, settings, ex.GetType().Name);
+            await context.SaveChangesAsync(ct);
+            return;
+        }
+#pragma warning disable CA1031 // Design 8: an unexpected per-row failure (bug, bad address, rendering) is logged and counted as an attempt, so the rest of the batch is still sent and the row reaches Failed after MaxAttempts instead of blocking the outbox.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            // Only the type name: the message of an unknown exception may quote the recipient address.
+            var reason = ex.GetType().Name;
+            notification.EmailFailed(reason, timeProvider.GetUtcNow(), settings.MaxAttempts);
+            LogUnexpectedFailure(notification.Id, notification.EmailAttempts, reason);
+            await context.SaveChangesAsync(ct);
             return;
         }
 
         notification.EmailSent(timeProvider.GetUtcNow());
         LogSent(notification.Id);
+
+        // Not cancellable: a shutdown between the send and this save must not cause a second send.
+        await context.SaveChangesAsync(CancellationToken.None);
     }
 
     // The exception itself is not logged: an SMTP server reply can quote the recipient address.
@@ -161,6 +192,11 @@ public sealed partial class EmailOutboxProcessor(
         var baseUrl = settings.AppBaseUrl?.AbsoluteUri.TrimEnd('/') ?? string.Empty;
         return baseUrl + path;
     }
+
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Notification email {NotificationId} failed unexpectedly ({Reason}, attempt {Attempts}).")]
+    private partial void LogUnexpectedFailure(Guid notificationId, int attempts, string reason);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Notification email {NotificationId} sent.")]
     private partial void LogSent(Guid notificationId);

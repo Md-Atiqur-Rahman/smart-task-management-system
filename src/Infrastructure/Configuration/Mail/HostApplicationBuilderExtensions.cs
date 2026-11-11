@@ -1,11 +1,11 @@
 using Datavanced.SmartTaskManagement.Application.Abstractions.Email;
-using Datavanced.SmartTaskManagement.Infrastructure.Email;
+using Datavanced.SmartTaskManagement.Infrastructure.Mail;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Email;
+namespace Datavanced.SmartTaskManagement.Infrastructure.Configuration.Mail;
 
 public static class HostApplicationBuilderExtensions
 {
