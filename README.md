@@ -1,5 +1,7 @@
 # Smart Task Management System
 
+## Project overview
+
 A secure, maintainable task management system: an **ASP.NET Core 10 API**
 (Clean Architecture, DDD, CQRS Lite) and an **Angular 22 frontend**. Teams plan
 projects, create and assign tasks, follow progress on a live dashboard and get
@@ -101,7 +103,7 @@ SmartTaskManagement-Frontend/
 The repository layout is recorded in
 [ADR 0019](SmartTaskManagement-Backend/docs/adr/0019-repository-layout.md).
 
-## Setup
+## Setup instructions
 
 **Requirements:**
 - .NET SDK 10.0.401 (pinned in `global.json`)
