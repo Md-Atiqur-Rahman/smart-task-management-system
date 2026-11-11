@@ -63,7 +63,7 @@ A fourth private repository is an archive of the long template build history and
 - **Frontend: built.** Angular 22 app in `SmartTaskManagement-Frontend/` (merged 2026-11-11, PR #7):
   - Screens: login and register, dashboard (live over SSE), projects, tasks, task detail, users and roles (Admin), notification bell with live toasts.
   - Security: access token in memory only; single-flight refresh on 401; HTTPS dev server.
-  - Checks: `scripts/verify.sh` (lint, Prettier, strict type-check, 76 Vitest unit tests, production build, `npm audit`); Playwright E2E (`npm run e2e`, local only); CI `.github/workflows/frontend.yml`.
+  - Checks: `scripts/verify.sh` (lint, Prettier, strict type-check, 93 Vitest unit tests, production build, `npm audit`); Playwright E2E (`npm run e2e`, local only); CI `.github/workflows/frontend.yml`.
   - "Improve with AI" in the task form calls the AI endpoint and shows the suggestion before the user applies it (PR #10).
   - Design: `SmartTaskManagement-Frontend/docs/frontend-design.md`; rules: `SmartTaskManagement-Frontend/CLAUDE.md`.
 - **AI description improvement: built.** `POST /api/tasks/description/improve` (Admin, Project Manager) behind the `IAiTextImprover` strategy; one implementation, `GeminiTextImprover`, calls the Google Gemini API free tier (`gemini-3.5-flash-lite`, ADR 0020). It saves nothing. Limits and errors: description at most 4000 characters, 25-second timeout, one immediate retry after a Gemini 503, `ai.not_configured` and `ai.unavailable` (503), `ai.rejected` (400). The API key is optional and lives only in user-secrets or environment variables. Design: `SmartTaskManagement-Backend/docs/ai-description-design.md`; prompts: `SmartTaskManagement-Backend/PROMPTS.md`.
@@ -79,7 +79,7 @@ A fourth private repository is an archive of the long template build history and
 
 ### In progress or open
 
-- Frontend follow-ups: seven minor review findings (listed in the PR #7 description). The Change owner dialog (Admin, project page) and the project filter on `/tasks` are built (2026-11-12).
+- Frontend follow-ups: none open. The Change owner dialog (Admin, project page), the project filter on `/tasks` and the seven minor review findings from PR #7 are done (2026-11-12).
 - The repository is public (made public by the developer on 2026-11-11), so the evaluator can open the link.
 
 ## Locked decisions and why
