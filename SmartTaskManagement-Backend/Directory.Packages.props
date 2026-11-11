@@ -49,6 +49,8 @@
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
     <!-- Verified 2026-11-11: MailKit 5.0.0 latest stable on nuget.org (dotnet package search exact-match), MIT, net8.0+; ADR 0017. -->
     <PackageVersion Include="MailKit" Version="5.0.0" />
+    <!-- Verified 2026-11-11: Microsoft.Extensions.Http 10.0.14 listed on nuget.org (dotnet package search exact-match: 10.0.13, 10.0.14, 10.0.15, 11.0.0), MIT; same 10.0.14 as the other Microsoft.Extensions packages; typed HttpClient for Gemini (ADR 0020). -->
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.14" />
   </ItemGroup>
 
   <!-- Api. Verified 2026-11-08 (latest stable, no advisories). -->

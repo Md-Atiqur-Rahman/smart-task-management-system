@@ -8,6 +8,7 @@ using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.AssignT
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.ChangeTaskStatus;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.CreateTask;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.DeleteTask;
+using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.ImproveTaskDescription;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Commands.UpdateTask;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Queries.GetTaskById;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks.Queries.ListProjectTasks;
@@ -26,6 +27,7 @@ public sealed class TasksController : ControllerBase
     public const string Route = "api/tasks";
     public const string ProjectTasksRoute = "/api/projects/{projectId:guid}/tasks";
     public const string ByIdRoute = "api/tasks/{id:guid}";
+    public const string ImproveDescriptionRoute = "api/tasks/description/improve";
 
     [Authorize(Policy = AuthorizationPolicies.ProjectManagerOrAdmin)]
     [HttpPost(ProjectTasksRoute)]
@@ -54,6 +56,28 @@ public sealed class TasksController : ControllerBase
         return result.IsSuccess
             ? Created(new Uri($"/{Route}/{result.Value}", UriKind.Relative), new CreatedResponse(result.Value))
             : this.ToProblem(result.Error);
+    }
+
+    /// <summary>
+    /// Returns an improved version of a task description from the AI service (design 3). Saves nothing:
+    /// the client shows the result and the PM decides whether to use it.
+    /// </summary>
+    [Authorize(Policy = AuthorizationPolicies.ProjectManagerOrAdmin)]
+    [HttpPost(ImproveDescriptionRoute)]
+    [ProducesResponseType<ImprovedDescriptionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
+    public async Task<IActionResult> ImproveDescription(
+        [FromBody] ImproveDescriptionRequest request,
+        [FromServices] ICommandHandler<ImproveTaskDescriptionCommand, ImprovedDescriptionDto> handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(
+            new ImproveTaskDescriptionCommand(request.Title, request.Description ?? string.Empty),
+            cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error);
     }
 
     [Authorize]

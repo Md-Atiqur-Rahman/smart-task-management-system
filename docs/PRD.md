@@ -236,10 +236,31 @@ one role.
 - CONFIRMED (assignment): one endpoint that fixes grammar, improves clarity, makes
   the text professional, expands short text and makes it actionable.
 - CONFIRMED: usable by Admin and PM only.
-- PROPOSED: behind an `IAiProvider` strategy; input length limit, timeout, clear
+- CONFIRMED (design approved 2026-11-11, `SmartTaskManagement-Backend/docs/ai-description-design.md`, ADR 0020): behind an `IAiTextImprover` strategy; input length limit, timeout, clear
   failure response, prompt-injection caution; prompt design documented in
   `PROMPTS.md`.
-- UNVERIFIED: GitHub Models model, endpoint, authentication and rate limits.
+- CONFIRMED (2026-11-11): provider is the **Google Gemini API, free tier**, with an
+  API key from Google AI Studio (key only in user-secrets or environment
+  variables). Model and API details are verified from Google's official docs in
+  the AI design.
+- Why not GitHub Models (the provider the assignment suggests): GitHub's official
+  docs say "As of July 30, 2026, GitHub Models has been fully retired. The
+  playground, model catalog, inference API, and bring your own key (BYOK) are no
+  longer available to any customer" (docs.github.com/en/github-models/quickstart,
+  checked 2026-11-11); the Marketplace models listing no longer shows models. The
+  assignment allows "any free AI provider".
+- Considered and not chosen: Ollama (local, free, keeps text on the machine) —
+  rejected for now because setting it up (model download, hardware, tuning for
+  Bangla/Banglish) would take too long. The `IAiTextImprover` strategy keeps it
+  possible later.
+- CONFIRMED: Gemini free-tier terms apply: Google may use submitted text to improve
+  its products and human reviewers may read it, so no sensitive or personal
+  information belongs in descriptions sent for improvement; users must be 18+ and
+  use is professional (documented in `PROMPTS.md`).
+- CONFIRMED: output keeps the input's language (Bangla, English or Banglish); the
+  result is shown to the PM first and is used only when the PM chooses "Use this"
+  (the endpoint saves nothing); on failure or after a 30-second timeout the PM sees a
+  clear message and the original text is unchanged; no per-user usage limit for now.
 
 ## 11. Frontend
 
@@ -293,9 +314,7 @@ Design: `SmartTaskManagement-Backend/docs/notifications-design.md`.
 
 ## Open questions
 
-| # | Question | Proposed default |
-| --- | --- | --- |
-| 6 | AI provider and model (section 10) | GitHub Models, after verifying official docs |
+None open.
 
 ## Change log
 
@@ -316,3 +335,5 @@ Design: `SmartTaskManagement-Backend/docs/notifications-design.md`.
 | 2026-11-11 | Dashboard (section 9): scope like the lists (section 2 PM dashboard row corrected from "own projects"), two calls (summary and upcoming), completed/pending/overdue definitions, upcoming window of 7 days and 10 tasks, no caching; notifications moved to a separate later module | Developer confirmed in the Dashboard interview; one visibility rule keeps dashboard numbers equal to what the lists show |
 | 2026-11-11 | Notifications (section 13): five notification events (task assigned, task removed, project owner set by an Admin, owner changed for the new and the previous owner), live pop-up and real-time dashboard over SSE, stored list with 7-day retention, unread badge, email through a database outbox with MailKit and Mailpit; section 6 Redis exception extended to pub/sub fan-out | Developer confirmed in the Notifications interview; several instances need a shared channel, and an assignment must not fail because the mail server is down |
 | 2026-11-11 | Repository split into backend and frontend folders (ADR 0019); section 11: the frontend folder is `SmartTaskManagement-Frontend/` (replaces `FE/`), the backend is in `SmartTaskManagement-Backend/` | Developer decision: each part keeps its own docs, compose and env files |
+| 2026-11-11 | AI provider (section 10): Google Gemini API free tier instead of the retired GitHub Models; Ollama considered and deferred; output keeps the input language; preview-then-"Use this"; 30-second timeout; no per-user limit; open question 6 closed | Developer confirmed in the AI interview; GitHub's docs state GitHub Models was retired on July 30, 2026 |
+| 2026-11-11 | Section 10: the strategy is named `IAiTextImprover` (was `IAiProvider`) | Approved AI design (`SmartTaskManagement-Backend/docs/ai-description-design.md` section 4) names it after its one job |
