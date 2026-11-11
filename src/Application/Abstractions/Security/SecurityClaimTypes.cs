@@ -13,4 +13,7 @@ public static class SecurityClaimTypes
     public const string TokenVersion = "tv";
 
     public const string TokenId = "jti";
+
+    /// <summary>Expiry of the access token (Unix seconds); the live stream ends at this time.</summary>
+    public const string Expires = "exp";
 }

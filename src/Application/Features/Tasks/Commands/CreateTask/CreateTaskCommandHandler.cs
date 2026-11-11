@@ -1,5 +1,7 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
@@ -16,7 +18,9 @@ internal sealed class CreateTaskCommandHandler(
     IProjectRepository projects,
     ITaskItemRepository tasks,
     IUserRepository users,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IAssignmentNotifier notifier,
+    LiveEventBuffer liveEvents)
     : ICommandHandler<CreateTaskCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateTaskCommand command, CancellationToken cancellationToken)
@@ -50,8 +54,16 @@ internal sealed class CreateTaskCommandHandler(
             command.DueDate,
             command.AssigneeId);
         tasks.Add(task);
+        await notifier.TaskAssigneeChangedAsync(task, null, callerId, cancellationToken);
 
         var saved = await unitOfWork.SaveChangesAsync(cancellationToken);
-        return saved.IsSuccess ? Result.Success(task.Id) : Result.Failure<Guid>(saved.Error);
+        if (saved.IsFailure)
+        {
+            return Result.Failure<Guid>(saved.Error);
+        }
+
+        // Not the request token: a request aborted right after a successful save still publishes.
+        await liveEvents.FlushAsync(CancellationToken.None);
+        return Result.Success(task.Id);
     }
 }

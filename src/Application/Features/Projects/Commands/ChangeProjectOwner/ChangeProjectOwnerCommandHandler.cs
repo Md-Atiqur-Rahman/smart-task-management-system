@@ -1,5 +1,7 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
 using Datavanced.SmartTaskManagement.Domain.Projects;
@@ -13,12 +15,14 @@ internal sealed class ChangeProjectOwnerCommandHandler(
     ISecurityContext securityContext,
     IProjectRepository projects,
     IUserRepository users,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IAssignmentNotifier notifier,
+    LiveEventBuffer liveEvents)
     : ICommandHandler<ChangeProjectOwnerCommand>
 {
     public async Task<Result> Handle(ChangeProjectOwnerCommand command, CancellationToken cancellationToken)
     {
-        if (securityContext.UserId is null || securityContext.Role is null)
+        if (securityContext.UserId is not { } callerId || securityContext.Role is null)
         {
             return Result.Failure(AuthErrors.TokenRevoked);
         }
@@ -35,11 +39,21 @@ internal sealed class ChangeProjectOwnerCommandHandler(
             return Result.Failure(ProjectErrors.InvalidOwner);
         }
 
+        var previousOwnerId = project.OwnerId;
         if (!project.ChangeOwner(owner.Id))
         {
             return Result.Success();
         }
 
-        return await unitOfWork.SaveChangesAsync(cancellationToken);
+        await notifier.ProjectOwnerChangedAsync(project, previousOwnerId, callerId, cancellationToken);
+
+        var result = await unitOfWork.SaveChangesAsync(cancellationToken);
+        if (result.IsSuccess)
+        {
+            // Not the request token: a request aborted right after a successful save still publishes.
+            await liveEvents.FlushAsync(CancellationToken.None);
+        }
+
+        return result;
     }
 }

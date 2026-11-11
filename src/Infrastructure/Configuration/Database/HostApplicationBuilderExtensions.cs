@@ -1,10 +1,12 @@
 using Datavanced.SmartTaskManagement.Application.Features.Dashboard;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Application.Features.Projects;
 using Datavanced.SmartTaskManagement.Application.Features.Samples;
 using Datavanced.SmartTaskManagement.Application.Features.Tasks;
 using Datavanced.SmartTaskManagement.Application.Features.Users;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
+using Datavanced.SmartTaskManagement.Domain.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Projects;
 using Datavanced.SmartTaskManagement.Domain.Samples;
 using Datavanced.SmartTaskManagement.Domain.Tasks;
@@ -46,12 +48,14 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
         builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
+        builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
         builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         builder.Services.AddScoped<ISampleReadRepository, SampleReadRepository>();
         builder.Services.AddScoped<IUserReadRepository, UserReadRepository>();
         builder.Services.AddScoped<IProjectReadRepository, ProjectReadRepository>();
         builder.Services.AddScoped<ITaskItemReadRepository, TaskItemReadRepository>();
         builder.Services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
+        builder.Services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
 
         if (builder.Environment.IsDevelopment())
         {

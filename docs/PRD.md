@@ -129,8 +129,9 @@ one role.
 ## 6. Redis and shared state (CONFIRMED, ADR 0013)
 
 - Redis is required because the API runs as **multiple instances**. It is an
-  exception to the no-caching rule, limited to token versions and the shared rate
-  limit counter.
+  exception to the no-caching rule, limited to token versions, the shared rate
+  limit counter and (CONFIRMED 2026-11-11, ADR 0018) pub/sub fan-out of live
+  events to the instance that holds a user's live connection (section 13).
 - Client: StackExchange.Redis 3.4.31 (verified). Image: `redis:8.10.3` (verified on
   Docker Hub), pinned once in `.env.example`. Redis 8 license (RSALv2 / SSPLv1 /
   AGPLv3) accepted: used unmodified as a separate service.
@@ -253,6 +254,37 @@ Serilog, health checks, consistent API responses. Documentation: `README.md`,
 `PROMPTS.md`, API collection (the committed `docs/openapi.json`), EF Core
 migrations.
 
+## 13. Notifications
+
+Design: `docs/notifications-design.md`.
+
+- CONFIRMED: when a task is assigned, the assignee gets a live pop-up (toast) and
+  an email; the notification is stored and shown in a notification list (pop-up
+  list under a bell icon). Clicking an item opens the task.
+- CONFIRMED: when an Admin creates a project for a Project Manager or changes a
+  project's owner, the new owner gets a notification and an email; on an owner
+  change the previous owner gets a notification that ownership was removed.
+- CONFIRMED: when a task is unassigned or reassigned, the previous assignee gets a
+  notification that the task was removed from them.
+- CONFIRMED: notifications are stored in the database and deleted automatically
+  after **7 days**; the list shows the last 7 days.
+- CONFIRMED: the bell icon shows a badge with the unread count; inside the list
+  each item shows itself as unread (active) or read (inactive), without counts.
+- CONFIRMED: the dashboard updates in real time: when work changes, the open
+  dashboards of the affected users refresh without a reload.
+- CONFIRMED: live updates use Server-Sent Events (SSE).
+- CONFIRMED: an assignment succeeds even when the mail server is down; email
+  goes through a transactional outbox in the database and a background worker
+  retries failed sends (ADR 0017).
+- CONFIRMED: email is sent with MailKit over SMTP; development uses a local
+  Mailpit inbox in Docker; a real provider is a configuration change only.
+- CONFIRMED: several API instances (section 7): live events reach the right
+  instance through Redis pub/sub, and the email worker claims each email so it is
+  sent once (ADR 0018, ADR 0017).
+- CONFIRMED (design approved 2026-11-11): the person who made the change never gets a notification about it;
+  every notification type also sends an email; "removed" notifications do not
+  link to the task or project.
+
 ## Open questions
 
 | # | Question | Proposed default |
@@ -276,3 +308,4 @@ migrations.
 | 2026-11-10 | Projects: fields, ownership (Admin chooses a PM owner; only an Admin can change the owner later, replacing "ownership does not change"), soft delete (open question 5 closed), list search/filter/sort/server-side paging, list and details contents, no demotion of a PM who owns projects | Developer confirmed in the Project module interview; a project must be handed to another PM when its PM leaves |
 | 2026-11-10 | Tasks: separate aggregate, no status transition rules (any status to any status; replaces the proposed transition table; open question 4 closed), fields, date-only due date with past dates allowed, soft delete, lists with search/filter/sort/paging, list and details contents, separate status and assignment operations, project task counts. Sections 2 and 3: whoever a task is assigned to sees it and its project and may change its status, whatever their role | Developer confirmed in the Task module interview; an Admin may assign anyone, and the assignee must be able to see the work; Azure Boards, Jira and Zoho allow any-to-any status changes by default, so final statuses would block normal reopening |
 | 2026-11-11 | Dashboard (section 9): scope like the lists (section 2 PM dashboard row corrected from "own projects"), two calls (summary and upcoming), completed/pending/overdue definitions, upcoming window of 7 days and 10 tasks, no caching; notifications moved to a separate later module | Developer confirmed in the Dashboard interview; one visibility rule keeps dashboard numbers equal to what the lists show |
+| 2026-11-11 | Notifications (section 13): five notification events (task assigned, task removed, project owner set by an Admin, owner changed for the new and the previous owner), live pop-up and real-time dashboard over SSE, stored list with 7-day retention, unread badge, email through a database outbox with MailKit and Mailpit; section 6 Redis exception extended to pub/sub fan-out | Developer confirmed in the Notifications interview; several instances need a shared channel, and an assignment must not fail because the mail server is down |

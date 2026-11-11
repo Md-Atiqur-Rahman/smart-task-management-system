@@ -1,5 +1,7 @@
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
+using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Domain.Abstractions;
 using Datavanced.SmartTaskManagement.Domain.Auth;
 using Datavanced.SmartTaskManagement.Domain.Projects;
@@ -12,7 +14,9 @@ internal sealed class DeleteProjectCommandHandler(
     ISecurityContext securityContext,
     IProjectRepository projects,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IAssignmentNotifier notifier,
+    LiveEventBuffer liveEvents)
     : ICommandHandler<DeleteProjectCommand>
 {
     public async Task<Result> Handle(DeleteProjectCommand command, CancellationToken cancellationToken)
@@ -29,6 +33,15 @@ internal sealed class DeleteProjectCommandHandler(
         }
 
         project.Delete(timeProvider.GetUtcNow());
-        return await unitOfWork.SaveChangesAsync(cancellationToken);
+        await notifier.ProjectDeletedAsync(project, callerId, cancellationToken);
+
+        var result = await unitOfWork.SaveChangesAsync(cancellationToken);
+        if (result.IsSuccess)
+        {
+            // Not the request token: a request aborted right after a successful save still publishes.
+            await liveEvents.FlushAsync(CancellationToken.None);
+        }
+
+        return result;
     }
 }
