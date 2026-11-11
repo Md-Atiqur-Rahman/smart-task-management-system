@@ -38,8 +38,9 @@ Constraints:
 - Tooling derives the folders and never writes the project name:
   - the backend workflow (`.github/workflows/backend.yml`) finds exactly one
     `*-Backend` folder in a shell step and runs `scripts/verify.sh` there; its
-    `paths` filter (`*-Backend/**`, `docs/**`, the workflow file) uses GitHub's
-    glob syntax, where `*` does not match `/`;
+    `paths-ignore` filter (`*-Frontend/**`, GitHub's glob syntax, where `*` does
+    not match `/`) skips it only for frontend-only changes, because verify also
+    checks root files (`.claude/`, `.github/`, root docs);
   - the scripts change to their own backend root (the parent of `scripts/`), so
     they work from any directory; the verify placeholder check covers the whole
     repository and the name check covers the root workflows;
@@ -53,10 +54,11 @@ Constraints:
 - Renaming `PROJECT_NAME` means renaming both top-level folders by hand, and the
   backend script paths in `.claude/settings.json`; `scripts/new-project` renames
   only inside the backend folder.
-- CI runs per part: the backend workflow runs only when the backend, the root
-  docs or the workflow itself changes. The frontend gets its own workflow later.
-  A skipped workflow leaves its checks pending, so a branch protection rule that
-  requires the backend check would block a frontend-only pull request.
+- CI runs per part: the backend workflow runs for every change except
+  frontend-only ones (all changed files under `*-Frontend/`). The frontend gets
+  its own workflow later. A skipped workflow leaves its checks pending, so a
+  branch protection rule that requires the backend check would block a
+  frontend-only pull request.
 - Commands run from the backend folder (`cd <PROJECT_NAME>-Backend`);
   `scripts/verify.sh` also runs from anywhere.
 - Every file moved with `git mv`, so `git log --follow` keeps its history.

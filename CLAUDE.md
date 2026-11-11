@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Backend work: read `SmartTaskManagement-Backend/CLAUDE.md` first (frontend work, later: `SmartTaskManagement-Frontend/CLAUDE.md`).
+
 Smart Task Management System: a .NET 10 Clean Architecture API and an Angular
 frontend in one repository. This file holds the project-wide rules; each part
 has its own `CLAUDE.md` with its strict rules.

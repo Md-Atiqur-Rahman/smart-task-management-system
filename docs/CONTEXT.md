@@ -56,11 +56,10 @@ A fourth private repository is an archive of the long template build history and
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
 - 683 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
-- `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `SmartTaskManagement-Backend/docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
+- `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `SmartTaskManagement-Backend/docs/openapi.json`, and `docker build`. `verify.sh` passes locally (also from the repository root after the split, ADR 0019); `verify.ps1` passed before the split and was not re-run after it. CI runs `verify.sh` on Ubuntu.
 - Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
 - Claude Code files: the root `CLAUDE.md` (project-wide) and `SmartTaskManagement-Backend/CLAUDE.md` (backend rules), `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
 - ADRs in `SmartTaskManagement-Backend/docs/adr/`, `SmartTaskManagement-Backend/docs/architecture.md`, `SmartTaskManagement-Backend/docs/coding-standards.md`.
-- `docs/TEMPLATE-PRD.md`, inherited from the template. The project should write its own `docs/PRD.md`; `TEMPLATE-PRD.md` may then be deleted.
 
 ### Not started
 
@@ -179,7 +178,7 @@ Template follow-ups (not blocking): GitHub Actions are pinned by major version, 
 The repository has two parts plus a thin root (ADR 0019). Tooling never writes the project name: CI and the scripts find the backend as the `*-Backend` folder or the folder that holds the `*.slnx`.
 
 ```text
-.github/workflows/backend.yml   backend CI (runs only for *-Backend/**, docs/**, the workflow itself)
+.github/workflows/backend.yml   backend CI (runs for every change except frontend-only ones)
 .claude/                        rules, agents, settings and the format hook (shared by both parts)
 README.md  CLAUDE.md            short root versions: overview and project-wide rules
 docs/                           project-wide docs: assignment.md, PRD.md, CONTEXT.md (this file)

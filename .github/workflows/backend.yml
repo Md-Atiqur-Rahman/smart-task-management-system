@@ -5,23 +5,22 @@
 #   https://github.com/actions/checkout         (README usage: actions/checkout@v7)
 #   https://github.com/actions/setup-dotnet     (README usage: actions/setup-dotnet@v6)
 #   https://github.com/actions/upload-artifact  (README usage: actions/upload-artifact@v7)
-# Path filters: `*` does not match `/`, `**` matches any character including `/`
+# Runs for every change except frontend-only ones: verify also checks root files
+# (.claude, .github, root docs). paths-ignore skips the run only when ALL changed
+# files match; `*` does not match `/`, `**` matches any character including `/`
 # (GitHub docs, workflow syntax, "Filter pattern cheat sheet", checked 2026-11-11).
+# `paths` and `paths-ignore` cannot be combined for the same event.
 name: Backend
 
 on:
   push:
     branches: [main]
-    paths:
-      - '*-Backend/**'
-      - 'docs/**'
-      - '.github/workflows/backend.yml'
+    paths-ignore:
+      - '*-Frontend/**'
   pull_request:
     branches: [main]
-    paths:
-      - '*-Backend/**'
-      - 'docs/**'
-      - '.github/workflows/backend.yml'
+    paths-ignore:
+      - '*-Frontend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
