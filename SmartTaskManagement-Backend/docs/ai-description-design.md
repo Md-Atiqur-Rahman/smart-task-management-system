@@ -1,7 +1,13 @@
 # Design: AI description improvement
 
-- Status: Approved by the developer (2026-11-11), including every
-  **[builder's call]** (decisions not stated by the developer).
+- Status: Implemented (2026-11-11). Approved by the developer (2026-11-11),
+  including every **[builder's call]** (decisions not stated by the developer).
+- Smoke test (developer, 2026-11-11, real key): the `x-goog-api-key` header and
+  `thinkingConfig.thinkingLevel` = `MINIMAL` on `gemini-3.5-flash-lite` both work;
+  the two UNVERIFIED items below are confirmed.
+- Implementation notes: the prompt asks for under 3500 characters (developer
+  decision, headroom under the server's 4000 check, rule 6); an invalid request
+  returns errorCode `validation.failed` (the project's existing code).
 - Requirements: root `../docs/assignment.md` ("AI Feature", "PROMPTS.md") and
   `../docs/PRD.md` section 10. Builds on the Task module (`task-design.md`).
 - Decision record: ADR 0020 (AI provider).

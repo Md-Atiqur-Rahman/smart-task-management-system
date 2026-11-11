@@ -251,7 +251,7 @@ one role.
   assignment allows "any free AI provider".
 - Considered and not chosen: Ollama (local, free, keeps text on the machine) —
   rejected for now because setting it up (model download, hardware, tuning for
-  Bangla/Banglish) would take too long. The `IAiProvider` strategy keeps it
+  Bangla/Banglish) would take too long. The `IAiTextImprover` strategy keeps it
   possible later.
 - CONFIRMED: Gemini free-tier terms apply: Google may use submitted text to improve
   its products and human reviewers may read it, so no sensitive or personal
@@ -336,3 +336,4 @@ None open.
 | 2026-11-11 | Notifications (section 13): five notification events (task assigned, task removed, project owner set by an Admin, owner changed for the new and the previous owner), live pop-up and real-time dashboard over SSE, stored list with 7-day retention, unread badge, email through a database outbox with MailKit and Mailpit; section 6 Redis exception extended to pub/sub fan-out | Developer confirmed in the Notifications interview; several instances need a shared channel, and an assignment must not fail because the mail server is down |
 | 2026-11-11 | Repository split into backend and frontend folders (ADR 0019); section 11: the frontend folder is `SmartTaskManagement-Frontend/` (replaces `FE/`), the backend is in `SmartTaskManagement-Backend/` | Developer decision: each part keeps its own docs, compose and env files |
 | 2026-11-11 | AI provider (section 10): Google Gemini API free tier instead of the retired GitHub Models; Ollama considered and deferred; output keeps the input language; preview-then-"Use this"; 30-second timeout; no per-user limit; open question 6 closed | Developer confirmed in the AI interview; GitHub's docs state GitHub Models was retired on July 30, 2026 |
+| 2026-11-11 | Section 10: the strategy is named `IAiTextImprover` (was `IAiProvider`) | Approved AI design (`SmartTaskManagement-Backend/docs/ai-description-design.md` section 4) names it after its one job |
