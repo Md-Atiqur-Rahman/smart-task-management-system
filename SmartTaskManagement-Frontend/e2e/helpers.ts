@@ -40,9 +40,17 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
+/**
+ * Clicks a link in the main menu. Pages also have breadcrumbs with the same link names
+ * (for example "Tasks" on a task page), so the menu is named explicitly.
+ */
+export async function openFromMenu(page: Page, name: string): Promise<void> {
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name }).click();
+}
+
 /** Admin page: gives a registered user the Project Manager role (with the confirmation step). */
 export async function promoteToProjectManager(adminPage: Page, user: TestUser): Promise<void> {
-  await adminPage.getByRole('link', { name: 'Users' }).click();
+  await openFromMenu(adminPage, 'Users');
   await adminPage.getByLabel('Search users').fill(user.email);
   const roleSelect = adminPage.getByLabel(`Role of ${user.fullName}`);
   await expect(roleSelect).toBeVisible();
@@ -53,7 +61,7 @@ export async function promoteToProjectManager(adminPage: Page, user: TestUser): 
 
 /** Admin page: creates a project owned by the given Project Manager and opens it. */
 export async function createProject(adminPage: Page, name: string, owner: TestUser): Promise<void> {
-  await adminPage.getByRole('link', { name: 'Projects' }).click();
+  await openFromMenu(adminPage, 'Projects');
   await adminPage.getByRole('button', { name: 'New project' }).click();
   const dialog = adminPage.getByRole('dialog', { name: 'New project' });
   await dialog.getByLabel('Name').fill(name);
