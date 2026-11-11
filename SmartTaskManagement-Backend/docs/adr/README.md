@@ -22,3 +22,4 @@ Changing an accepted decision needs a new ADR that supersedes the old one.
 | [0016](0016-refresh-token-families.md) | Refresh-token families; reuse detection revokes one family | Accepted |
 | [0017](0017-email-outbox.md) | Email through a transactional outbox on the notification row | Accepted |
 | [0018](0018-sse-and-redis-pubsub.md) | Live events over SSE, fanned out through Redis pub/sub (amends 0013) | Accepted |
+| [0019](0019-repository-layout.md) | Repository layout with separate backend and frontend folders | Accepted |

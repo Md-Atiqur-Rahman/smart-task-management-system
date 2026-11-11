@@ -6,7 +6,7 @@ Updated 2026-11-11. This file describes the current truth, not the history. Anyt
 
 **বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard (summary ও upcoming, দুটি endpoint) তৈরি হয়েছে; Notifications (stored list, live SSE push, email outbox) তৈরি হয়েছে; AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project, Task, Dashboard and Notifications modules are built (`docs/project-design.md`, `docs/task-design.md`, `docs/dashboard-design.md`, `docs/notifications-design.md`); AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`SmartTaskManagement-Backend/docs/auth-design.md`) and the Project, Task, Dashboard and Notifications modules are built (`SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md`, `SmartTaskManagement-Backend/docs/notifications-design.md`); AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -46,20 +46,20 @@ A fourth private repository is an archive of the long template build history and
 ### What exists in this repository
 
 - Four source projects (Domain, Application, Infrastructure, Api) and three test projects (UnitTests, IntegrationTests, ArchitectureTests), plus a small `tests/WeavingProbe` library used only to probe NullGuard behaviour.
-- A runnable `Sample` feature (5 endpoints: create, list with search/sort/paging, get by id, complete, soft delete), all `[Authorize]`. It is the copy-source for every new feature. See `docs/sample-flow.md`.
-- **Auth: built.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`; the only anonymous actions), `UsersController` (Admin: list users and change a role; Admin or Project Manager: assignable users), `User` and `RefreshToken` aggregates, a first-Admin seed from secret configuration, and `[RequireAllowedOrigin]` (Origin check against `Cors:AllowedOrigins`) on refresh and logout. The refresh token lives only in the `__Secure-refresh_token` HttpOnly cookie. Details: `docs/auth-design.md`, ADR 0013 to 0015.
-- **Project: built.** `ProjectsController`: `POST` and `GET /api/projects` (list with search, sort by `name`/`createdAt`/`updatedAt`, paging, `ownerId` filter), `GET`, `PUT` and `DELETE /api/projects/{id}`, and `PUT /api/projects/{id}/owner` (Admin only). Create, update and delete: Admin or Project Manager; a Project Manager sees and changes only their own projects, Admin all, a Team Member (or any assignee) sees the projects of their tasks, details only (delivered by the Task module). Delete is a soft delete. The owner must be a Project Manager. Demotion guard: changing the role of a Project Manager who still owns projects returns 409 `users.owns_projects`. Design: `docs/project-design.md`.
-- **Task: built.** `TaskItem` aggregate (`TaskItemStatus`, `TaskPriority`; priority Medium by default, date-only due date, no state machine) in the `Tasks` table. Endpoints: `POST` and `GET /api/projects/{projectId}/tasks`, `GET /api/tasks`, `GET`, `PUT` and `DELETE /api/tasks/{id}`, `PUT /api/tasks/{id}/status` (an Admin, the owning Project Manager, or the task's assignee) and `PUT /api/tasks/{id}/assignee` (Admin or owning Project Manager; null unassigns). Both lists filter by status, priority, `assigneeId`, `unassigned`, `dueFrom`/`dueTo` and sort rank-aware. The assignee (any role) sees the task and its project and may change its status. Project list and details carry task counts (an assignee-only caller counts only their own tasks). Design: `docs/task-design.md`.
-- **Dashboard: built.** `DashboardController`: `GET /api/dashboard/summary` (total projects and tasks, tasks by status and by priority, completed, pending and overdue counts; all four status and priority keys are always present) and `GET /api/dashboard/upcoming` (pending tasks due from today to today + `Dashboard:UpcomingDays`, at most `Dashboard:UpcomingLimit`). Both are `[Authorize]`; every role sees only the projects and tasks it may see (one visibility definition shared with the project and task lists). Design: `docs/dashboard-design.md`.
-- **Notifications: built.** `Notification` aggregate in the `Notifications` table, which is also the email outbox (ADR 0017). Five events (task assigned or unassigned, project owner assigned or removed; the actor is never notified). Endpoints: `GET /api/notifications`, `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all` and `GET /api/notifications/stream` (SSE; event types `notification`, `notifications-read`, `dashboard-changed`, `heartbeat`; ends at the access token's expiry; browsers must use `fetch` with the bearer header). Live events go through Redis pub/sub to every instance (ADR 0018; fail open when Redis is down). An `EmailOutboxWorker` sends emails with MailKit (Mailpit locally, `http://localhost:8025`) and a `NotificationCleanupWorker` deletes notifications after `Notifications:RetentionDays` (7). Design: `docs/notifications-design.md`.
+- A runnable `Sample` feature (5 endpoints: create, list with search/sort/paging, get by id, complete, soft delete), all `[Authorize]`. It is the copy-source for every new feature. See `SmartTaskManagement-Backend/docs/sample-flow.md`.
+- **Auth: built.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`; the only anonymous actions), `UsersController` (Admin: list users and change a role; Admin or Project Manager: assignable users), `User` and `RefreshToken` aggregates, a first-Admin seed from secret configuration, and `[RequireAllowedOrigin]` (Origin check against `Cors:AllowedOrigins`) on refresh and logout. The refresh token lives only in the `__Secure-refresh_token` HttpOnly cookie. Details: `SmartTaskManagement-Backend/docs/auth-design.md`, ADR 0013 to 0015.
+- **Project: built.** `ProjectsController`: `POST` and `GET /api/projects` (list with search, sort by `name`/`createdAt`/`updatedAt`, paging, `ownerId` filter), `GET`, `PUT` and `DELETE /api/projects/{id}`, and `PUT /api/projects/{id}/owner` (Admin only). Create, update and delete: Admin or Project Manager; a Project Manager sees and changes only their own projects, Admin all, a Team Member (or any assignee) sees the projects of their tasks, details only (delivered by the Task module). Delete is a soft delete. The owner must be a Project Manager. Demotion guard: changing the role of a Project Manager who still owns projects returns 409 `users.owns_projects`. Design: `SmartTaskManagement-Backend/docs/project-design.md`.
+- **Task: built.** `TaskItem` aggregate (`TaskItemStatus`, `TaskPriority`; priority Medium by default, date-only due date, no state machine) in the `Tasks` table. Endpoints: `POST` and `GET /api/projects/{projectId}/tasks`, `GET /api/tasks`, `GET`, `PUT` and `DELETE /api/tasks/{id}`, `PUT /api/tasks/{id}/status` (an Admin, the owning Project Manager, or the task's assignee) and `PUT /api/tasks/{id}/assignee` (Admin or owning Project Manager; null unassigns). Both lists filter by status, priority, `assigneeId`, `unassigned`, `dueFrom`/`dueTo` and sort rank-aware. The assignee (any role) sees the task and its project and may change its status. Project list and details carry task counts (an assignee-only caller counts only their own tasks). Design: `SmartTaskManagement-Backend/docs/task-design.md`.
+- **Dashboard: built.** `DashboardController`: `GET /api/dashboard/summary` (total projects and tasks, tasks by status and by priority, completed, pending and overdue counts; all four status and priority keys are always present) and `GET /api/dashboard/upcoming` (pending tasks due from today to today + `Dashboard:UpcomingDays`, at most `Dashboard:UpcomingLimit`). Both are `[Authorize]`; every role sees only the projects and tasks it may see (one visibility definition shared with the project and task lists). Design: `SmartTaskManagement-Backend/docs/dashboard-design.md`.
+- **Notifications: built.** `Notification` aggregate in the `Notifications` table, which is also the email outbox (ADR 0017). Five events (task assigned or unassigned, project owner assigned or removed; the actor is never notified). Endpoints: `GET /api/notifications`, `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all` and `GET /api/notifications/stream` (SSE; event types `notification`, `notifications-read`, `dashboard-changed`, `heartbeat`; ends at the access token's expiry; browsers must use `fetch` with the bearer header). Live events go through Redis pub/sub to every instance (ADR 0018; fail open when Redis is down). An `EmailOutboxWorker` sends emails with MailKit (Mailpit locally, `http://localhost:8025`) and a `NotificationCleanupWorker` deletes notifications after `Notifications:RetentionDays` (7). Design: `SmartTaskManagement-Backend/docs/notifications-design.md`.
 - **Lesson from the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
 - 683 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
-- `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
+- `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `SmartTaskManagement-Backend/docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
 - Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
-- Claude Code files: `CLAUDE.md`, `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
-- ADRs in `docs/adr/`, `docs/architecture.md`, `docs/coding-standards.md`.
+- Claude Code files: the root `CLAUDE.md` (project-wide) and `SmartTaskManagement-Backend/CLAUDE.md` (backend rules), `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
+- ADRs in `SmartTaskManagement-Backend/docs/adr/`, `SmartTaskManagement-Backend/docs/architecture.md`, `SmartTaskManagement-Backend/docs/coding-standards.md`.
 - `docs/TEMPLATE-PRD.md`, inherited from the template. The project should write its own `docs/PRD.md`; `TEMPLATE-PRD.md` may then be deleted.
 
 ### Not started
@@ -87,7 +87,7 @@ These are settled. Changing one needs an ADR and the developer's approval.
 | Formatting | `dotnet format` only; `.editorconfig` is the single source; naming rules at severity suggestion | One formatter, no conflicts |
 | Tests | xunit.v3 on Microsoft.Testing.Platform, NSubstitute, Shouldly, NetArchTest.Rules, Testcontainers (SQL Server) | Free licenses; real database in integration tests |
 | Database TLS | `Encrypt=False` only in Development and Testing; the literal `TrustServerCertificate` is forbidden everywhere | Certificate validation is never disabled |
-| OpenAPI | `docs/openapi.json` is committed and checked for freshness in CI; no Spectral | Doubles as the Swagger export deliverable |
+| OpenAPI | `SmartTaskManagement-Backend/docs/openapi.json` is committed and checked for freshness in CI; no Spectral | Doubles as the Swagger export deliverable |
 | Auth | Implemented in-house (built): 10-minute JWT access token with a token version, rotating refresh token in an HttpOnly cookie. Keycloak was considered and not chosen | The assignment lists these features as deliverables |
 | Redis | Allowed only for token versions and the shared rate-limit counter (ADR 0013); any other use needs a new ADR | Revocation and rate limits must agree across instances |
 
@@ -108,7 +108,7 @@ A pinned transitive package (`System.Security.Cryptography.Pkcs` 10.0.14) fixes 
 7. **Secrets.** Never commit secrets. Values live in user-secrets or `.env` (git-ignored); `.env.example` holds only safe placeholders. Scan the diff before pushing.
 8. **Git identity.** Commit with the repository-local identity the developer configured (a GitHub no-reply address). Never change the global git config and never copy values from it. Check `git log -1 --format="%an <%ae>"` after the first commit.
 9. **No unrelated content.** Do not copy code, names or packages from other employers or private projects into this repository.
-10. **Features follow the Sample slice.** Copy the structure in `docs/sample-flow.md` and keep the architecture tests green. When controllers or DTOs change, regenerate `docs/openapi.json`.
+10. **Features follow the Sample slice.** Copy the structure in `SmartTaskManagement-Backend/docs/sample-flow.md` and keep the architecture tests green. When controllers or DTOs change, regenerate `SmartTaskManagement-Backend/docs/openapi.json`.
 11. **One PRD.** Keep exactly one project PRD, `docs/PRD.md`. After the developer approves it, any change goes into its change log with a date, what and why, and needs approval.
 
 ### Working with the developer
@@ -136,14 +136,14 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 
 ### Auth design
 
-Built as designed in `docs/auth-design.md`; the implementation amendments are in ADR 0014 and ADR 0015. The template pieces it uses: `ISecurityContext`, the security-context middleware, `IPasswordHasher`, JWT options validation (signing key of at least 32 characters) and rate limiting.
+Built as designed in `SmartTaskManagement-Backend/docs/auth-design.md`; the implementation amendments are in ADR 0014 and ADR 0015. The template pieces it uses: `ISecurityContext`, the security-context middleware, `IPasswordHasher`, JWT options validation (signing key of at least 32 characters) and rate limiting.
 
 ### Domain rules
 
-Built (decided, implemented and tested): separate aggregates, task status, project soft delete, permissions and the dashboard numbers (details in `docs/project-design.md`, `docs/task-design.md`, `docs/dashboard-design.md` and `docs/notifications-design.md`). Still **proposed** (not built): the AI endpoint.
+Built (decided, implemented and tested): separate aggregates, task status, project soft delete, permissions and the dashboard numbers (details in `SmartTaskManagement-Backend/docs/project-design.md`, `SmartTaskManagement-Backend/docs/task-design.md`, `SmartTaskManagement-Backend/docs/dashboard-design.md` and `SmartTaskManagement-Backend/docs/notifications-design.md`). Still **proposed** (not built): the AI endpoint.
 
 - Project and Task are separate aggregates; a Task references its project only by `ProjectId`.
-- Task status: any status to any status (reopen allowed); there is no state machine because there are no transition rules (developer decision 2026-11-10, evidence in `docs/task-design.md` section 9).
+- Task status: any status to any status (reopen allowed); there is no state machine because there are no transition rules (developer decision 2026-11-10, evidence in `SmartTaskManagement-Backend/docs/task-design.md` section 9).
 - Deleting a project is a soft delete and hides its tasks.
 - Permissions: Admin sees and manages everything; a Project Manager manages their own projects and tasks and can assign; a Team Member sees only tasks assigned to them (and their projects) and may change only the status of those tasks.
 - Dashboard numbers use database-level grouping and are scoped by role (Admin all, Project Manager own projects plus tasks assigned to them (same rule as the lists), Team Member their assigned tasks and those tasks' projects).
@@ -151,13 +151,13 @@ Built (decided, implemented and tested): separate aggregates, task status, proje
 
 ### Frontend (proposed)
 
-Angular 18 or later, standalone components, lazy-loaded feature routes, auth and role guards, interceptors (attach token, refresh on 401, global error handling), reactive forms, responsive layout. Location: a `client/` folder in the same repository.
+Angular 18 or later, standalone components, lazy-loaded feature routes, auth and role guards, interceptors (attach token, refresh on 401, global error handling), reactive forms, responsive layout. Location: the `SmartTaskManagement-Frontend/` folder in the same repository (PRD section 11, ADR 0019).
 
 ## Open questions and UNVERIFIED items
 
 | Question | Proposed default |
 | --- | --- |
-| Is the Angular app in the same repository? | Yes, in `client/`, after the backend is stable |
+| Is the Angular app in the same repository? | Decided: yes, in `SmartTaskManagement-Frontend/` (PRD section 11, ADR 0019), after the backend is stable |
 | Where does Angular keep the refresh token (memory, localStorage, httpOnly cookie)? | Decide in the frontend phase; localStorage is exposed to XSS, a cookie needs CORS and CSRF handling |
 | Are the proposed domain rules and permissions correct? | Confirm one by one in the PRD interview |
 | Which GitHub Models model and endpoint will the AI feature use? | Unknown; verify from official documentation |
@@ -176,32 +176,45 @@ Template follow-ups (not blocking): GitHub Actions are pinned by major version, 
 
 ### Layout
 
+The repository has two parts plus a thin root (ADR 0019). Tooling never writes the project name: CI and the scripts find the backend as the `*-Backend` folder or the folder that holds the `*.slnx`.
+
 ```text
-Datavanced.SmartTaskManagement.slnx
-src/Domain  src/Application  src/Infrastructure  src/Api
-tests/UnitTests  tests/IntegrationTests  tests/ArchitectureTests  tests/WeavingProbe
-docs/            assignment, architecture, coding standards, sample-flow, ADRs, openapi.json
-scripts/         verify.sh, verify.ps1, check-packages, generate-openapi, new-project
-.claude/         rules, agents, settings and the format hook
-CLAUDE.md        main rules; each src project has its own CLAUDE.md
+.github/workflows/backend.yml   backend CI (runs only for *-Backend/**, docs/**, the workflow itself)
+.claude/                        rules, agents, settings and the format hook (shared by both parts)
+README.md  CLAUDE.md            short root versions: overview and project-wide rules
+docs/                           project-wide docs: assignment.md, PRD.md, CONTEXT.md (this file)
+SmartTaskManagement-Backend/
+  Datavanced.SmartTaskManagement.slnx
+  src/Domain  src/Application  src/Infrastructure  src/Api
+  tests/UnitTests  tests/IntegrationTests  tests/ArchitectureTests  tests/WeavingProbe
+  docs/          architecture, coding standards, sample-flow, *-design.md, ADRs, plans, openapi.json
+  scripts/       verify.sh, verify.ps1, check-packages, generate-openapi, new-project
+  Dockerfile  docker-compose.yml  .env.example  (.env, git-ignored, lives here)
+  README.md  CLAUDE.md   backend README and rules; each src project has its own CLAUDE.md
+SmartTaskManagement-Frontend/
+  README.md      placeholder until the Angular step
 ```
+
+Paths such as `src/...`, `tests/...` and `scripts/...` elsewhere in this file are relative to `SmartTaskManagement-Backend/`.
 
 Assemblies and namespaces are `Datavanced.SmartTaskManagement.<Layer>`, set once in `Directory.Build.props`. Package versions live only in `Directory.Packages.props`.
 
 ### Commands
 
+Run these from the backend folder (`cd SmartTaskManagement-Backend`) unless noted.
+
 | Task | Command |
 | --- | --- |
-| Full verification (Git Bash) | `bash scripts/verify.sh` |
+| Full verification (Git Bash) | `bash scripts/verify.sh` (from the repository root: `bash SmartTaskManagement-Backend/scripts/verify.sh`) |
 | Full verification (Windows PowerShell 5.1) | `powershell -File scripts/verify.ps1` |
-| Start the database, Redis and Mailpit | `docker compose up -d db redis mailpit` (needs a local `.env` copied from `.env.example`; Mailpit web UI at `http://localhost:8025`) |
-| Local secrets | Set `Database:Name`, `Database:Password`, `Jwt:SigningKey`, `Redis:ConnectionString` and `AdminSeed:Email`, `AdminSeed:Password`, `AdminSeed:FullName` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the README |
+| Start the database, Redis and Mailpit | `docker compose up -d db redis mailpit` (needs a local `.env` in the backend folder, copied from `.env.example`; Mailpit web UI at `http://localhost:8025`) |
+| Local secrets | Set `Database:Name`, `Database:Password`, `Jwt:SigningKey`, `Redis:ConnectionString` and `AdminSeed:Email`, `AdminSeed:Password`, `AdminSeed:FullName` with `dotnet user-secrets set` on `src/Api`; the exact one-liner is in the backend README |
 | Run the API | `dotnet run --project src/Api --launch-profile https`, then open `https://localhost:7254/swagger` (Development only; the `http` profile uses port 5199) |
-| Regenerate the OpenAPI file | `bash scripts/generate-openapi.sh` and commit `docs/openapi.json` |
+| Regenerate the OpenAPI file | `bash scripts/generate-openapi.sh` and commit `docs/openapi.json` (the backend one) |
 | Full stack in Docker | `docker compose up -d` (local only; the compose file runs in Development mode; the API port comes from `API_PORT` in `.env`) |
 
 Docker Desktop must be running for the integration tests and `docker build`.
 
 ### Definition of done for any task
 
-The build has 0 warnings, all tests pass, `dotnet format --verify-no-changes` is clean, `scripts/verify` passes after the commit, architecture tests stay green, and `docs/openapi.json` is regenerated when the API surface changed. The agent shows the real output of these commands.
+The build has 0 warnings, all tests pass, `dotnet format --verify-no-changes` is clean, `scripts/verify` passes after the commit, architecture tests stay green, and `SmartTaskManagement-Backend/docs/openapi.json` is regenerated when the API surface changed. The agent shows the real output of these commands.
