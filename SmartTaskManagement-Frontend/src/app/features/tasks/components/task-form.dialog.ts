@@ -2,13 +2,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  computed,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, map } from 'rxjs';
+import { Observable, TimeoutError, map } from 'rxjs';
 import { toApiProblem } from '../../../core/http/api-problem';
 import { messageFor } from '../../../core/http/error-messages';
 import { PersonDto, TASK_PRIORITIES, TaskPriority } from '../../../core/models/api.models';
@@ -23,7 +25,8 @@ import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX, TaskDetailsDto } from '../models/
 /**
  * New task (in a project) or Edit task (prototype D08, D11). Edit covers title,
  * description, priority and due date only; status and assignee have their own
- * operations (PRD 8). "Improve with AI" is shown disabled until the AI endpoint exists.
+ * operations (PRD 8). "Improve with AI" asks the API for a suggestion; the user's text
+ * is replaced only when they choose "Use this description" (AI design: the user decides).
  */
 @Component({
   selector: 'app-task-form-dialog',
@@ -87,12 +90,15 @@ import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX, TaskDetailsDto } from '../models/
         <div class="field">
           <div class="label-row">
             <label class="label" for="task-description">Description</label>
-            <span class="tip">
-              <button type="button" class="btn btn-sm" disabled aria-describedby="ai-tip">
-                Improve with AI
-              </button>
-              <span class="tip-text" id="ai-tip" role="tooltip">Coming soon</span>
-            </span>
+            <button
+              type="button"
+              class="btn btn-sm ai-btn"
+              aria-describedby="ai-note"
+              [disabled]="!canImprove() || improving()"
+              (click)="improve()"
+            >
+              {{ improving() ? 'Improving…' : 'Improve with AI' }}
+            </button>
           </div>
           <textarea
             class="input"
@@ -106,7 +112,31 @@ import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX, TaskDetailsDto } from '../models/
               >{{ form.controls.description.value.length }} / {{ descriptionMax }}</span
             >
           </div>
+          <p class="hint" id="ai-note">
+            Improve with AI sends the title and description to Google Gemini. Do not include
+            confidential or personal information.
+          </p>
         </div>
+        @if (aiError(); as message) {
+          <div class="alert alert-error" role="alert">{{ message }}</div>
+        }
+        @if (suggestion(); as text) {
+          <section class="suggestion" aria-labelledby="ai-suggestion-title">
+            <div class="suggestion-head">
+              <strong id="ai-suggestion-title">AI suggestion</strong>
+              <span class="hint">Review it before you use it.</span>
+            </div>
+            <p class="suggestion-text">{{ text }}</p>
+            <div class="actions">
+              <button type="button" class="btn btn-sm" (click)="suggestion.set(null)">
+                Discard
+              </button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="useSuggestion(text)">
+                Use this description
+              </button>
+            </div>
+          </section>
+        }
         <div class="actions">
           <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="saving()">
@@ -132,14 +162,38 @@ import { TASK_DESCRIPTION_MAX, TASK_TITLE_MAX, TaskDetailsDto } from '../models/
     .label-row .label {
       margin: 0;
     }
-    .tip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    .ai-btn {
+      border-color: var(--color-primary-border);
+      background: var(--color-primary-soft);
+      color: var(--color-primary-hover);
     }
-    .tip-text {
-      font-size: 12px;
-      color: var(--color-muted);
+    .suggestion {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--color-primary-border);
+      border-radius: 10px;
+      background: var(--color-primary-soft);
+    }
+    .suggestion-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--color-primary-hover);
+    }
+    .suggestion-text {
+      margin: 0;
+      padding: 12px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 13px;
+      background: #fff;
+      border: 1px solid var(--color-primary-border);
+      border-radius: 8px;
+      max-height: 280px;
+      overflow-y: auto;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -170,6 +224,45 @@ export class TaskFormDialogComponent implements OnInit {
     priority: ['Medium' as TaskPriority],
     dueDate: [''],
   });
+
+  private readonly description = toSignal(this.form.controls.description.valueChanges, {
+    initialValue: '',
+  });
+  protected readonly canImprove = computed(() => this.description().trim().length > 0);
+  protected readonly improving = signal(false);
+  protected readonly suggestion = signal<string | null>(null);
+  protected readonly aiError = signal<string | null>(null);
+
+  /** Asks the API for a better description; the user's text changes only if they accept it. */
+  protected improve(): void {
+    const { title, description } = this.form.getRawValue();
+    if (!description.trim() || this.improving()) {
+      return;
+    }
+    this.improving.set(true);
+    this.aiError.set(null);
+    this.suggestion.set(null);
+    this.api.improveDescription(title.trim() || null, description.trim()).subscribe({
+      next: (text) => {
+        this.suggestion.set(text);
+        this.improving.set(false);
+      },
+      error: (err: unknown) => {
+        this.aiError.set(
+          err instanceof TimeoutError
+            ? 'The AI service took too long. Try again.'
+            : messageFor(toApiProblem(err)),
+        );
+        this.improving.set(false);
+      },
+    });
+  }
+
+  protected useSuggestion(text: string): void {
+    this.form.controls.description.setValue(text);
+    this.form.controls.description.markAsDirty();
+    this.suggestion.set(null);
+  }
 
   ngOnInit(): void {
     const task = this.task();

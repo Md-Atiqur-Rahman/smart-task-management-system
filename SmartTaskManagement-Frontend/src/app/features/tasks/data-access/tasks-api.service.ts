@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../core/config/api-base-url';
 import { CreatedResponse, PagedResult, TaskItemStatus } from '../../../core/models/api.models';
 import { toApiParams } from '../../../shared/list-query';
@@ -11,6 +11,8 @@ import {
   TaskListQuery,
   UpdateTaskRequest,
 } from '../models/task.models';
+
+const IMPROVE_TIMEOUT_MS = 30_000;
 
 /** /api/tasks and /api/projects/{projectId}/tasks. */
 @Injectable({ providedIn: 'root' })
@@ -57,6 +59,20 @@ export class TasksApi {
   /** null unassigns. */
   assign(id: string, assigneeId: string | null): Observable<void> {
     return this.http.put<void>(`${this.taskUrl(id)}/assignee`, { assigneeId });
+  }
+
+  /**
+   * Suggests an improved description (POST /api/tasks/description/improve, Admin and
+   * Project Manager). Nothing is saved; the user decides whether to use the text.
+   * The API answers within 25 s; the client gives up after 30 s (AI design 3).
+   */
+  improveDescription(title: string | null, description: string): Observable<string> {
+    return this.http
+      .post<{ description: string }>(`${this.url}/description/improve`, { title, description })
+      .pipe(
+        timeout(IMPROVE_TIMEOUT_MS),
+        map((result) => result.description),
+      );
   }
 
   private taskUrl(id: string): string {

@@ -43,11 +43,14 @@ obviously correct rather than feature-rich.
 
 - **No backend change** [decided]. If a missing field or endpoint is found,
   stop and propose a separate backend task.
-- **AI "Improve with AI"** [decided]: the button is drawn **disabled** with the
-  tooltip "Coming soon", visible to Admin and PM only (hidden for TM), in the
-  new-task and edit-task dialogs. It is wired to the AI endpoint in the **last
-  milestone**, which may start only after the AI endpoint exists in
-  `openapi.json`.
+- **AI "Improve with AI"** (built 2026-11-12): in the new-task and edit-task
+  dialogs (Admin and PM only; a Team Member never opens them). It calls
+  `POST /api/tasks/description/improve` with the title and description (30 s
+  client timeout), shows the suggestion, and replaces the description only when
+  the user chooses "Use this description". A note says the text is sent to
+  Google Gemini. Errors: `ai.rejected` (400) asks the user to rewrite the text;
+  `ai.unavailable` and `ai.not_configured` (503) and a timeout keep the user's
+  text unchanged.
 - **E2E tests (Playwright)**: built on 2026-11-11 at the developer's request (section 13).
 - **CI workflow `.github/workflows/frontend.yml`**: built on 2026-11-11 (section 13).
 - No i18n, no dark theme, no offline mode, no state library (NgRx etc.), no UI
@@ -69,7 +72,7 @@ obviously correct rather than feature-rich.
 | # | Decision | Effect |
 | --- | --- | --- |
 | 1 | **Option B: no backend change for task permissions.** The task DTOs carry no project owner id. | Edit, assign and delete appear on the project detail page (owner known from `ProjectDetailsDto.owner.id`) and on the task page (owner looked up with `GET /api/projects/{projectId}`). In the all-tasks list a row shows a status control only when the task is assigned to the caller (Admin: every row). |
-| 2 | AI button disabled, "Coming soon", Admin and PM only; wired last. | See non-goals. |
+| 2 | AI button disabled, "Coming soon", Admin and PM only; wired last. Wired on 2026-11-12. | See non-goals. |
 | 3 | **Only the dashboard is live.** | `dashboard-changed` re-fetches summary and upcoming only on the dashboard. Lists never refresh by themselves; new notifications still update the toast and badge everywhere. |
 | 4 | Any status to any status (PRD 8); no final states. | Every status control offers all four statuses. |
 | 5 | No "Viewing as" switcher, no demo accounts. | The role comes only from the signed-in user. |
@@ -274,7 +277,7 @@ so the mapping is unit-tested in one place.
 | Status control | All tasks | Own projects (project and task pages) + tasks assigned to me | Tasks assigned to me |
 | Assignee filter "choose a person" | Yes | Yes | No (it needs `/api/users/assignable`, which a TM may not call) |
 | Owner filter on projects | Yes | No | No |
-| AI button (disabled) | Yes | Yes | Hidden |
+| Improve with AI (task dialogs) | Yes | Yes | Hidden |
 
 New tasks are created from a project page, where the project is known
 [decided in the screens]. The dashboard subtitle and the "Tasks" info line
@@ -480,7 +483,7 @@ Counters show the remaining length. Submit buttons are disabled while sending
 6. Notifications and SSE: bell, panel, toasts, live dashboard, reconnect.
 7. Polish: responsive pass, accessibility pass, states (D10), docs, final review.
 8. Deferred: E2E (Playwright), CI workflow.
-9. Last: AI button wiring, after the AI endpoint exists.
+9. Last: AI button wiring, after the AI endpoint exists (done 2026-11-12).
 
 ## 15. Open items and UNVERIFIED
 

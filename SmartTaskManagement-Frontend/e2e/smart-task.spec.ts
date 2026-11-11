@@ -105,3 +105,42 @@ test.describe('projects, tasks and notifications (Admin)', () => {
     await memberContext.close();
   });
 });
+
+test.describe('Improve with AI (real Gemini call)', () => {
+  const admin = adminFromEnv();
+  test.skip(
+    !admin || process.env['E2E_AI'] !== '1',
+    'Set E2E_AI=1 (and the Admin variables) to call the real AI endpoint.',
+  );
+
+  test('suggests a description and replaces the text only when the user accepts it', async ({
+    page,
+  }) => {
+    const credentials = admin!;
+    await signIn(page, credentials.email, credentials.password);
+
+    // Any existing task (the Admin sees all); the dialog is cancelled, nothing is saved.
+    await page.getByRole('link', { name: 'Tasks' }).click();
+    await page.getByRole('table').getByRole('link').first().click();
+    await expect(page).toHaveURL(/\/tasks\/[^/]+$/);
+    await page.getByRole('button', { name: 'Edit' }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Edit task' });
+    await expect(
+      dialog.getByText('sends the title and description to Google Gemini'),
+    ).toBeVisible();
+    await dialog.getByLabel('Description').fill('fix the login bug');
+    await dialog.getByRole('button', { name: 'Improve with AI' }).click();
+
+    const suggestion = dialog.getByRole('region', { name: 'AI suggestion' });
+    await expect(suggestion).toBeVisible({ timeout: 35_000 });
+    // The user's text is unchanged until they accept the suggestion.
+    await expect(dialog.getByLabel('Description')).toHaveValue('fix the login bug');
+
+    await suggestion.getByRole('button', { name: 'Use this description' }).click();
+    await expect(dialog.getByLabel('Description')).not.toHaveValue('fix the login bug');
+    await expect(suggestion).toHaveCount(0);
+
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+  });
+});
