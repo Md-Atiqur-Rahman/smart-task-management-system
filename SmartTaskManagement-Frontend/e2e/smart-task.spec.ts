@@ -3,6 +3,7 @@ import {
   adminFromEnv,
   createProject,
   newUser,
+  openFromMenu,
   pickPerson,
   promoteToProjectManager,
   register,
@@ -142,7 +143,7 @@ test.describe('owner change and project filter (Admin)', () => {
     await taskDialog.getByRole('button', { name: 'Create task' }).click();
     await expect(adminPage).toHaveURL(/\/tasks\/[^/]+$/);
 
-    await adminPage.getByRole('link', { name: 'Tasks' }).click();
+    await openFromMenu(adminPage, 'Tasks');
     await adminPage.getByLabel('Project', { exact: true }).selectOption({ label: projectName });
     await expect(adminPage).toHaveURL(/[?&]project=/);
     const rows = adminPage.getByRole('table').locator('tbody tr');
