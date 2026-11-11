@@ -14,7 +14,7 @@ What is built:
 - The AI description improvement with Google Gemini: the backend endpoint (PR #9) and the frontend "Improve with AI" button (PR #10) (`SmartTaskManagement-Backend/docs/ai-description-design.md`, ADR 0020).
 - The project `README.md` and `SmartTaskManagement-Backend/PROMPTS.md`, with the real smoke-test outputs (PR #11).
 
-The project PRD is `docs/PRD.md` (draft, not yet approved). The developer reads Bangla: explain decisions to them in simple Bangla with English technical terms (see "Working with the developer").
+The project PRD is `docs/PRD.md` (approved 2026-11-12). The developer reads Bangla: explain decisions to them in simple Bangla with English technical terms (see "Working with the developer").
 
 ## Assignment requirements
 
@@ -133,11 +133,11 @@ The developer reads Bangla and prefers explanations in simple Bangla with Englis
 
 ## What to do next
 
-Auth, Project, Task, Dashboard and Notifications are built. Everything below that is not about them is **proposed** until the developer confirms it in the PRD interview.
+Everything in the PRD is built: Auth, Project, Task, Dashboard, Notifications, the AI description improvement and the Angular frontend. No feature work is open.
 
-### First task: the project PRD
+### The project PRD
 
-A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Write `docs/PRD.md` by interviewing the developer, one question at a time, each with a recommended default. Order of topics: roles and permissions, task status rules, project delete behaviour, the AI provider, the frontend location, where the refresh token lives. Mark every requirement CONFIRMED or PROPOSED, and anything about the AI provider that cannot be verified from official documentation as UNVERIFIED. The PRD is final only when the developer approves it and its open-questions list is empty.
+`docs/PRD.md` was approved by the developer on 2026-11-12, after every section was checked against the built system; its open-questions list is empty. Any later change goes into its change log with a date, what and why, and needs the developer's approval.
 
 ### Build order
 
@@ -175,7 +175,7 @@ Angular 22, standalone components, zoneless with signals and OnPush, lazy-loaded
 | --- | --- |
 | Is the Angular app in the same repository? | Decided: yes, in `SmartTaskManagement-Frontend/` (PRD section 11, ADR 0019), after the backend is stable |
 | Where does Angular keep the refresh token (memory, localStorage, httpOnly cookie)? | Decided and built (PRD 5): access token in memory only, refresh token only in the HttpOnly cookie |
-| Are the proposed domain rules and permissions correct? | Confirm one by one in the PRD interview |
+| Are the proposed domain rules and permissions correct? | Decided: confirmed in the PRD interview, built, and the PRD approved on 2026-11-12 |
 | Which AI provider and model does the AI feature use? | Decided: Google Gemini API free tier, `gemini-3.5-flash-lite` (ADR 0020; GitHub Models was retired on July 30, 2026) |
 | Must the repository be public or shared with the evaluator? | The assignment asks for a "GitHub repository link shared with the submission": share it (public, or the evaluator as collaborator) before submitting |
 

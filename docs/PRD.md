@@ -1,8 +1,8 @@
 # PRD: Smart Task Management System
 
-- Status: **Draft**, not yet approved. Final only when the developer approves it and
-  the open-questions list is empty.
-- Updated: 2026-11-11
+- Status: **Approved** by the developer on 2026-11-12 (the open-questions list is
+  empty). Changes go into the change log with a date and need approval.
+- Updated: 2026-11-12
 - Sources: `docs/assignment.md` (the brief), the PRD interview with the developer,
   `SmartTaskManagement-Backend/docs/adr/` (decisions). Design and
   implementation details live in design documents under
@@ -119,13 +119,13 @@ one role.
     cookie.
   - CORS allows credentials only for the explicitly configured frontend origins.
 
-### PROPOSED
+### CONFIRMED (built; developer approval 2026-11-12)
 
 - CSRF check on the cookie endpoints (refresh, logout): besides
   `SameSite=Strict`, reject requests whose `Origin` header is not one of the
-  configured frontend origins.
-- Login returns the same generic error for an unknown email and a wrong password.
-- Claims: `sub`, role, token version; role is taken only from the validated
+  configured frontend origins (`[RequireAllowedOrigin]`, ADR 0014).
+- Login returns the same generic error for an unknown email and a wrong password (`auth.invalid_credentials`).
+- Claims: `sub`, `role`, token version (`tv`); role is taken only from the validated
   token, never from a request body.
 
 ## 6. Redis and shared state (CONFIRMED, ADR 0013)
@@ -159,7 +159,7 @@ one role.
   same time must not both succeed (optimistic concurrency on the token row).
 - **Logs:** every log entry carries an instance identifier.
 
-## 8. Projects and tasks (PROPOSED unless marked)
+## 8. Projects and tasks (CONFIRMED)
 
 - CONFIRMED (assignment): project create, update, delete, view, list, search, sort,
   paginate; task create, update, delete, assign, status, priority, due date,
@@ -269,7 +269,7 @@ one role.
   `SmartTaskManagement-Backend/` (ADR 0019). Each folder has its own README,
   docs, compose and env files; the project-wide docs (assignment, this PRD,
   CONTEXT) stay in the root `docs/`.
-- PROPOSED: Angular 18 or later, built after the backend is stable: standalone components, lazy-loaded routes, auth and role guards,
+- CONFIRMED (built, Angular 22; developer approval 2026-11-12): Angular 18 or later, built after the backend is stable: standalone components, lazy-loaded routes, auth and role guards,
 interceptors (attach token, refresh on 401, error handling), reactive forms,
 responsive layout.
 
@@ -337,3 +337,4 @@ None open.
 | 2026-11-11 | Repository split into backend and frontend folders (ADR 0019); section 11: the frontend folder is `SmartTaskManagement-Frontend/` (replaces `FE/`), the backend is in `SmartTaskManagement-Backend/` | Developer decision: each part keeps its own docs, compose and env files |
 | 2026-11-11 | AI provider (section 10): Google Gemini API free tier instead of the retired GitHub Models; Ollama considered and deferred; output keeps the input language; preview-then-"Use this"; 30-second timeout; no per-user limit; open question 6 closed | Developer confirmed in the AI interview; GitHub's docs state GitHub Models was retired on July 30, 2026 |
 | 2026-11-11 | Section 10: the strategy is named `IAiTextImprover` (was `IAiProvider`) | Approved AI design (`SmartTaskManagement-Backend/docs/ai-description-design.md` section 4) names it after its one job |
+| 2026-11-12 | PRD approved; section 5 (Origin check on refresh and logout, generic login error, token claims) and section 11 (Angular) moved from PROPOSED to CONFIRMED, all built; section 8 heading corrected | Developer approved the PRD after checking every section against the built system |
