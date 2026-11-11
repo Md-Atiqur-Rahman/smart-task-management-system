@@ -114,7 +114,16 @@ public sealed class NotificationStreamTests(SqlServerFixture database, RedisFixt
 
         clock.Advance(TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(1));
 
-        await stream.ReadToEndAsync();
+        // The server may arm its next timer on the fake clock just after the advance; keep the clock
+        // moving (by less than the heartbeat) until the stream ends. The stream's timeout bounds the loop.
+        var end = stream.ReadToEndAsync();
+        while (!end.IsCompleted)
+        {
+            clock.Advance(TimeSpan.FromSeconds(1));
+            await Task.WhenAny(end, Task.Delay(TimeSpan.FromMilliseconds(50), _ct));
+        }
+
+        await end;
     }
 
     [Fact]
