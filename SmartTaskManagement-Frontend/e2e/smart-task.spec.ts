@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { adminFromEnv, newUser, pickPerson, register, signIn } from './helpers';
+import {
+  adminFromEnv,
+  createProject,
+  newUser,
+  openFromMenu,
+  pickPerson,
+  promoteToProjectManager,
+  register,
+  signIn,
+} from './helpers';
 
 test.describe('authentication', () => {
   test('register, reload keeps the session, logout, wrong password, login', async ({ page }) => {
@@ -58,24 +67,10 @@ test.describe('projects, tasks and notifications (Admin)', () => {
     await signIn(adminPage, credentials.email, credentials.password);
 
     // Users: promote the manager (role change with confirmation).
-    await adminPage.getByRole('link', { name: 'Users' }).click();
-    await adminPage.getByLabel('Search users').fill(manager.email);
-    const roleSelect = adminPage.getByLabel(`Role of ${manager.fullName}`);
-    await expect(roleSelect).toBeVisible();
-    await roleSelect.selectOption('ProjectManager');
-    await adminPage.getByRole('button', { name: 'Change role' }).click();
-    await expect(adminPage.getByText(`${manager.fullName} is now Project Manager.`)).toBeVisible();
+    await promoteToProjectManager(adminPage, manager);
 
     // Projects: create with the Project Manager as owner.
-    await adminPage.getByRole('link', { name: 'Projects' }).click();
-    await adminPage.getByRole('button', { name: 'New project' }).click();
-    const projectDialog = adminPage.getByRole('dialog', { name: 'New project' });
-    await projectDialog.getByLabel('Name').fill(projectName);
-    await projectDialog.getByLabel('Description').fill('Created by the E2E suite.');
-    await pickPerson(projectDialog, 'Owner (Project Manager)', manager.email);
-    await projectDialog.getByRole('button', { name: 'Create project' }).click();
-    await expect(adminPage).toHaveURL(/\/projects\/[^/]+$/);
-    await expect(adminPage.getByRole('heading', { name: projectName })).toBeVisible();
+    await createProject(adminPage, projectName, manager);
 
     // Tasks: create and assign to the member.
     await adminPage.getByRole('button', { name: 'Add task' }).click();
@@ -103,6 +98,59 @@ test.describe('projects, tasks and notifications (Admin)', () => {
 
     await adminContext.close();
     await memberContext.close();
+  });
+});
+
+test.describe('owner change and project filter (Admin)', () => {
+  const admin = adminFromEnv();
+  test.skip(!admin, 'Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run the Admin tests.');
+
+  test('the Admin gives a project to another Project Manager; /tasks filters by project', async ({
+    browser,
+  }) => {
+    const credentials = admin!;
+    const first = newUser('Owner');
+    const second = newUser('NewOwner');
+    const projectName = `E2E owner project ${Date.now()}`;
+    const taskTitle = `E2E filtered task ${Date.now()}`;
+
+    for (const user of [first, second]) {
+      const context = await browser.newContext();
+      await register(await context.newPage(), user);
+      await context.close();
+    }
+
+    const adminContext = await browser.newContext();
+    const adminPage = await adminContext.newPage();
+    await signIn(adminPage, credentials.email, credentials.password);
+    await promoteToProjectManager(adminPage, first);
+    await promoteToProjectManager(adminPage, second);
+    await createProject(adminPage, projectName, first);
+
+    // Change owner: the dialog shows the current owner; saving shows the new one on the page.
+    await adminPage.getByRole('button', { name: 'Change owner' }).click();
+    const ownerDialog = adminPage.getByRole('dialog', { name: 'Change owner' });
+    await expect(ownerDialog.getByText(first.fullName)).toBeVisible();
+    await pickPerson(ownerDialog, 'New owner (Project Manager)', second.email);
+    await ownerDialog.getByRole('button', { name: `Make ${second.fullName} the owner` }).click();
+    await expect(ownerDialog).toHaveCount(0);
+    await expect(adminPage.getByRole('definition').getByText(second.fullName)).toBeVisible();
+
+    // A task in this project, then the project filter on /tasks shows only this project's task.
+    await adminPage.getByRole('button', { name: 'Add task' }).click();
+    const taskDialog = adminPage.getByRole('dialog', { name: 'New task' });
+    await taskDialog.getByLabel('Title').fill(taskTitle);
+    await taskDialog.getByRole('button', { name: 'Create task' }).click();
+    await expect(adminPage).toHaveURL(/\/tasks\/[^/]+$/);
+
+    await openFromMenu(adminPage, 'Tasks');
+    await adminPage.getByLabel('Project', { exact: true }).selectOption({ label: projectName });
+    await expect(adminPage).toHaveURL(/[?&]project=/);
+    const rows = adminPage.getByRole('table').locator('tbody tr');
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first().getByRole('link', { name: taskTitle })).toBeVisible();
+
+    await adminContext.close();
   });
 });
 
