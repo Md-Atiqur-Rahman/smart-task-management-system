@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  effect,
   inject,
   input,
   output,
@@ -121,7 +122,13 @@ export class UserPickerComponent {
   readonly search = input.required<(term: string) => Observable<PagedResult<PersonDto>>>();
   readonly placeholder = input('Search by name or email');
   readonly hint = input<string | null>(null);
+  /**
+   * Optional: the id the parent currently has selected (null = none). When it is no longer the
+   * person picked here (for example after "Clear filters"), the shown name is cleared.
+   */
+  readonly selected = input<string | null | undefined>(undefined);
   readonly picked = output<PersonDto>();
+  private pickedId: string | null = null;
 
   private readonly id = UserPickerComponent.nextId++;
   protected readonly inputId = `user-picker-${this.id}`;
@@ -133,6 +140,13 @@ export class UserPickerComponent {
   private readonly terms = new Subject<string>();
 
   constructor() {
+    effect(() => {
+      const selected = this.selected();
+      if (selected !== undefined && selected !== this.pickedId) {
+        this.pickedId = null;
+        this.text.set('');
+      }
+    });
     this.terms
       .pipe(
         debounceTime(300),
@@ -181,6 +195,7 @@ export class UserPickerComponent {
 
   protected pick(person: PersonDto): void {
     this.text.set(person.fullName);
+    this.pickedId = person.id;
     this.open.set(false);
     this.picked.emit(person);
   }
