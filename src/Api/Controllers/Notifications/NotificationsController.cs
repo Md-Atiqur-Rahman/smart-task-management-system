@@ -1,13 +1,18 @@
 using Datavanced.SmartTaskManagement.Api.Errors;
+using Datavanced.SmartTaskManagement.Api.Notifications;
+using Datavanced.SmartTaskManagement.Application.Abstractions.LiveEvents;
 using Datavanced.SmartTaskManagement.Application.Abstractions.Messaging;
+using Datavanced.SmartTaskManagement.Application.Abstractions.Security;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications.Commands.MarkAllNotificationsRead;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications.Commands.MarkNotificationRead;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications.Queries.GetUnreadCount;
 using Datavanced.SmartTaskManagement.Application.Features.Notifications.Queries.ListNotifications;
+using Datavanced.SmartTaskManagement.Domain.Auth;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Datavanced.SmartTaskManagement.Api.Controllers.Notifications;
 
@@ -47,6 +52,7 @@ public sealed class NotificationsController : ControllerBase
     [Authorize]
     [HttpPost("{id:guid}/read")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, ErrorResults.ProblemJson)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
@@ -70,5 +76,42 @@ public sealed class NotificationsController : ControllerBase
     {
         var result = await handler.Handle(new MarkAllNotificationsReadCommand(), cancellationToken);
         return result.IsSuccess ? NoContent() : this.ToProblem(result.Error);
+    }
+
+    /// <summary>
+    /// Live events over Server-Sent Events (design 6, ADR 0018): <c>notification</c> (data: the
+    /// notification), <c>notifications-read</c>, <c>dashboard-changed</c> and <c>heartbeat</c> (no data).
+    /// Ends at the access token's expiry and at the first heartbeat whose token version check fails.
+    /// </summary>
+    [Authorize]
+    [HttpGet("stream")]
+    [ProducesResponseType<string>(StatusCodes.Status200OK, "text/event-stream")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, ErrorResults.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable, ErrorResults.ProblemJson)]
+    public IResult Stream(
+        [FromServices] ILiveConnections connections,
+        [FromServices] ITokenVersionChecker checker,
+        [FromServices] ISecurityContext securityContext,
+        [FromServices] TimeProvider timeProvider,
+        [FromServices] IOptions<NotificationsOptions> options,
+        [FromServices] IOptions<JsonOptions> jsonOptions,
+        CancellationToken cancellationToken)
+    {
+        if (securityContext.UserId is not { } userId
+            || securityContext.Role is not { } role
+            || !NotificationStream.TryReadToken(User, out var tokenVersion, out var expiresAt))
+        {
+            var problem = ErrorResults.ToProblemDetails(HttpContext, AuthErrors.TokenRevoked);
+            return Results.Json(problem, contentType: ErrorResults.ProblemJson, statusCode: problem.Status);
+        }
+
+        var stream = new NotificationStream(
+            connections,
+            checker,
+            timeProvider,
+            TimeSpan.FromSeconds(options.Value.HeartbeatSeconds),
+            jsonOptions.Value.JsonSerializerOptions);
+        return TypedResults.ServerSentEvents(
+            stream.ReadAsync(userId, role, tokenVersion, expiresAt, cancellationToken));
     }
 }
