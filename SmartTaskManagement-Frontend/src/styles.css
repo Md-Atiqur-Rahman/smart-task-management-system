@@ -327,13 +327,14 @@ table.table {
   font-weight: 600;
 }
 
-/* Page layout helpers */
+/* Page layout helpers. Pages use the full width beside the menu (no max-width), so wide
+   screens show more table columns instead of an empty area; long text keeps its own limit
+   (.description). */
 .page {
   padding: 28px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1280px;
   width: 100%;
 }
 
