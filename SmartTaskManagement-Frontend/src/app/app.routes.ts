@@ -41,6 +41,12 @@ export const routes: Routes = [
         title: 'Users · SmartTask',
         loadComponent: () => import('./features/users/pages/users.page').then((m) => m.UsersPage),
       },
+      {
+        // roleGuard sends a wrong role here: "not found" inside the shell, with the menu.
+        path: 'not-found',
+        title: 'Not found · SmartTask',
+        loadComponent: () => import('./features/not-found.page').then((m) => m.NotFoundPage),
+      },
     ],
   },
   {
