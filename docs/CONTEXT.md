@@ -4,9 +4,9 @@ Updated 2026-11-11. This file describes the current truth, not the history. Anyt
 
 ## At a glance
 
-**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard, AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
+**বাংলা সারাংশ.** এটা একটা hiring assignment: .NET 10 (Clean Architecture) backend ও Angular frontend দিয়ে একটা Smart Task Management System বানাতে হবে। Code quality, security ও documentation feature সংখ্যার চেয়ে বেশি গুরুত্বপূর্ণ। একটা reusable template ও তা থেকে project বানানোর একটা Claude Code skill আগেই তৈরি ও প্রমাণিত (CI সবুজ)। এই project repo টা সেই template থেকে বানানো হয়েছে। Auth feature (register, login, refresh, logout, role, Redis) এবং Project module (create, update, delete, list, owner change) তৈরি হয়েছে; Task module (project এর ভিতরে task, assign, status বদল, filter) ও তৈরি হয়েছে; Dashboard (summary ও upcoming, দুটি endpoint) তৈরি হয়েছে; AI, Angular এখনো লেখা হয়নি। প্রথম কাজ হলো এই project এর নিজের `docs/PRD.md` লেখা, developer এর সাথে একটা একটা করে প্রশ্ন করে। Auth নিজের implementation হবে (Keycloak এখন না)। Developer বাংলা পড়েন; সিদ্ধান্ত সহজ ভাষায় বুঝিয়ে বলুন।
 
-**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project and Task modules are built (`docs/project-design.md`, `docs/task-design.md`); Dashboard, AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
+**English.** Build a Smart Task Management System (ASP.NET Core 10 and Angular) as a hiring assignment judged on architecture, code quality, security and documentation. A verified Clean Architecture template exists, and this repository was created from it. Authentication is built in-house (`docs/auth-design.md`) and the Project, Task and Dashboard modules are built (`docs/project-design.md`, `docs/task-design.md`, `docs/dashboard-design.md`); AI and Angular are not started. The project PRD is `docs/PRD.md` (draft, not yet approved).
 
 ## Assignment requirements
 
@@ -50,10 +50,11 @@ A fourth private repository is an archive of the long template build history and
 - **Auth: built.** `AuthController` (`register`, `login`, `refresh`, `logout`, `me`; the only anonymous actions), `UsersController` (Admin: list users and change a role; Admin or Project Manager: assignable users), `User` and `RefreshToken` aggregates, a first-Admin seed from secret configuration, and `[RequireAllowedOrigin]` (Origin check against `Cors:AllowedOrigins`) on refresh and logout. The refresh token lives only in the `__Secure-refresh_token` HttpOnly cookie. Details: `docs/auth-design.md`, ADR 0013 to 0015.
 - **Project: built.** `ProjectsController`: `POST` and `GET /api/projects` (list with search, sort by `name`/`createdAt`/`updatedAt`, paging, `ownerId` filter), `GET`, `PUT` and `DELETE /api/projects/{id}`, and `PUT /api/projects/{id}/owner` (Admin only). Create, update and delete: Admin or Project Manager; a Project Manager sees and changes only their own projects, Admin all, a Team Member (or any assignee) sees the projects of their tasks, details only (delivered by the Task module). Delete is a soft delete. The owner must be a Project Manager. Demotion guard: changing the role of a Project Manager who still owns projects returns 409 `users.owns_projects`. Design: `docs/project-design.md`.
 - **Task: built.** `TaskItem` aggregate (`TaskItemStatus`, `TaskPriority`; priority Medium by default, date-only due date, no state machine) in the `Tasks` table. Endpoints: `POST` and `GET /api/projects/{projectId}/tasks`, `GET /api/tasks`, `GET`, `PUT` and `DELETE /api/tasks/{id}`, `PUT /api/tasks/{id}/status` (an Admin, the owning Project Manager, or the task's assignee) and `PUT /api/tasks/{id}/assignee` (Admin or owning Project Manager; null unassigns). Both lists filter by status, priority, `assigneeId`, `unassigned`, `dueFrom`/`dueTo` and sort rank-aware. The assignee (any role) sees the task and its project and may change its status. Project list and details carry task counts (an assignee-only caller counts only their own tasks). Design: `docs/task-design.md`.
+- **Dashboard: built.** `DashboardController`: `GET /api/dashboard/summary` (total projects and tasks, tasks by status and by priority, completed, pending and overdue counts; all four status and priority keys are always present) and `GET /api/dashboard/upcoming` (pending tasks due from today to today + `Dashboard:UpcomingDays`, at most `Dashboard:UpcomingLimit`). Both are `[Authorize]`; every role sees only the projects and tasks it may see (one visibility definition shared with the project and task lists). Design: `docs/dashboard-design.md`.
 - **Lesson from the Task module:** EF Core `IgnoreQueryFilters()` applies to the whole query, so every set in such a query needs its own explicit soft-delete predicate (`ProjectReadRepository` adds `!p.IsDeleted`).
 - **Redis (exception to "no caching"):** it holds security state only, never cached query results (ADR 0013). Allowed uses: the per-user token version (`auth:token-version:<userId>`) and the shared per-IP rate-limit counter. The access token lives **10 minutes**; a role change bumps the token version, so old tokens fail at once on every instance. Redis down: authenticated requests get 503 (fail closed), rate limiting degrades to per-instance limits (fail open).
 - **Forwarded headers: done.** `X-Forwarded-For` and `X-Forwarded-Proto` are trusted only from `ForwardedHeaders:KnownProxies`; with an empty list the middleware is not added (ADR 0015).
-- 560 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
+- 587 tests that pass, including a real SQL Server through Testcontainers and architecture rules that fail the build when layering is broken.
 - `scripts/verify.sh` and `scripts/verify.ps1`: build with 0 warnings, format check, tests, vulnerable and deprecated package check, naming and secret checks, OpenAPI freshness against the committed `docs/openapi.json`, and `docker build`. Both pass locally; CI runs `verify.sh` on Ubuntu.
 - Docker Compose with SQL Server and Redis bound to loopback, and a working multi-stage Dockerfile that runs as a non-root user.
 - Claude Code files: `CLAUDE.md`, `.claude/rules/`, one `CLAUDE.md` per layer, `architect` and read-only `reviewer` agents, and a whitespace-only format hook.
@@ -62,7 +63,7 @@ A fourth private repository is an archive of the long template build history and
 
 ### Not started
 
-Dashboard, the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
+The Notifications module (live push, stored notification list, email on assignment), the AI endpoint, the Angular frontend, `PROMPTS.md`, the Postman or Swagger export for the final submission, and the project-specific README.
 
 ## Locked decisions and why
 
@@ -126,10 +127,11 @@ A draft exists (`docs/PRD.md`, status Draft); finish it and get it approved. Wri
 1. ~~Auth (users, roles, register, login, refresh, logout)~~ built
 2. ~~Project module~~ built
 3. ~~Task module~~ built
-4. Remove the Sample slice (`docs/sample-flow.md` "Remove Sample"), then the Dashboard
-5. AI endpoint
-6. Angular frontend (after the backend is stable)
-7. README, `PROMPTS.md`, API collection export
+4. ~~Dashboard~~ built (the developer decided on 2026-11-11 to keep the Sample slice for now)
+5. Notifications module (live push, stored notification list, email on assignment)
+6. AI endpoint
+7. Angular frontend (after the backend is stable)
+8. README, `PROMPTS.md`, API collection export
 
 ### Auth design
 
@@ -137,7 +139,7 @@ Built as designed in `docs/auth-design.md`; the implementation amendments are in
 
 ### Domain rules
 
-Built (decided, implemented and tested): the first four bullets (separate aggregates, task status, project soft delete, permissions; details in `docs/project-design.md` and `docs/task-design.md`). Still **proposed** (not built): the dashboard and the AI endpoint.
+Built (decided, implemented and tested): the first four bullets (separate aggregates, task status, project soft delete, permissions; details in `docs/project-design.md` and `docs/task-design.md`). The dashboard is also built (`docs/dashboard-design.md`). Still **proposed** (not built): the AI endpoint.
 
 - Project and Task are separate aggregates; a Task references its project only by `ProjectId`.
 - Task status: any status to any status (reopen allowed); there is no state machine because there are no transition rules (developer decision 2026-11-10, evidence in `docs/task-design.md` section 9).

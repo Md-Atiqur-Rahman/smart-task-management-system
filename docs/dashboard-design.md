@@ -1,6 +1,6 @@
 # Design: Dashboard
 
-- Status: Approved by the developer (2026-11-11). Written from defaults at the
+- Status: Implemented (2026-11-11). Approved by the developer (2026-11-11). Written from defaults at the
   developer's request; every decision not stated in the PRD is marked
   **[builder's call]**.
 - Date: 2026-11-11

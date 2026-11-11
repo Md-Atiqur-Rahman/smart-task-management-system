@@ -108,6 +108,8 @@ All routes are under `/api`. Full request and response shapes: `docs/openapi.jso
 | Tasks | `GET /projects/{projectId}/tasks`, `GET /tasks`, `GET /tasks/{id}` | Signed-in user (Admin all, Project Manager tasks of own projects plus tasks assigned to them, others only tasks assigned to them) |
 | Tasks | `PUT /tasks/{id}/status` | Admin, owning Project Manager, or the assignee |
 | Tasks | `PUT /tasks/{id}/assignee` | Admin, owning Project Manager (Admin may assign any user, a Project Manager only a Team Member or themselves; null unassigns) |
+| Dashboard | `GET /dashboard/summary` (counts: projects, tasks, by status, by priority, completed, pending, overdue) | Signed-in user (sees only what their role may see) |
+| Dashboard | `GET /dashboard/upcoming` (pending tasks due in the next days, earliest first) | Signed-in user (sees only what their role may see) |
 | Samples | `/samples` (copy-source feature) | Signed-in user |
 
 ### Authentication and the first Admin
