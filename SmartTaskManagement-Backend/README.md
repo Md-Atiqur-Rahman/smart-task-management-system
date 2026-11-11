@@ -1,8 +1,10 @@
-# Datavanced.SmartTaskManagement
+# Smart Task Management System: backend API
 
-ASP.NET Core (.NET 10) Clean Architecture boilerplate with one runnable Sample feature.
-Every rule is enforced by code: build settings, architecture tests and one verify
-script (`scripts/verify.sh`), which is also the only CI step.
+The ASP.NET Core (.NET 10) API of the Smart Task Management System: projects,
+tasks, a role-scoped dashboard, notifications with live events and email, built
+with Clean Architecture, DDD and CQRS Lite. Every rule is enforced by code:
+build settings, architecture tests and one verify script (`scripts/verify.sh`),
+which is also the backend CI step.
 
 This is the backend folder of the repository (the root `../README.md` gives the
 overview; the Angular frontend lives in `../SmartTaskManagement-Frontend/`).
@@ -40,8 +42,21 @@ cd SmartTaskManagement-Backend
 - **Quality gates:** warnings as errors with all analyzers, NullGuard runtime null
   checks, `dotnet format`, vulnerable/deprecated package check, committed
   OpenAPI document checked for freshness, Docker image build.
-- **Sample feature:** five endpoints under `/api/samples` (all `[Authorize]`), the
-  copy-source for new features ([docs/sample-flow.md](docs/sample-flow.md)).
+- **Projects:** create, update, soft delete, details with task counts, list with
+  search, owner filter, sorting and paging; owner change by an Admin. Design:
+  `docs/project-design.md`.
+- **Tasks:** create, update, soft delete, assign or unassign, any-to-any status
+  change, priority and date-only due date; lists with search, filters, sorting
+  and paging. Design: `docs/task-design.md`.
+- **Dashboard:** totals, tasks by status and priority, completed versus pending,
+  overdue, upcoming due tasks, scoped to what each role may see. Design:
+  `docs/dashboard-design.md`.
+- **Notifications:** stored notifications, live Server-Sent Events through
+  Redis pub/sub, and email through a transactional outbox. Design:
+  `docs/notifications-design.md`.
+- **Sample feature:** five endpoints under `/api/samples` (all `[Authorize]`),
+  kept from the template this project started from as the reference slice for
+  new features ([docs/sample-flow.md](docs/sample-flow.md)).
 
 ## Backend layout
 
@@ -212,17 +227,6 @@ docker compose down
 > rejected in every other environment (ADR 0011). All ports bind to `127.0.0.1`,
 > and the values come from the dev-only placeholders in `.env`.
 
-## Roadmap
-
-- **Phase 1.5: tooling.** A `/scaffold` Claude Code skill that generates a new
-  feature slice from Sample, and a matching Angular front-end boilerplate.
-- **Open decisions.**
-  - Docker image tag strategy for local and CI builds (today: `<image>:local` and
-    `<image>:verify`; no registry push).
-  - Whether to enforce the 80-character line guideline with a built-in analyzer
-    rule, if one exists (today it is a guideline only; `dotnet format` does not
-    wrap lines).
-
 ## Known limitations
 
 - **Forwarded headers are off until proxies are listed.** `X-Forwarded-For` and
@@ -246,55 +250,12 @@ docker compose down
   Compose, `restart: on-failure` retries until SQL Server is up; elsewhere the
   orchestrator must restart the process.
 
-## Create a project from this template
+## Origin
 
-1. Copy the repository (a fresh clone or a commit with a clean working tree),
-   then rename it with the script. Names are PascalCase, letters and digits only.
-   The script replaces the current names (from `Directory.Build.props`) in file
-   contents, file and folder names, generates a new `UserSecretsId`, regenerates
-   `docs/openapi.json` and prints every change. It refuses to run with uncommitted
-   changes or when a new name already occurs in the files. It works inside the
-   backend folder only: rename the `<PROJECT_NAME>-Backend` and
-   `<PROJECT_NAME>-Frontend` folders, the root docs and the backend script
-   paths in `../.claude/settings.json` by hand (ADR 0019).
-
-   Git Bash:
-
-   ```bash
-   bash scripts/new-project.sh YourCompany YourProject
-   bash scripts/verify.sh
-   ```
-
-   Windows PowerShell 5.1:
-
-   ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/new-project.ps1 YourCompany YourProject
-   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
-   ```
-
-   > **Windows note:** in PowerShell or cmd, plain `bash` may resolve to the WSL
-   > launcher (`C:\Users\<you>\AppData\Local\Microsoft\WindowsApps\bash.exe`)
-   > instead of Git Bash, and fail or run in a different environment. Run the
-   > `.sh` scripts from a Git Bash terminal, call Git Bash explicitly
-   > (`& "C:\Program Files\Git\bin\bash.exe" scripts/verify.sh`), or use the
-   > `.ps1` scripts.
-
-   Then commit the result and set the user-secrets for the new project (see
-   "Run locally").
-2. Replace the dev-only placeholders in `.env.example`; real secrets go only into
-   user-secrets or environment variables.
-3. Add features by copying the Sample slice, then remove Sample
-   (checklists in `docs/sample-flow.md`).
-4. Authentication is included; set the Redis and first-Admin secrets (see "Run
-   locally" and "Authentication and the first Admin") and run Redis in every
-   environment.
-5. **If the API will run behind a reverse proxy or load balancer, configure
-   `ForwardedHeaders:KnownProxies` first** (see Known
-   limitations): otherwise rate limiting sees only the proxy's IP and HTTPS
-   redirection may loop.
-6. Production database: `Database:Encrypt=true` with a certificate the client
-   trusts (enforced outside Development and Testing).
-7. Run `bash scripts/verify.sh` and push; CI runs the same script.
+This repository was created from a Clean Architecture template. The template's
+rename scripts (`scripts/new-project.sh` and `.ps1`) and the Sample slice are
+kept: the scripts are part of the verified tooling, and Sample is the reference
+slice that every feature was copied from (`docs/sample-flow.md`).
 
 ## Tests and checks
 
