@@ -19,13 +19,14 @@ first. Decisions the brief leaves open are in the [PRD](docs/PRD.md).
   - A Project Manager manages their own projects and tasks and assigns work.
   - A Team Member sees the tasks assigned to them and changes their status.
 - **Projects:** create, update, delete (soft), view details with task counts,
-  list with keyword search, owner filter, sorting and server-side paging.
+  list with keyword search, owner filter, sorting and server-side paging; an
+  Admin can give a project to another Project Manager.
 - **Tasks:**
   - create, update, delete (soft), assign or unassign, change the status
     (To Do, In Progress, Completed, Cancelled; any status to any status);
   - priority (Low, Medium, High, Critical), date-only due date;
-  - search, filters (status, priority, assignee, unassigned, due-date range),
-    sorting and paging.
+  - search, filters (project, status, priority, assignee, unassigned, due-date
+    range), sorting and paging.
 - **Dashboard:** total projects and tasks, tasks by status and priority,
   completed versus pending, overdue, upcoming due tasks. It updates live.
 - **Notifications:**
@@ -34,8 +35,10 @@ first. Decisions the brief leaves open are in the [PRD](docs/PRD.md).
   - an email for each notification, sent through a transactional outbox
     (Mailpit locally).
 - **AI description improvement:** an endpoint that rewrites a rough task
-  description into a clear, actionable one, using the Google Gemini API.
-  Prompt design: [PROMPTS.md](SmartTaskManagement-Backend/PROMPTS.md).
+  description into a clear, actionable one in the same language, using the
+  Google Gemini API. In the task form, "Improve with AI" shows the suggestion
+  first, and the user decides whether to use it. Prompt design:
+  [PROMPTS.md](SmartTaskManagement-Backend/PROMPTS.md).
 - **Responsive, accessible UI** from 360 px phones to desktop.
 
 ## Technology stack
@@ -201,9 +204,9 @@ Responses:
 
 | Check | Command | Content |
 | --- | --- | --- |
-| Backend verify | `bash SmartTaskManagement-Backend/scripts/verify.sh` | Release build with 0 warnings, `dotnet format`, 683 tests (unit, integration with a real SQL Server through Testcontainers, architecture), vulnerable package check, OpenAPI freshness, Docker build |
-| Frontend verify | `bash SmartTaskManagement-Frontend/scripts/verify.sh` | angular-eslint, Prettier, strict type-check, 76 unit tests (Vitest), production build, `npm audit` |
-| End-to-end | `npm run e2e` (frontend folder, API running) | Playwright on Edge: register, reload keeps the session, logout and login; the Admin flow (promote a Project Manager, create a project and an assigned task, live notification) |
+| Backend verify | `bash SmartTaskManagement-Backend/scripts/verify.sh` | Release build with 0 warnings, `dotnet format`, 785 tests (unit, integration with a real SQL Server through Testcontainers, architecture), vulnerable package check, OpenAPI freshness, Docker build |
+| Frontend verify | `bash SmartTaskManagement-Frontend/scripts/verify.sh` | angular-eslint, Prettier, strict type-check, 93 unit tests (Vitest), production build, `npm audit` |
+| End-to-end | `npm run e2e` (frontend folder, API running) | Playwright on Edge: register, reload keeps the session, logout and login; the Admin flows (promote a Project Manager, create a project and an assigned task, live notification; change a project's owner and filter tasks by project); optional "Improve with AI" with a real Gemini call (`E2E_AI=1`) |
 
 GitHub Actions runs both verify scripts on pull requests and on `main`: the
 frontend workflow for frontend changes, the backend workflow for everything

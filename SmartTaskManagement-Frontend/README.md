@@ -1,9 +1,18 @@
 # SmartTaskManagement-Frontend
 
-Angular 22 frontend of the Smart Task Management System: login and register,
-role-aware dashboard, project and task management with search, filters, sorting
-and paging, and live notifications. Design: `docs/frontend-design.md`; screens:
-`docs/design/prototype/`; plan: `docs/plans/`.
+Angular 22 frontend of the Smart Task Management System:
+
+- login and register;
+- a role-aware dashboard that updates live;
+- project and task management with search, filters (including a project filter on
+  the task list), sorting and paging;
+- a "Change owner" dialog for Admins;
+- "Improve with AI" in the task form: an AI suggestion that the user reads first
+  and applies only if they choose to;
+- live notifications.
+
+Design: `docs/frontend-design.md`; screens: `docs/design/prototype/`; plan:
+`docs/plans/`.
 
 ## Stack
 
@@ -55,9 +64,17 @@ server itself if it is not running.
 npm run e2e
 ```
 
-The Admin scenario (promote a Project Manager, create a project and an assigned
-task, the assignee gets the live notification) needs the Admin sign-in in your
-shell only (never committed, never printed). It is skipped without them.
+The Admin scenarios need the Admin sign-in in your shell only (never committed,
+never printed); they are skipped without it:
+
+- promote a Project Manager, create a project and an assigned task, and the
+  assignee gets the live notification;
+- change a project's owner through the dialog, then filter `/tasks` by that
+  project.
+
+The AI scenario ("Improve with AI" with a real Gemini call) also needs
+`E2E_AI=1` and a Gemini key set in the API.
+
 PowerShell:
 
 ```powershell
@@ -73,9 +90,10 @@ the local database (soft delete only). CI does not run E2E.
 
 ```text
 src/app/
-  core/       auth (session, interceptors, guards), http errors, config, realtime, layout
+  core/       auth (session, interceptors, guards), http errors, config, realtime,
+              notifications (bell, toasts), layout
   shared/     reusable UI and helpers
-  features/   auth, dashboard, projects, tasks, users, notifications
+  features/   auth, dashboard, projects, tasks, users
               each: pages/ components/ data-access/ models/
 src/environments/  API base URL only (no secrets)
 scripts/verify.sh  full check
