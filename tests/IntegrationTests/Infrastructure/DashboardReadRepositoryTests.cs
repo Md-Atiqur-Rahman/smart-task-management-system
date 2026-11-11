@@ -181,14 +181,11 @@ public sealed class DashboardReadRepositoryTests(SqlServerFixture fixture)
         var project = await SaveProjectAsync(pm.Id);
         var expected = new List<Guid>();
 
-        async Task AddAsync(int dayOffset, TaskPriority priority, bool expectedInResult = true)
+        async Task AddAsync(int dayOffset, TaskPriority priority)
         {
             var task = await SaveTaskAsync(
                 project.Id, assigneeId: member.Id, dueDate: _today.AddDays(dayOffset), priority: priority);
-            if (expectedInResult)
-            {
-                expected.Add(task.Id);
-            }
+            expected.Add(task.Id);
         }
 
         // Created out of order on purpose. Every returned task has a distinct (date, priority) pair,

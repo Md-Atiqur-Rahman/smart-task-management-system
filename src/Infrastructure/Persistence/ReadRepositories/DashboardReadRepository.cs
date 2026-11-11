@@ -77,7 +77,7 @@ public sealed class DashboardReadRepository(AppDbContext context) : IDashboardRe
             .Select(t => new UpcomingTaskDto(
                 t.Id,
                 t.Title,
-                t.DueDate!.Value,
+                t.DueDate ?? today,
                 t.Status,
                 t.Priority,
                 t.ProjectId,
