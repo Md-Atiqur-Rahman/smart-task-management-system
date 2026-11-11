@@ -22,6 +22,9 @@ const BY_CODE: Readonly<Record<string, string>> = {
   'tasks.assignee_not_allowed': "This person can't be assigned to this task.",
   'tasks.not_found': 'This task no longer exists or you no longer have access.',
   'notifications.not_found': 'This notification no longer exists.',
+  'ai.rejected': 'The AI service declined this text. Rewrite it and try again.',
+  'ai.unavailable': 'The AI service is unavailable. Try again later.',
+  'ai.not_configured': 'The AI service is not set up on this server.',
 };
 
 const BY_STATUS: Readonly<Record<number, string>> = {

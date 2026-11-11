@@ -52,4 +52,27 @@ describe('TasksApi', () => {
     req.flush(null);
     backend.verify();
   });
+
+  it('improveDescription_PostsTitleAndDescription_AndReturnsTheSuggestion', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: API_BASE_URL, useValue: 'https://api.test' },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    const backend = TestBed.inject(HttpTestingController);
+    let suggestion = '';
+
+    TestBed.inject(TasksApi)
+      .improveDescription(null, 'fix the login bug')
+      .subscribe((text) => (suggestion = text));
+
+    const req = backend.expectOne('https://api.test/api/tasks/description/improve');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ title: null, description: 'fix the login bug' });
+    req.flush({ description: 'Goal: Fix the login bug.' });
+    expect(suggestion).toBe('Goal: Fix the login bug.');
+    backend.verify();
+  });
 });
